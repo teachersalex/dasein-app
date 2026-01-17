@@ -71,6 +71,12 @@ export default function Home() {
     const canvas = canvasRef.current
     const ctx = canvas.getContext('2d')
     
+    // Check if video has dimensions
+    if (video.videoWidth === 0 || video.videoHeight === 0) {
+      console.error('Video not ready')
+      return
+    }
+    
     canvas.width = video.videoWidth
     canvas.height = video.videoHeight
     
@@ -96,6 +102,7 @@ export default function Home() {
     
     const photo = canvas.toDataURL('image/jpeg', 0.92)
     setPhotoData(photo)
+    setFilteredPhoto(photo) // Start with original
     setFilterIndex(0)
     stopCamera()
     setScreen('preview')
@@ -106,11 +113,23 @@ export default function Home() {
   // ==========================================
   
   useEffect(() => {
-    if (photoData && screen === 'preview') {
-      const filter = FILTERS[filterIndex]
-      const filtered = applyFilter(photoData, filter)
-      setFilteredPhoto(filtered)
+    async function processFilter() {
+      if (photoData && screen === 'preview') {
+        const filter = FILTERS[filterIndex]
+        
+        // If original filter, just use photoData
+        if (filter.id === 'original' || !filter.css) {
+          setFilteredPhoto(photoData)
+          return
+        }
+        
+        // Apply filter asynchronously
+        const filtered = await applyFilter(photoData, filter)
+        setFilteredPhoto(filtered)
+      }
     }
+    
+    processFilter()
   }, [photoData, filterIndex, screen])
 
   function nextFilter() {
@@ -231,11 +250,15 @@ export default function Home() {
             onTouchStart={handleTouchStart}
             onTouchEnd={handleTouchEnd}
           >
-            <img 
-              src={filteredPhoto || photoData} 
-              alt="Preview" 
-              className="preview-image"
-            />
+            {filteredPhoto ? (
+              <img 
+                src={filteredPhoto} 
+                alt="Preview" 
+                className="preview-image"
+              />
+            ) : (
+              <div className="spinner" />
+            )}
             <span className={`filter-label ${filterIndex !== 0 ? 'visible' : ''}`}>
               {FILTERS[filterIndex].name}
             </span>
@@ -254,7 +277,7 @@ export default function Home() {
           <div className="camera-controls">
             <button 
               className="btn btn-ghost" 
-              onClick={() => { setPhotoData(null); startCamera() }}
+              onClick={() => { setPhotoData(null); setFilteredPhoto(null); startCamera() }}
             >
               Tirar outra
             </button>
@@ -263,6 +286,7 @@ export default function Home() {
               className="btn" 
               style={{ padding: '12px 32px' }}
               onClick={() => setScreen('caption')}
+              disabled={!filteredPhoto}
             >
               Avançar
             </button>
