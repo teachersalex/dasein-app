@@ -140,6 +140,8 @@ async function createUserProfile(uid, data) {
       role: 'user',
       invitesAvailable: 2,
       invitedBy: data.invitedBy || null,
+      followersCount: 0,
+      followingCount: 0,
       createdAt: serverTimestamp()
     })
     return { success: true }

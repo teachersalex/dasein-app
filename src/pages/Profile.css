@@ -4,6 +4,24 @@
   margin: 0 auto;
 }
 
+.profile-back {
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  background: none;
+  border: none;
+  color: var(--color-text-secondary);
+  font-size: 14px;
+  font-weight: 300;
+  cursor: pointer;
+  transition: color 0.2s;
+  z-index: 10;
+}
+
+.profile-back:hover {
+  color: var(--color-text);
+}
+
 .profile-header {
   text-align: center;
   margin-bottom: 48px;
@@ -21,6 +39,33 @@
   font-weight: 300;
   color: var(--color-text-secondary);
   margin-bottom: 16px;
+}
+
+/* Stats */
+.profile-stats {
+  display: flex;
+  justify-content: center;
+  gap: 32px;
+  margin-bottom: 16px;
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.stat-number {
+  font-size: 18px;
+  font-weight: 400;
+  color: var(--color-text);
+}
+
+.stat-label {
+  font-size: 12px;
+  font-weight: 300;
+  color: var(--color-text-tertiary);
 }
 
 .profile-bio {

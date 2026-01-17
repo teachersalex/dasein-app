@@ -3,35 +3,67 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { getUserPosts } from '../lib/posts'
 import { getUserInvites, createInvite } from '../lib/invites'
+import { getUserByUsername, isFollowing, followUser, unfollowUser } from '../lib/follows'
 import { getFilterClass } from '../lib/filters'
 import './Profile.css'
 
 export default function Profile() {
   const navigate = useNavigate()
   const { username } = useParams()
-  const { user, profile, logout } = useAuth()
+  const { user, profile, logout, getUserProfile } = useAuth()
   
+  const [viewProfile, setViewProfile] = useState(null)
   const [posts, setPosts] = useState([])
   const [loading, setLoading] = useState(true)
   const [invitesPanelOpen, setInvitesPanelOpen] = useState(false)
   const [invites, setInvites] = useState([])
   const [generatingInvite, setGeneratingInvite] = useState(false)
+  
+  // Follow state
+  const [following, setFollowing] = useState(false)
+  const [followLoading, setFollowLoading] = useState(false)
 
-  // TODO: Se username passado, carregar outro perfil
-  const displayProfile = profile
-  const isOwnProfile = true
+  const isOwnProfile = !username || (profile && username === profile.username)
 
+  // Load profile (own or other user's)
   useEffect(() => {
-    if (user) {
-      loadPosts()
+    async function loadProfile() {
+      setLoading(true)
+      
+      if (isOwnProfile) {
+        setViewProfile(profile)
+        if (user) {
+          const userPosts = await getUserPosts(user.uid)
+          setPosts(userPosts)
+        }
+      } else {
+        // Load other user's profile
+        const otherProfile = await getUserByUsername(username)
+        
+        if (otherProfile) {
+          setViewProfile(otherProfile)
+          
+          // Check if following
+          if (user) {
+            const isFollow = await isFollowing(user.uid, otherProfile.id)
+            setFollowing(isFollow)
+          }
+          
+          // Load their posts
+          const userPosts = await getUserPosts(otherProfile.id)
+          setPosts(userPosts)
+        } else {
+          setViewProfile(null)
+        }
+      }
+      
+      setLoading(false)
     }
-  }, [user])
 
-  async function loadPosts() {
-    const userPosts = await getUserPosts(user.uid)
-    setPosts(userPosts)
-    setLoading(false)
-  }
+    if (user) {
+      loadProfile()
+    }
+  }, [user, username, profile, isOwnProfile])
 
   async function loadInvites() {
     const userInvites = await getUserInvites(user.uid)
@@ -76,7 +108,6 @@ export default function Profile() {
 
   async function copyInviteCode(code) {
     await navigator.clipboard.writeText(code)
-    // Could use toast here
   }
 
   async function handleLogout() {
@@ -84,7 +115,47 @@ export default function Profile() {
     navigate('/')
   }
 
-  if (!displayProfile) {
+  // Follow/Unfollow handlers
+  async function handleFollow() {
+    if (!viewProfile || followLoading) return
+    
+    setFollowLoading(true)
+    
+    const result = await followUser(user.uid, viewProfile.id)
+    
+    if (result.success) {
+      setFollowing(true)
+      // Update local counter
+      setViewProfile(prev => ({
+        ...prev,
+        followersCount: (prev.followersCount || 0) + 1
+      }))
+    }
+    
+    setFollowLoading(false)
+  }
+
+  async function handleUnfollow() {
+    if (!viewProfile || followLoading) return
+    
+    setFollowLoading(true)
+    
+    const result = await unfollowUser(user.uid, viewProfile.id)
+    
+    if (result.success) {
+      setFollowing(false)
+      // Update local counter
+      setViewProfile(prev => ({
+        ...prev,
+        followersCount: Math.max(0, (prev.followersCount || 0) - 1)
+      }))
+    }
+    
+    setFollowLoading(false)
+  }
+
+  // Loading state
+  if (loading) {
     return (
       <div className="screen-center">
         <div className="spinner" />
@@ -92,57 +163,114 @@ export default function Profile() {
     )
   }
 
-  const invitesAvailable = displayProfile.invitesAvailable
+  // Profile not found
+  if (!viewProfile) {
+    return (
+      <div className="screen-center">
+        <p className="text-caption">Usuário não encontrado</p>
+        <button 
+          className="btn btn-ghost" 
+          onClick={() => navigate('/home')}
+          style={{ marginTop: 16 }}
+        >
+          Voltar
+        </button>
+      </div>
+    )
+  }
+
+  const invitesAvailable = viewProfile.invitesAvailable
+  const followersCount = viewProfile.followersCount || 0
+  const followingCount = viewProfile.followingCount || 0
 
   return (
     <div className="profile-page fade-in">
+      {/* Back button for other profiles */}
+      {!isOwnProfile && (
+        <button 
+          className="profile-back"
+          onClick={() => navigate(-1)}
+        >
+          ← voltar
+        </button>
+      )}
+
       <header className="profile-header">
         <div 
           className="avatar avatar-lg"
           style={{ margin: '0 auto 24px' }}
         >
-          {displayProfile.photoURL ? (
-            <img src={displayProfile.photoURL} alt={displayProfile.displayName} />
+          {viewProfile.photoURL ? (
+            <img src={viewProfile.photoURL} alt={viewProfile.displayName} />
           ) : (
-            displayProfile.displayName?.charAt(0).toUpperCase()
+            viewProfile.displayName?.charAt(0).toUpperCase()
           )}
         </div>
         
-        <h1 className="profile-name">{displayProfile.displayName}</h1>
-        <p className="profile-username">@{displayProfile.username}</p>
+        <h1 className="profile-name">{viewProfile.displayName}</h1>
+        <p className="profile-username">@{viewProfile.username}</p>
         
-        {(displayProfile.status || displayProfile.profession || displayProfile.location) && (
+        {/* Stats */}
+        <div className="profile-stats">
+          <div className="stat">
+            <span className="stat-number">{posts.length}</span>
+            <span className="stat-label">posts</span>
+          </div>
+          <div className="stat">
+            <span className="stat-number">{followersCount}</span>
+            <span className="stat-label">seguidores</span>
+          </div>
+          <div className="stat">
+            <span className="stat-number">{followingCount}</span>
+            <span className="stat-label">seguindo</span>
+          </div>
+        </div>
+        
+        {(viewProfile.status || viewProfile.profession || viewProfile.location) && (
           <p className="profile-bio">
-            {[displayProfile.status, displayProfile.profession, displayProfile.location]
+            {[viewProfile.status, viewProfile.profession, viewProfile.location]
               .filter(Boolean)
               .join(' · ')}
           </p>
         )}
         
-        {isOwnProfile && (
+        {/* Actions - different for own profile vs others */}
+        {isOwnProfile ? (
+          <>
+            <div className="profile-actions">
+              <button className="btn" onClick={() => navigate('/home')}>
+                + Nova foto
+              </button>
+              <button 
+                className="btn-settings"
+                onClick={() => navigate('/settings')}
+              >
+                ⚙
+              </button>
+            </div>
+            
+            {(invitesAvailable === -1 || invitesAvailable > 0) && (
+              <button className="invites-badge" onClick={toggleInvitesPanel}>
+                <span className="sparkle">✨</span>
+                <span>
+                  <strong>{invitesAvailable === -1 ? '∞' : invitesAvailable}</strong> convites
+                </span>
+              </button>
+            )}
+          </>
+        ) : (
           <div className="profile-actions">
-            <button className="btn" onClick={() => navigate('/home')}>
-              + Nova foto
-            </button>
             <button 
-              className="btn-settings"
-              onClick={() => navigate('/settings')}
+              className={`btn ${following ? 'btn-secondary' : ''}`}
+              onClick={following ? handleUnfollow : handleFollow}
+              disabled={followLoading}
             >
-              ⚙
+              {followLoading ? '...' : following ? 'Seguindo' : 'Seguir'}
             </button>
           </div>
         )}
         
-        {isOwnProfile && (invitesAvailable === -1 || invitesAvailable > 0) && (
-          <button className="invites-badge" onClick={toggleInvitesPanel}>
-            <span className="sparkle">✨</span>
-            <span>
-              <strong>{invitesAvailable === -1 ? '∞' : invitesAvailable}</strong> convites
-            </span>
-          </button>
-        )}
-        
-        {invitesPanelOpen && (
+        {invitesPanelOpen && isOwnProfile && (
           <div className="invites-panel">
             <h3>Seus convites</h3>
             
@@ -182,23 +310,21 @@ export default function Profile() {
       </header>
       
       <div className="photo-grid">
-        {loading ? (
-          <div className="profile-loading">
-            <div className="spinner" />
-          </div>
-        ) : posts.length === 0 ? (
+        {posts.length === 0 ? (
           <div className="profile-empty">
-            <p>Nenhuma foto ainda.</p>
-            <button className="btn" onClick={() => navigate('/home')}>
-              Tirar primeira foto
-            </button>
+            <p>{isOwnProfile ? 'Nenhuma foto ainda.' : 'Nenhuma foto ainda.'}</p>
+            {isOwnProfile && (
+              <button className="btn" onClick={() => navigate('/home')}>
+                Tirar primeira foto
+              </button>
+            )}
           </div>
         ) : (
           posts.map((post, index) => (
             <div 
               key={post.id} 
               className={`photo-grid-item ${index === 0 ? 'featured' : ''}`}
-              onClick={() => navigate(`/post/${post.id}`, { state: { post, profile: displayProfile } })}
+              onClick={() => navigate(`/post/${post.id}`, { state: { post, profile: viewProfile } })}
             >
               <img 
                 src={post.photoURL} 
