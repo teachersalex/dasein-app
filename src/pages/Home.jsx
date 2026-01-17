@@ -140,19 +140,82 @@ export default function Home() {
     setFilterIndex(i => (i - 1 + FILTERS.length) % FILTERS.length)
   }
 
-  // Swipe handling
-  const touchStart = useRef({ x: 0, time: 0 })
+  // Swipe handling - smooth and responsive
+  const touchState = useRef({ 
+    startX: 0, 
+    startY: 0,
+    lastX: 0,
+    startTime: 0,
+    lastFilterChange: 0,
+    isDragging: false
+  })
+  
+  const SWIPE_THRESHOLD = 25      // Pixels to trigger filter change
+  const DRAG_THRESHOLD = 60       // Pixels durante drag pra trocar
+  const FILTER_COOLDOWN = 150     // ms entre trocas durante drag
   
   function handleTouchStart(e) {
-    touchStart.current = { x: e.touches[0].clientX, time: Date.now() }
+    const touch = e.touches[0]
+    touchState.current = {
+      startX: touch.clientX,
+      startY: touch.clientY,
+      lastX: touch.clientX,
+      startTime: Date.now(),
+      lastFilterChange: Date.now(),
+      isDragging: true
+    }
+  }
+  
+  function handleTouchMove(e) {
+    if (!touchState.current.isDragging) return
+    
+    const touch = e.touches[0]
+    const deltaX = touch.clientX - touchState.current.lastX
+    const deltaY = Math.abs(touch.clientY - touchState.current.startY)
+    const now = Date.now()
+    
+    // Se moveu muito vertical, cancela
+    if (deltaY > 100) {
+      touchState.current.isDragging = false
+      return
+    }
+    
+    // Troca filtro durante drag se passou threshold e cooldown
+    if (Math.abs(deltaX) > DRAG_THRESHOLD && 
+        now - touchState.current.lastFilterChange > FILTER_COOLDOWN) {
+      
+      if (deltaX > 0) {
+        prevFilter()
+      } else {
+        nextFilter()
+      }
+      
+      // Haptic feedback
+      if (navigator.vibrate) navigator.vibrate(10)
+      
+      // Reset reference point
+      touchState.current.lastX = touch.clientX
+      touchState.current.lastFilterChange = now
+    }
   }
   
   function handleTouchEnd(e) {
-    const deltaX = e.changedTouches[0].clientX - touchStart.current.x
-    const deltaTime = Date.now() - touchStart.current.time
+    if (!touchState.current.isDragging) return
+    touchState.current.isDragging = false
     
-    if (Math.abs(deltaX) > 50 && deltaTime < 300) {
-      deltaX > 0 ? prevFilter() : nextFilter()
+    const deltaX = e.changedTouches[0].clientX - touchState.current.startX
+    const deltaY = Math.abs(e.changedTouches[0].clientY - touchState.current.startY)
+    const deltaTime = Date.now() - touchState.current.startTime
+    
+    // Swipe rápido (< 300ms) com threshold menor
+    if (deltaTime < 300 && Math.abs(deltaX) > SWIPE_THRESHOLD && deltaY < 60) {
+      if (deltaX > 0) {
+        prevFilter()
+      } else {
+        nextFilter()
+      }
+      // Haptic
+      if (navigator.vibrate) navigator.vibrate(10)
     }
   }
 
@@ -248,6 +311,7 @@ export default function Home() {
           <div 
             className="preview-container"
             onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
             onTouchEnd={handleTouchEnd}
           >
             {filteredPhoto ? (
@@ -264,7 +328,12 @@ export default function Home() {
             </span>
           </div>
           
-          <div className="filter-indicators">
+          <div 
+            className="filter-indicators"
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
+          >
             {FILTERS.map((_, i) => (
               <div 
                 key={i} 
