@@ -1,0 +1,195 @@
+.profile-page {
+  padding: 60px 24px 40px;
+  max-width: 540px;
+  margin: 0 auto;
+}
+
+.profile-header {
+  text-align: center;
+  margin-bottom: 48px;
+}
+
+.profile-name {
+  font-size: 20px;
+  font-weight: 400;
+  letter-spacing: -0.3px;
+  margin-bottom: 4px;
+}
+
+.profile-username {
+  font-size: 14px;
+  font-weight: 300;
+  color: var(--color-text-secondary);
+  margin-bottom: 16px;
+}
+
+.profile-bio {
+  font-size: 13px;
+  font-weight: 200;
+  color: var(--color-text-secondary);
+  letter-spacing: 0.5px;
+}
+
+.profile-actions {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.btn-settings {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  background: transparent;
+  border: 1px solid var(--color-border);
+  border-radius: 50%;
+  color: var(--color-text-secondary);
+  font-size: 16px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-settings:hover {
+  border-color: var(--color-text-tertiary);
+  color: var(--color-text);
+}
+
+/* Invites */
+.invites-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  padding: 8px 16px;
+  border-radius: var(--radius-full);
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  margin-top: 16px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.invites-badge:hover {
+  border-color: var(--color-text-tertiary);
+  color: var(--color-text);
+}
+
+.invites-badge strong {
+  color: var(--color-text);
+  font-weight: 400;
+}
+
+.sparkle {
+  animation: sparkle 2s ease-in-out infinite;
+}
+
+@keyframes sparkle {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; }
+}
+
+.invites-panel {
+  margin-top: 24px;
+  padding: 20px;
+  background: var(--color-bg-elevated);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-border);
+  max-width: 320px;
+  margin-left: auto;
+  margin-right: auto;
+  text-align: left;
+}
+
+.invites-panel h3 {
+  font-size: 14px;
+  font-weight: 400;
+  margin-bottom: 16px;
+}
+
+.invites-list {
+  margin-bottom: 8px;
+}
+
+.invites-empty {
+  font-size: 13px;
+  color: var(--color-text-tertiary);
+  text-align: center;
+  padding: 16px 0;
+}
+
+.invite-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  background: var(--color-surface);
+  border-radius: var(--radius-md);
+  margin-bottom: 8px;
+}
+
+.invite-code {
+  font-family: monospace;
+  font-size: 13px;
+  color: var(--color-text);
+}
+
+.invite-status {
+  font-size: 11px;
+  margin-left: auto;
+}
+
+.invite-status.available {
+  color: var(--color-success);
+}
+
+.invite-status.used {
+  color: var(--color-text-tertiary);
+}
+
+.invite-copy {
+  background: none;
+  border: none;
+  color: var(--color-text-secondary);
+  font-size: 12px;
+  cursor: pointer;
+  padding: 4px 8px;
+}
+
+.invite-copy:hover {
+  color: var(--color-text);
+}
+
+/* Grid */
+.profile-loading,
+.profile-empty {
+  grid-column: span 3;
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--color-text-secondary);
+}
+
+.profile-empty p {
+  margin-bottom: 24px;
+  font-size: 14px;
+}
+
+/* Logout */
+.logout-link {
+  display: block;
+  text-align: center;
+  margin-top: 48px;
+  color: var(--color-text-tertiary);
+  font-size: 13px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.logout-link:hover {
+  color: var(--color-text-secondary);
+}

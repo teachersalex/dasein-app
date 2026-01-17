@@ -1,0 +1,147 @@
+.auth-page {
+  max-width: 400px;
+  margin: 0 auto;
+  padding: 48px 24px;
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+}
+
+.auth-header {
+  margin-bottom: 48px;
+}
+
+.auth-back {
+  color: var(--color-text-secondary);
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 300;
+  transition: color 0.2s;
+}
+
+.auth-back:hover {
+  color: var(--color-text);
+}
+
+.auth-title {
+  font-size: 24px;
+  font-weight: 300;
+  letter-spacing: -0.5px;
+  margin-bottom: 8px;
+}
+
+.auth-subtitle {
+  font-size: 14px;
+  font-weight: 200;
+  color: var(--color-text-secondary);
+}
+
+.auth-spacer {
+  flex: 1;
+  min-height: 24px;
+}
+
+.auth-error {
+  font-size: 13px;
+  color: var(--color-error);
+  margin-bottom: 16px;
+}
+
+.auth-success {
+  font-size: 13px;
+  color: var(--color-success);
+  margin-bottom: 16px;
+}
+
+.auth-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 16px;
+  color: var(--color-text-tertiary);
+  font-size: 13px;
+}
+
+/* Steps */
+.auth-step {
+  display: none;
+  flex-direction: column;
+  flex: 1;
+  animation: fadeIn 0.3s ease;
+}
+
+.auth-step.active {
+  display: flex;
+}
+
+/* Code input */
+.code-input {
+  font-size: 20px;
+  font-weight: 400;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  text-align: center;
+}
+
+/* Avatar upload */
+.avatar-upload {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  background: var(--color-surface);
+  border: 2px dashed var(--color-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 24px;
+  cursor: pointer;
+  overflow: hidden;
+  transition: border-color 0.2s;
+}
+
+.avatar-upload:hover {
+  border-color: var(--color-text-tertiary);
+}
+
+.avatar-upload img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.avatar-upload svg {
+  width: 32px;
+  height: 32px;
+  color: var(--color-text-tertiary);
+}
+
+.avatar-upload-hint {
+  text-align: center;
+  font-size: 12px;
+  color: var(--color-text-tertiary);
+  margin-bottom: 32px;
+}
+
+.avatar-upload-hint a {
+  color: var(--color-text-secondary);
+}
+
+/* Username wrapper */
+.username-wrapper {
+  position: relative;
+}
+
+.username-prefix {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 16px;
+  color: var(--color-text-tertiary);
+}
+
+.username-wrapper .input {
+  padding-left: 20px;
+}

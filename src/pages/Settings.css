@@ -1,0 +1,85 @@
+.settings-page {
+  min-height: 100vh;
+  min-height: 100dvh;
+  padding-bottom: 40px;
+}
+
+.settings-content {
+  max-width: 440px;
+  margin: 0 auto;
+  padding: 32px 24px;
+}
+
+/* Avatar section */
+.avatar-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 48px;
+}
+
+.avatar-wrapper {
+  position: relative;
+  cursor: pointer;
+  margin-bottom: 16px;
+}
+
+.avatar-overlay {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.2s;
+  color: white;
+}
+
+.avatar-wrapper:hover .avatar-overlay {
+  opacity: 1;
+}
+
+.avatar-hint {
+  font-size: 13px;
+  color: var(--color-text-tertiary);
+}
+
+/* Form sections */
+.form-section {
+  margin-bottom: 40px;
+}
+
+.section-title {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--color-text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  margin-bottom: 20px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--color-bg-elevated);
+}
+
+/* Username input */
+.username-input-wrapper {
+  position: relative;
+}
+
+.username-at {
+  position: absolute;
+  left: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--color-text-tertiary);
+  font-size: 15px;
+  pointer-events: none;
+}
+
+/* Danger zone */
+.danger-zone {
+  margin-top: 60px;
+  padding-top: 32px;
+  border-top: 1px solid var(--color-bg-elevated);
+}
