@@ -5,6 +5,7 @@ import { getUserPosts } from '../lib/posts'
 import { getUserInvites, createInvite } from '../lib/invites'
 import { getUserByUsername, isFollowing, followUser, unfollowUser } from '../lib/follows'
 import { getFilterClass } from '../lib/filters'
+import FollowModal from '../components/FollowModal'
 import './Profile.css'
 
 export default function Profile() {
@@ -22,6 +23,9 @@ export default function Profile() {
   // Follow state
   const [following, setFollowing] = useState(false)
   const [followLoading, setFollowLoading] = useState(false)
+  
+  // Modal state
+  const [modalType, setModalType] = useState(null) // 'followers' | 'following' | null
 
   const isOwnProfile = !username || (profile && username === profile.username)
 
@@ -210,17 +214,23 @@ export default function Profile() {
         <h1 className="profile-name">{viewProfile.displayName}</h1>
         <p className="profile-username">@{viewProfile.username}</p>
         
-        {/* Stats */}
+        {/* Stats - clickable */}
         <div className="profile-stats">
           <div className="stat">
             <span className="stat-number">{posts.length}</span>
             <span className="stat-label">posts</span>
           </div>
-          <div className="stat">
+          <div 
+            className="stat stat-clickable"
+            onClick={() => followersCount > 0 && setModalType('followers')}
+          >
             <span className="stat-number">{followersCount}</span>
             <span className="stat-label">seguidores</span>
           </div>
-          <div className="stat">
+          <div 
+            className="stat stat-clickable"
+            onClick={() => followingCount > 0 && setModalType('following')}
+          >
             <span className="stat-number">{followingCount}</span>
             <span className="stat-label">seguindo</span>
           </div>
@@ -340,6 +350,15 @@ export default function Profile() {
         <button className="logout-link" onClick={handleLogout}>
           sair
         </button>
+      )}
+
+      {/* Follow Modal */}
+      {modalType && (
+        <FollowModal 
+          userId={viewProfile.id}
+          type={modalType}
+          onClose={() => setModalType(null)}
+        />
       )}
     </div>
   )
