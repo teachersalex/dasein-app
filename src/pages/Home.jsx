@@ -28,17 +28,25 @@ export default function Home() {
   
   async function startCamera() {
     try {
+      // Stop any existing stream first
+      stopCamera()
+      
       const stream = await navigator.mediaDevices.getUserMedia({
         video: { facingMode, width: { ideal: 1920 }, height: { ideal: 1080 } },
         audio: false
       })
       
       streamRef.current = stream
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream
-      }
-      
       setScreen('camera')
+      
+      // Wait for next render cycle so videoRef is available
+      setTimeout(() => {
+        if (videoRef.current && streamRef.current) {
+          videoRef.current.srcObject = streamRef.current
+          videoRef.current.play().catch(console.error)
+        }
+      }, 50)
+      
     } catch (error) {
       console.error('Camera error:', error)
       alert('Não foi possível acessar a câmera')
@@ -59,10 +67,18 @@ export default function Home() {
 
   // Restart camera when facingMode changes
   useEffect(() => {
-    if (screen === 'camera' && !streamRef.current) {
+    if (screen === 'camera') {
       startCamera()
     }
-  }, [facingMode, screen])
+  }, [facingMode])
+  
+  // Ensure video plays when component mounts with stream
+  useEffect(() => {
+    if (screen === 'camera' && videoRef.current && streamRef.current) {
+      videoRef.current.srcObject = streamRef.current
+      videoRef.current.play().catch(console.error)
+    }
+  }, [screen])
 
   function capturePhoto() {
     if (!videoRef.current || !canvasRef.current) return
@@ -133,11 +149,11 @@ export default function Home() {
   }, [photoData, filterIndex, screen])
 
   function nextFilter() {
-    setFilterIndex(i => (i + 1) % FILTERS.length)
+    setFilterIndex(i => Math.min(i + 1, FILTERS.length - 1))
   }
 
   function prevFilter() {
-    setFilterIndex(i => (i - 1 + FILTERS.length) % FILTERS.length)
+    setFilterIndex(i => Math.max(i - 1, 0))
   }
 
   // Swipe handling - smooth and responsive
