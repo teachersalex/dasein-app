@@ -16,10 +16,6 @@ import './Home.css'
 import './preview.css'
 import './caption.css'
 
-// ==========================================
-// DASEIN - Home (Orchestrator)
-// ==========================================
-
 export default function Home() {
   const navigate = useNavigate()
   const { user } = useAuth()
@@ -31,11 +27,14 @@ export default function Home() {
   const [caption, setCaption] = useState('')
   const [posting, setPosting] = useState(false)
 
-  // ==========================================
-  // FILTERS
-  // ==========================================
-  
+  // Refs para feedback visual (performance)
+  const previewRef = useRef(null)
+  const filterNameRef = useRef(null)
+
+  // ⚠️ CRITICAL - Processamento de filtros
   useEffect(() => {
+    let isCancelled = false
+    
     async function processFilter() {
       if (photoData && screen === 'preview') {
         const filter = FILTERS[filterIndex]
@@ -46,31 +45,30 @@ export default function Home() {
         }
         
         const filtered = await applyFilter(photoData, filter)
-        setFilteredPhoto(filtered)
+        if (!isCancelled) setFilteredPhoto(filtered)
       }
     }
     
     processFilter()
+    return () => { isCancelled = true }
   }, [photoData, filterIndex, screen])
 
+  // ✅ SAFE - navegação de filtros
   function nextFilter() {
     if (filterIndex < FILTERS.length - 1) {
       setFilterIndex(i => i + 1)
-      if (navigator.vibrate) navigator.vibrate(8)
+      if (navigator.vibrate) navigator.vibrate(10)
     }
   }
 
   function prevFilter() {
     if (filterIndex > 0) {
       setFilterIndex(i => i - 1)
-      if (navigator.vibrate) navigator.vibrate(8)
+      if (navigator.vibrate) navigator.vibrate(10)
     }
   }
 
-  // ==========================================
-  // TOUCH GESTURES (Preview)
-  // ==========================================
-
+  // Touch com feedback visual (Tension & Snap)
   const touchState = useRef({ 
     startX: 0, startY: 0, lastX: 0,
     startTime: 0, lastFilterChange: 0, isDragging: false
@@ -86,30 +84,47 @@ export default function Home() {
       lastFilterChange: Date.now(),
       isDragging: true
     }
+    
+    if (previewRef.current) previewRef.current.style.transition = 'none'
+    if (filterNameRef.current) filterNameRef.current.style.transition = 'none'
   }
   
   function handleTouchMove(e) {
     if (!touchState.current.isDragging) return
     
     const touch = e.touches[0]
-    const deltaX = touch.clientX - touchState.current.lastX
+    const deltaFromStart = touch.clientX - touchState.current.startX
+    const deltaFromLast = touch.clientX - touchState.current.lastX
     const deltaY = Math.abs(touch.clientY - touchState.current.startY)
     const now = Date.now()
     
     if (deltaY > 80) {
       touchState.current.isDragging = false
+      resetVisualState()
       return
     }
     
-    const threshold = 50
-    const timeSinceLastChange = now - touchState.current.lastFilterChange
+    // Feedback visual 1:1
+    const offset = deltaFromStart / 2.5
     
-    if (timeSinceLastChange > 100) {
-      if (deltaX < -threshold) {
+    if (previewRef.current) {
+      previewRef.current.style.transform = `translateX(${offset}px) scale(${1 - Math.abs(offset)/1000})`
+      previewRef.current.style.opacity = 1 - Math.abs(offset) / 500
+    }
+    
+    if (filterNameRef.current) {
+      filterNameRef.current.style.transform = `translateX(calc(-50% + ${offset * 1.5}px))`
+      filterNameRef.current.style.opacity = 1 - Math.abs(offset) / 100
+    }
+    
+    // Troca de filtro
+    const threshold = 50
+    if (now - touchState.current.lastFilterChange > 100) {
+      if (deltaFromLast < -threshold) {
         nextFilter()
         touchState.current.lastX = touch.clientX
         touchState.current.lastFilterChange = now
-      } else if (deltaX > threshold) {
+      } else if (deltaFromLast > threshold) {
         prevFilter()
         touchState.current.lastX = touch.clientX
         touchState.current.lastFilterChange = now
@@ -129,12 +144,26 @@ export default function Home() {
     }
     
     touchState.current.isDragging = false
+    resetVisualState(true)
+  }
+  
+  function resetVisualState(animate = false) {
+    const transition = animate ? 'transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.3s ease' : 'none'
+    
+    if (previewRef.current) {
+      previewRef.current.style.transition = transition
+      previewRef.current.style.transform = 'translateX(0) scale(1)'
+      previewRef.current.style.opacity = '1'
+    }
+    
+    if (filterNameRef.current) {
+      filterNameRef.current.style.transition = transition
+      filterNameRef.current.style.transform = 'translateX(-50%)'
+      filterNameRef.current.style.opacity = filterIndex !== 0 ? '1' : '0'
+    }
   }
 
-  // ==========================================
-  // HANDLERS
-  // ==========================================
-
+  // 🔒 Handlers críticos
   function handleCapture(photo) {
     setPhotoData(photo)
     setFilteredPhoto(photo)
@@ -148,18 +177,17 @@ export default function Home() {
     setScreen('camera')
   }
   
+  // 🔒 ORDEM DOS PARAMS: uploadPost(userId, photoData, caption, filterName)
   async function handlePost() {
     if (posting || !filteredPhoto) return
-    
     setPosting(true)
     
     try {
-      // FIX: parâmetros na ordem correta
       const result = await uploadPost(
-        user.uid, 
-        filteredPhoto, 
-        caption, 
-        FILTERS[filterIndex].name
+        user.uid,                    // 1
+        filteredPhoto,               // 2
+        caption,                     // 3
+        FILTERS[filterIndex].name    // 4
       )
       
       if (result.success) {
@@ -178,47 +206,32 @@ export default function Home() {
     setPosting(false)
   }
 
-  // ==========================================
-  // RENDER
-  // ==========================================
-  
   return (
     <div className="home">
       
-      {/* HOME SCREEN */}
       {screen === 'home' && (
         <div className="home-screen">
           <div className="home-content">
             <button className="capture-btn" onClick={() => setScreen('camera')}>
               <div className="capture-btn-ring" />
-              <div className="capture-btn-icon">
-                <CameraIcon />
-              </div>
+              <div className="capture-btn-icon"><CameraIcon /></div>
             </button>
             <p className="home-hint">capturar</p>
           </div>
-          
-          <button 
-            className="home-profile-link"
-            onClick={() => navigate('/profile')}
-          >
+          <button className="home-profile-link" onClick={() => navigate('/profile')}>
             meu perfil →
           </button>
         </div>
       )}
       
-      {/* CAMERA SCREEN */}
       {screen === 'camera' && (
-        <HomeCamera 
-          onCapture={handleCapture}
-          onClose={() => setScreen('home')}
-        />
+        <HomeCamera onCapture={handleCapture} onClose={() => setScreen('home')} />
       )}
       
-      {/* PREVIEW SCREEN */}
       {screen === 'preview' && (
         <div className="preview-screen">
           <div 
+            ref={previewRef}
             className="preview-container"
             onTouchStart={handleTouchStart}
             onTouchMove={handleTouchMove}
@@ -229,8 +242,7 @@ export default function Home() {
             ) : (
               <div className="preview-loading"><div className="spinner" /></div>
             )}
-            
-            <div className={`filter-name ${filterIndex !== 0 ? 'visible' : ''}`}>
+            <div ref={filterNameRef} className={`filter-name ${filterIndex !== 0 ? 'visible' : ''}`}>
               {FILTERS[filterIndex].name}
             </div>
           </div>
@@ -252,25 +264,17 @@ export default function Home() {
             <button className="action-btn secondary" onClick={handleRetake}>
               <RetakeIcon /><span>Outra</span>
             </button>
-            
-            <button 
-              className="action-btn primary"
-              onClick={() => setScreen('caption')}
-              disabled={!filteredPhoto}
-            >
+            <button className="action-btn primary" onClick={() => setScreen('caption')} disabled={!filteredPhoto}>
               <span>Continuar</span><ArrowIcon />
             </button>
           </div>
         </div>
       )}
       
-      {/* CAPTION SCREEN */}
       {screen === 'caption' && (
         <div className="caption-screen">
           <div className="caption-header">
-            <button className="back-btn" onClick={() => setScreen('preview')}>
-              <BackIcon />
-            </button>
+            <button className="back-btn" onClick={() => setScreen('preview')}><BackIcon /></button>
             <span className="caption-title">Finalizar</span>
             <div style={{ width: 44 }} />
           </div>
@@ -279,7 +283,6 @@ export default function Home() {
             <div className="caption-preview">
               <img src={filteredPhoto || photoData} alt="" />
             </div>
-            
             <div className="caption-input-wrapper">
               <input
                 type="text"
@@ -302,7 +305,6 @@ export default function Home() {
         </div>
       )}
       
-      {/* SUCCESS SCREEN */}
       {screen === 'success' && (
         <div className="success-screen">
           <div className="success-content">
@@ -310,12 +312,10 @@ export default function Home() {
             <h2 className="success-title">Publicado</h2>
             <p className="success-subtitle">Seu momento foi salvo</p>
           </div>
-          
           <div className="success-actions">
             <button className="action-btn primary" onClick={() => setScreen('camera')}>
               <CameraIcon /><span>Nova foto</span>
             </button>
-            
             <button className="action-btn ghost" onClick={() => navigate('/profile')}>
               <span>Ver perfil</span><ArrowIcon />
             </button>

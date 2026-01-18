@@ -3,7 +3,6 @@ import { Routes, Route, Navigate, useParams } from 'react-router-dom'
 import { AuthProvider, useAuth } from './hooks/useAuth'
 import { ToastProvider } from './components/Toast'
 
-// Pages
 import Landing from './pages/Landing'
 import Login from './pages/Login'
 import Auth from './pages/Auth'
@@ -13,89 +12,72 @@ import Settings from './pages/Settings'
 import Post from './pages/Post'
 import Feed from './pages/Feed'
 
-// React Query client
+// ✅ SAFE - pode ajustar tempos
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 1000 * 60 * 5,  // 5 min
+      staleTime: 1000 * 60 * 5,
       retry: 2,
       refetchOnWindowFocus: true
     }
   }
 })
 
-// Protected Route wrapper
+// 🔒 Exige auth
 function ProtectedRoute({ children }) {
   const { user, loading } = useAuth()
   
   if (loading) {
-    return (
-      <div className="screen-center">
-        <div className="spinner" />
-      </div>
-    )
+    return <div className="screen-center"><div className="spinner" /></div>
   }
   
-  if (!user) {
-    return <Navigate to="/" replace />
-  }
-  
-  return children
+  return user ? children : <Navigate to="/" replace />
 }
 
-// Public Route (redirect if logged in)
+// 🔒 Redireciona se já logado
 function PublicRoute({ children }) {
   const { user, profile, loading } = useAuth()
   
   if (loading) {
-    return (
-      <div className="screen-center">
-        <div className="spinner" />
-      </div>
-    )
+    return <div className="screen-center"><div className="spinner" /></div>
   }
   
-  if (user && profile) {
-    return <Navigate to="/home" replace />
-  }
-  
-  return children
+  // ⚠️ Checa user E profile (onboarding pode estar incompleto)
+  return (user && profile) ? <Navigate to="/home" replace /> : children
 }
 
-// Invite link handler: getdasein.app/DSEIN-XXXXX
+// 🔒 Handler: getdasein.app/DSEIN-XXXXX
 function InviteRoute() {
   const { inviteCode } = useParams()
   const { user, profile, loading } = useAuth()
   
-  // If logged in, go home
   if (!loading && user && profile) {
     return <Navigate to="/home" replace />
   }
   
-  // Check if it looks like a valid invite code (DSEIN-XXXXX)
+  // 🔒 Formato do convite - mudar quebra convites existentes
   const isValidFormat = /^DSEIN-[A-Z0-9]{5}$/i.test(inviteCode)
   
   if (isValidFormat) {
-    // Pass code to Auth via state
     return <Navigate to="/auth" state={{ inviteCode: inviteCode.toUpperCase() }} replace />
   }
   
-  // Not a valid invite code format, go to landing
   return <Navigate to="/" replace />
 }
 
+// 🔒 Ordem dos providers importa
 export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <ToastProvider>
           <Routes>
-            {/* Public routes */}
+            {/* Públicas */}
             <Route path="/" element={<PublicRoute><Landing /></PublicRoute>} />
             <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
             <Route path="/auth" element={<Auth />} />
             
-            {/* Protected routes */}
+            {/* 🔒 Protegidas - mudar paths quebra links salvos */}
             <Route path="/home" element={<ProtectedRoute><Home /></ProtectedRoute>} />
             <Route path="/feed" element={<ProtectedRoute><Feed /></ProtectedRoute>} />
             <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
@@ -103,10 +85,9 @@ export default function App() {
             <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
             <Route path="/post/:id" element={<ProtectedRoute><Post /></ProtectedRoute>} />
             
-            {/* Invite link: getdasein.app/DSEIN-XXXXX */}
+            {/* Convites */}
             <Route path="/:inviteCode" element={<InviteRoute />} />
             
-            {/* Fallback */}
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </ToastProvider>

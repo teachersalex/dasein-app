@@ -3,6 +3,7 @@ import { getAuth } from 'firebase/auth'
 import { getFirestore } from 'firebase/firestore'
 import { getStorage } from 'firebase/storage'
 
+// Projeto: dasein-b052d
 const firebaseConfig = {
   apiKey: "AIzaSyDH2dEaf-rjULqaBdJLA2K97ORYn4uxcU8",
   authDomain: "dasein-b052d.firebaseapp.com",
@@ -14,6 +15,7 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig)
 
+// 🔒 NÃO RENOMEAR - todo o app importa esses nomes
 export const auth = getAuth(app)
 export const db = getFirestore(app)
 export const storage = getStorage(app)
