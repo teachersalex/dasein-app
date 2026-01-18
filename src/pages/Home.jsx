@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { uploadPost } from '../lib/posts'
@@ -9,7 +9,7 @@ export default function Home() {
   const navigate = useNavigate()
   const { user } = useAuth()
   
-  const [screen, setScreen] = useState('home') // home, camera, preview, caption, success
+  const [screen, setScreen] = useState('home')
   const [photoData, setPhotoData] = useState(null)
   const [filterIndex, setFilterIndex] = useState(0)
   const [filteredPhoto, setFilteredPhoto] = useState(null)
@@ -20,47 +20,72 @@ export default function Home() {
   const canvasRef = useRef(null)
   const streamRef = useRef(null)
   const [facingMode, setFacingMode] = useState('environment')
-  const [flashActive, setFlashActive] = useState(false)
+  
+  // Animation states
+  const [isCapturing, setIsCapturing] = useState(false)
+  const [isFlipping, setIsFlipping] = useState(false)
+  const [showFlash, setShowFlash] = useState(false)
+  const [cameraReady, setCameraReady] = useState(false)
+  const [transitionPhoto, setTransitionPhoto] = useState(null)
 
   // ==========================================
   // CAMERA
   // ==========================================
   
-  async function startCamera() {
+  const startCamera = useCallback(async () => {
     try {
-      // Stop any existing stream first
       stopCamera()
+      setCameraReady(false)
       
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode, width: { ideal: 1920 }, height: { ideal: 1080 } },
+        video: { 
+          facingMode, 
+          width: { ideal: 1920 }, 
+          height: { ideal: 1920 },
+          aspectRatio: { ideal: 1 }
+        },
         audio: false
       })
       
       streamRef.current = stream
       setScreen('camera')
       
-      // Wait for next render cycle so videoRef is available
-      setTimeout(() => {
+      // Wait for video element
+      requestAnimationFrame(() => {
         if (videoRef.current && streamRef.current) {
           videoRef.current.srcObject = streamRef.current
-          videoRef.current.play().catch(console.error)
+          videoRef.current.play().then(() => {
+            // Delay ready state for smooth transition
+            setTimeout(() => setCameraReady(true), 100)
+          }).catch(console.error)
         }
-      }, 50)
+      })
       
     } catch (error) {
       console.error('Camera error:', error)
       alert('Não foi possível acessar a câmera')
     }
-  }
+  }, [facingMode])
 
   function stopCamera() {
     if (streamRef.current) {
       streamRef.current.getTracks().forEach(track => track.stop())
       streamRef.current = null
     }
+    setCameraReady(false)
   }
 
   async function flipCamera() {
+    if (isFlipping) return
+    
+    setIsFlipping(true)
+    
+    // Haptic
+    if (navigator.vibrate) navigator.vibrate(10)
+    
+    // Wait for animation
+    await new Promise(r => setTimeout(r, 150))
+    
     stopCamera()
     setFacingMode(mode => mode === 'environment' ? 'user' : 'environment')
   }
@@ -68,60 +93,75 @@ export default function Home() {
   // Restart camera when facingMode changes
   useEffect(() => {
     if (screen === 'camera') {
-      startCamera()
+      startCamera().then(() => {
+        setTimeout(() => setIsFlipping(false), 300)
+      })
     }
   }, [facingMode])
-  
-  // Ensure video plays when component mounts with stream
-  useEffect(() => {
-    if (screen === 'camera' && videoRef.current && streamRef.current) {
-      videoRef.current.srcObject = streamRef.current
-      videoRef.current.play().catch(console.error)
-    }
-  }, [screen])
 
+  // ==========================================
+  // CAPTURE
+  // ==========================================
+  
   function capturePhoto() {
-    if (!videoRef.current || !canvasRef.current) return
+    if (!videoRef.current || !canvasRef.current || isCapturing) return
     
     const video = videoRef.current
     const canvas = canvasRef.current
     const ctx = canvas.getContext('2d')
     
-    // Check if video has dimensions
     if (video.videoWidth === 0 || video.videoHeight === 0) {
       console.error('Video not ready')
       return
     }
     
-    canvas.width = video.videoWidth
-    canvas.height = video.videoHeight
+    // Start capture animation
+    setIsCapturing(true)
     
-    // Mirror if front camera
-    if (facingMode === 'user') {
-      ctx.translate(canvas.width, 0)
-      ctx.scale(-1, 1)
-    }
+    // Haptic - initial press
+    if (navigator.vibrate) navigator.vibrate(20)
     
-    ctx.drawImage(video, 0, 0)
-    
-    // Reset transform
-    if (facingMode === 'user') {
-      ctx.setTransform(1, 0, 0, 1, 0, 0)
-    }
-    
-    // Flash effect
-    setFlashActive(true)
-    setTimeout(() => setFlashActive(false), 150)
-    
-    // Haptic
-    if (navigator.vibrate) navigator.vibrate(15)
-    
-    const photo = canvas.toDataURL('image/jpeg', 0.92)
-    setPhotoData(photo)
-    setFilteredPhoto(photo) // Start with original
-    setFilterIndex(0)
-    stopCamera()
-    setScreen('preview')
+    // Small delay for animation feel
+    setTimeout(() => {
+      // Determine square crop dimensions
+      const size = Math.min(video.videoWidth, video.videoHeight)
+      const offsetX = (video.videoWidth - size) / 2
+      const offsetY = (video.videoHeight - size) / 2
+      
+      canvas.width = size
+      canvas.height = size
+      
+      // Mirror if front camera
+      if (facingMode === 'user') {
+        ctx.translate(size, 0)
+        ctx.scale(-1, 1)
+        ctx.drawImage(video, offsetX, offsetY, size, size, 0, 0, size, size)
+        ctx.setTransform(1, 0, 0, 1, 0, 0)
+      } else {
+        ctx.drawImage(video, offsetX, offsetY, size, size, 0, 0, size, size)
+      }
+      
+      // Flash
+      setShowFlash(true)
+      setTimeout(() => setShowFlash(false), 120)
+      
+      // Haptic - capture moment
+      if (navigator.vibrate) navigator.vibrate([10, 30, 10])
+      
+      const photo = canvas.toDataURL('image/jpeg', 0.92)
+      setPhotoData(photo)
+      setFilteredPhoto(photo)
+      setFilterIndex(0)
+      setTransitionPhoto(photo)
+      
+      // Transition to preview
+      setTimeout(() => {
+        stopCamera()
+        setScreen('preview')
+        setIsCapturing(false)
+      }, 200)
+      
+    }, 80)
   }
 
   // ==========================================
@@ -133,13 +173,11 @@ export default function Home() {
       if (photoData && screen === 'preview') {
         const filter = FILTERS[filterIndex]
         
-        // If original filter, just use photoData
         if (!filter.settings) {
           setFilteredPhoto(photoData)
           return
         }
         
-        // Apply filter asynchronously
         const filtered = await applyFilter(photoData, filter)
         setFilteredPhoto(filtered)
       }
@@ -149,14 +187,20 @@ export default function Home() {
   }, [photoData, filterIndex, screen])
 
   function nextFilter() {
-    setFilterIndex(i => Math.min(i + 1, FILTERS.length - 1))
+    if (filterIndex < FILTERS.length - 1) {
+      setFilterIndex(i => i + 1)
+      if (navigator.vibrate) navigator.vibrate(8)
+    }
   }
 
   function prevFilter() {
-    setFilterIndex(i => Math.max(i - 1, 0))
+    if (filterIndex > 0) {
+      setFilterIndex(i => i - 1)
+      if (navigator.vibrate) navigator.vibrate(8)
+    }
   }
 
-  // Swipe handling - smooth and responsive
+  // Swipe handling
   const touchState = useRef({ 
     startX: 0, 
     startY: 0,
@@ -166,9 +210,9 @@ export default function Home() {
     isDragging: false
   })
   
-  const SWIPE_THRESHOLD = 25      // Pixels to trigger filter change
-  const DRAG_THRESHOLD = 60       // Pixels durante drag pra trocar
-  const FILTER_COOLDOWN = 150     // ms entre trocas durante drag
+  const SWIPE_THRESHOLD = 30
+  const DRAG_THRESHOLD = 50
+  const FILTER_COOLDOWN = 120
   
   function handleTouchStart(e) {
     const touch = e.touches[0]
@@ -190,26 +234,17 @@ export default function Home() {
     const deltaY = Math.abs(touch.clientY - touchState.current.startY)
     const now = Date.now()
     
-    // Se moveu muito vertical, cancela
-    if (deltaY > 100) {
+    if (deltaY > 80) {
       touchState.current.isDragging = false
       return
     }
     
-    // Troca filtro durante drag se passou threshold e cooldown
     if (Math.abs(deltaX) > DRAG_THRESHOLD && 
         now - touchState.current.lastFilterChange > FILTER_COOLDOWN) {
       
-      if (deltaX > 0) {
-        prevFilter()
-      } else {
-        nextFilter()
-      }
+      if (deltaX > 0) prevFilter()
+      else nextFilter()
       
-      // Haptic feedback
-      if (navigator.vibrate) navigator.vibrate(10)
-      
-      // Reset reference point
       touchState.current.lastX = touch.clientX
       touchState.current.lastFilterChange = now
     }
@@ -223,15 +258,9 @@ export default function Home() {
     const deltaY = Math.abs(e.changedTouches[0].clientY - touchState.current.startY)
     const deltaTime = Date.now() - touchState.current.startTime
     
-    // Swipe rápido (< 300ms) com threshold menor
-    if (deltaTime < 300 && Math.abs(deltaX) > SWIPE_THRESHOLD && deltaY < 60) {
-      if (deltaX > 0) {
-        prevFilter()
-      } else {
-        nextFilter()
-      }
-      // Haptic
-      if (navigator.vibrate) navigator.vibrate(10)
+    if (deltaTime < 250 && Math.abs(deltaX) > SWIPE_THRESHOLD && deltaY < 50) {
+      if (deltaX > 0) prevFilter()
+      else nextFilter()
     }
   }
 
@@ -247,9 +276,13 @@ export default function Home() {
     const result = await uploadPost(user.uid, filteredPhoto || photoData, caption, filter.id)
     
     if (result.success) {
+      // Haptic success
+      if (navigator.vibrate) navigator.vibrate([10, 50, 10, 50, 10])
+      
       setScreen('success')
       setPhotoData(null)
       setFilteredPhoto(null)
+      setTransitionPhoto(null)
       setCaption('')
       setFilterIndex(0)
     } else {
@@ -259,6 +292,13 @@ export default function Home() {
     setPosting(false)
   }
 
+  function handleRetake() {
+    setPhotoData(null)
+    setFilteredPhoto(null)
+    setTransitionPhoto(null)
+    startCamera()
+  }
+
   // ==========================================
   // RENDER
   // ==========================================
@@ -266,20 +306,20 @@ export default function Home() {
   return (
     <div className="home">
       {/* Flash overlay */}
-      <div className={`capture-flash ${flashActive ? 'flash' : ''}`} />
+      <div className={`capture-flash ${showFlash ? 'active' : ''}`} />
       
-      {/* Hidden canvas for capture */}
+      {/* Hidden canvas */}
       <canvas ref={canvasRef} style={{ display: 'none' }} />
       
-      {/* HOME */}
+      {/* HOME SCREEN */}
       {screen === 'home' && (
-        <div className="home-screen fade-in">
+        <div className="home-screen">
           <div className="home-content">
             <button className="capture-btn" onClick={startCamera}>
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
-                <circle cx="12" cy="13" r="4"/>
-              </svg>
+              <div className="capture-btn-ring" />
+              <div className="capture-btn-icon">
+                <CameraIcon />
+              </div>
             </button>
             <p className="home-hint">capturar</p>
           </div>
@@ -293,10 +333,10 @@ export default function Home() {
         </div>
       )}
       
-      {/* CAMERA */}
+      {/* CAMERA SCREEN */}
       {screen === 'camera' && (
-        <div className="camera-screen fade-in">
-          <div className="camera-viewfinder">
+        <div className={`camera-screen ${cameraReady ? 'ready' : ''}`}>
+          <div className={`camera-viewfinder ${isFlipping ? 'flipping' : ''}`}>
             <video 
               ref={videoRef} 
               autoPlay 
@@ -304,28 +344,63 @@ export default function Home() {
               muted
               className={facingMode === 'user' ? 'mirror' : ''}
             />
+            
+            {/* Vignette overlay */}
+            <div className="viewfinder-vignette" />
+            
+            {/* Frame guides */}
+            <div className="viewfinder-frame">
+              <div className="frame-corner tl" />
+              <div className="frame-corner tr" />
+              <div className="frame-corner bl" />
+              <div className="frame-corner br" />
+            </div>
           </div>
           
-          <div className="camera-controls">
-            <button 
-              className="btn-icon" 
-              onClick={() => { stopCamera(); setScreen('home') }}
-            >
-              ✕
-            </button>
+          {/* Controls overlay */}
+          <div className="camera-controls-overlay">
+            {/* Top controls */}
+            <div className="camera-top-controls">
+              <button 
+                className="control-btn close-btn" 
+                onClick={() => { stopCamera(); setScreen('home') }}
+              >
+                <CloseIcon />
+              </button>
+            </div>
             
-            <button className="shutter" onClick={capturePhoto} />
-            
-            <button className="btn-icon" onClick={flipCamera}>
-              ⟲
-            </button>
+            {/* Bottom controls */}
+            <div className="camera-bottom-controls">
+              <div className="controls-row">
+                <div className="control-spacer" />
+                
+                <button 
+                  className={`shutter-btn ${isCapturing ? 'capturing' : ''}`}
+                  onClick={capturePhoto}
+                  disabled={!cameraReady || isCapturing}
+                >
+                  <div className="shutter-outer">
+                    <div className="shutter-ring" />
+                    <div className="shutter-inner" />
+                  </div>
+                </button>
+                
+                <button 
+                  className={`control-btn flip-btn ${isFlipping ? 'flipping' : ''}`}
+                  onClick={flipCamera}
+                  disabled={isFlipping}
+                >
+                  <FlipIcon />
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}
       
-      {/* PREVIEW */}
+      {/* PREVIEW SCREEN */}
       {screen === 'preview' && (
-        <div className="preview-screen fade-in">
+        <div className="preview-screen">
           <div 
             className="preview-container"
             onTouchStart={handleTouchStart}
@@ -339,140 +414,215 @@ export default function Home() {
                 className="preview-image"
               />
             ) : (
-              <div className="spinner" />
+              <div className="preview-loading">
+                <div className="spinner" />
+              </div>
             )}
-            <span className={`filter-label ${filterIndex !== 0 ? 'visible' : ''}`}>
+            
+            {/* Filter name overlay */}
+            <div className={`filter-name ${filterIndex !== 0 ? 'visible' : ''}`}>
               {FILTERS[filterIndex].name}
-            </span>
+            </div>
           </div>
           
-          <div 
-            className="filter-indicators"
-            onTouchStart={handleTouchStart}
-            onTouchMove={handleTouchMove}
-            onTouchEnd={handleTouchEnd}
-          >
-            {FILTERS.map((_, i) => (
-              <div 
-                key={i} 
-                className={`filter-bar ${i === filterIndex ? 'active' : ''}`}
-                onClick={() => setFilterIndex(i)}
+          {/* Filter indicators */}
+          <div className="filter-indicators">
+            {FILTERS.map((filter, i) => (
+              <button 
+                key={filter.id}
+                className={`filter-dot ${i === filterIndex ? 'active' : ''}`}
+                onClick={() => {
+                  setFilterIndex(i)
+                  if (navigator.vibrate) navigator.vibrate(5)
+                }}
               />
             ))}
           </div>
           
-          <div className="camera-controls">
-            <button 
-              className="btn btn-ghost" 
-              onClick={() => { setPhotoData(null); setFilteredPhoto(null); startCamera() }}
-            >
-              Tirar outra
+          {/* Bottom actions */}
+          <div className="preview-actions">
+            <button className="action-btn secondary" onClick={handleRetake}>
+              <RetakeIcon />
+              <span>Outra</span>
             </button>
             
             <button 
-              className="btn" 
-              style={{ padding: '12px 32px' }}
+              className="action-btn primary"
               onClick={() => setScreen('caption')}
               disabled={!filteredPhoto}
             >
-              Avançar
+              <span>Continuar</span>
+              <ArrowIcon />
             </button>
           </div>
         </div>
       )}
       
-      {/* CAPTION */}
+      {/* CAPTION SCREEN */}
       {screen === 'caption' && (
-        <div className="caption-screen fade-in">
+        <div className="caption-screen">
           <div className="caption-header">
-            <button className="btn btn-ghost" onClick={() => setScreen('preview')}>
-              ←
+            <button className="back-btn" onClick={() => setScreen('preview')}>
+              <BackIcon />
             </button>
-            <span className="text-heading">Escrever</span>
-            <div style={{ width: 48 }} />
+            <span className="caption-title">Finalizar</span>
+            <div style={{ width: 44 }} />
           </div>
           
-          <div className="caption-preview">
-            <img src={filteredPhoto || photoData} alt="" />
+          <div className="caption-content">
+            <div className="caption-preview">
+              <img src={filteredPhoto || photoData} alt="" />
+            </div>
+            
+            <div className="caption-input-wrapper">
+              <input
+                type="text"
+                className="caption-input"
+                placeholder="Escreva algo..."
+                maxLength={140}
+                value={caption}
+                onChange={e => setCaption(e.target.value)}
+                autoFocus
+              />
+              <span className="caption-count">{caption.length}/140</span>
+            </div>
           </div>
           
-          <input
-            type="text"
-            className="input"
-            placeholder="Diga algo..."
-            maxLength={140}
-            value={caption}
-            onChange={e => setCaption(e.target.value)}
-            autoFocus
-          />
-          
-          <p className="text-micro" style={{ textAlign: 'right', marginTop: 8 }}>
-            {caption.length}/140
-          </p>
-          
-          <button 
-            className="btn btn-full" 
-            style={{ marginTop: 32 }}
-            onClick={handlePost}
-            disabled={posting}
-          >
-            {posting ? 'Postando...' : 'Postar'}
-          </button>
+          <div className="caption-actions">
+            <button 
+              className="post-btn"
+              onClick={handlePost}
+              disabled={posting}
+            >
+              {posting ? (
+                <div className="spinner spinner-sm" />
+              ) : (
+                <>
+                  <span>Publicar</span>
+                  <CheckIcon />
+                </>
+              )}
+            </button>
+          </div>
         </div>
       )}
       
-      {/* SUCCESS */}
+      {/* SUCCESS SCREEN */}
       {screen === 'success' && (
-        <div className="screen-center fade-in">
-          <SuccessCheck />
+        <div className="success-screen">
+          <div className="success-content">
+            <SuccessAnimation />
+            <h2 className="success-title">Publicado</h2>
+            <p className="success-subtitle">Seu momento foi salvo</p>
+          </div>
           
-          <h2 className="text-heading" style={{ marginBottom: 8 }}>Postado</h2>
-          <p className="text-caption" style={{ marginBottom: 32 }}>Seu momento foi salvo.</p>
-          
-          <button className="btn" onClick={startCamera}>
-            Nova foto
-          </button>
-          
-          <button 
-            className="btn btn-ghost" 
-            onClick={() => navigate('/profile')}
-            style={{ marginTop: 16 }}
-          >
-            Ver perfil →
-          </button>
+          <div className="success-actions">
+            <button className="action-btn primary" onClick={startCamera}>
+              <CameraIcon />
+              <span>Nova foto</span>
+            </button>
+            
+            <button 
+              className="action-btn ghost"
+              onClick={() => navigate('/profile')}
+            >
+              <span>Ver perfil</span>
+              <ArrowIcon />
+            </button>
+          </div>
         </div>
       )}
     </div>
   )
 }
 
-function SuccessCheck() {
+// ==========================================
+// ICONS
+// ==========================================
+
+function CameraIcon() {
   return (
-    <svg className="success-check" viewBox="0 0 52 52" style={{ width: 64, height: 64, marginBottom: 24 }}>
-      <circle 
-        cx="26" cy="26" r="24" 
-        fill="none" 
-        stroke="var(--color-success)" 
-        strokeWidth="2"
-        style={{
-          strokeDasharray: 166,
-          strokeDashoffset: 166,
-          animation: 'circleDraw 0.6s ease forwards'
-        }}
-      />
-      <path 
-        d="M14 27l8 8 16-16" 
-        fill="none" 
-        stroke="var(--color-success)" 
-        strokeWidth="3"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        style={{
-          strokeDasharray: 48,
-          strokeDashoffset: 48,
-          animation: 'checkDraw 0.3s ease 0.4s forwards'
-        }}
-      />
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+      <circle cx="12" cy="13" r="4"/>
     </svg>
+  )
+}
+
+function CloseIcon() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+      <path d="M18 6L6 18M6 6l12 12"/>
+    </svg>
+  )
+}
+
+function FlipIcon() {
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M21 4H3"/>
+      <path d="M18 8l3-4-3-4"/>
+      <path d="M3 20h18"/>
+      <path d="M6 16l-3 4 3 4"/>
+      <rect x="7" y="8" width="10" height="8" rx="1"/>
+    </svg>
+  )
+}
+
+function RetakeIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M1 4v6h6"/>
+      <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/>
+    </svg>
+  )
+}
+
+function ArrowIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M5 12h14M12 5l7 7-7 7"/>
+    </svg>
+  )
+}
+
+function BackIcon() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M19 12H5M12 19l-7-7 7-7"/>
+    </svg>
+  )
+}
+
+function CheckIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+      <polyline points="20 6 9 17 4 12"/>
+    </svg>
+  )
+}
+
+function SuccessAnimation() {
+  return (
+    <div className="success-animation">
+      <svg viewBox="0 0 52 52">
+        <circle 
+          className="success-circle"
+          cx="26" cy="26" r="24" 
+          fill="none" 
+          stroke="currentColor" 
+          strokeWidth="2"
+        />
+        <path 
+          className="success-check"
+          d="M14 27l8 8 16-16" 
+          fill="none" 
+          stroke="currentColor" 
+          strokeWidth="3"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
+    </div>
   )
 }

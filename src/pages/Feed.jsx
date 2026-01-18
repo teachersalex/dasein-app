@@ -1,8 +1,6 @@
-import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
-import { getFeedPosts } from '../lib/posts'
-import { getFollowing } from '../lib/follows'
+import { useFeed } from '../hooks/useQueries'
 import { getFilterClass } from '../lib/filters'
 import FadeImage from '../components/FadeImage'
 import './Feed.css'
@@ -11,44 +9,7 @@ export default function Feed() {
   const navigate = useNavigate()
   const { user, profile } = useAuth()
   
-  const [posts, setPosts] = useState([])
-  const [profiles, setProfiles] = useState({}) // userId -> profile
-  const [loading, setLoading] = useState(true)
-  const [empty, setEmpty] = useState(false)
-
-  useEffect(() => {
-    if (user) {
-      loadFeed()
-    }
-  }, [user])
-
-  async function loadFeed() {
-    setLoading(true)
-    
-    // Get who user follows
-    const following = await getFollowing(user.uid)
-    
-    if (following.length === 0) {
-      setEmpty(true)
-      setLoading(false)
-      return
-    }
-
-    // Build profiles map
-    const profilesMap = {}
-    following.forEach(p => {
-      profilesMap[p.id] = p
-    })
-    setProfiles(profilesMap)
-
-    // Get posts from followed users
-    const followingIds = following.map(p => p.id)
-    const feedPosts = await getFeedPosts(followingIds)
-    
-    setPosts(feedPosts)
-    setEmpty(feedPosts.length === 0)
-    setLoading(false)
-  }
+  const { data, isLoading, error } = useFeed(user?.uid)
 
   function formatTime(timestamp) {
     if (!timestamp) return ''
@@ -71,18 +32,34 @@ export default function Feed() {
     navigate(`/profile/${username}`)
   }
 
-  function goToPost(post) {
-    const author = profiles[post.userId]
+  function goToPost(post, author) {
     navigate(`/post/${post.id}`, { state: { post, profile: author } })
   }
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="screen-center">
         <div className="spinner" />
       </div>
     )
   }
+
+  if (error) {
+    return (
+      <div className="screen-center">
+        <p className="text-caption">Erro ao carregar feed</p>
+        <button 
+          className="btn btn-ghost" 
+          onClick={() => window.location.reload()}
+          style={{ marginTop: 16 }}
+        >
+          Tentar novamente
+        </button>
+      </div>
+    )
+  }
+
+  const { posts, profiles, empty } = data || { posts: [], profiles: {}, empty: true }
 
   return (
     <div className="feed-page fade-in">
@@ -141,7 +118,7 @@ export default function Feed() {
                 
                 <div 
                   className="feed-item-photo"
-                  onClick={() => goToPost(post)}
+                  onClick={() => goToPost(post, author)}
                 >
                   <FadeImage 
                     src={post.photoURL} 
