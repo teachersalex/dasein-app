@@ -6,6 +6,7 @@ import { getUserInvites, createInvite } from '../lib/invites'
 import { getUserByUsername, isFollowing, followUser, unfollowUser } from '../lib/follows'
 import { getFilterClass } from '../lib/filters'
 import FollowModal from '../components/FollowModal'
+import FadeImage from '../components/FadeImage'
 import './Profile.css'
 
 export default function Profile() {
@@ -205,7 +206,7 @@ export default function Profile() {
           style={{ margin: '0 auto 24px' }}
         >
           {viewProfile.photoURL ? (
-            <img src={viewProfile.photoURL} alt={viewProfile.displayName} />
+            <FadeImage src={viewProfile.photoURL} alt={viewProfile.displayName} />
           ) : (
             viewProfile.displayName?.charAt(0).toUpperCase()
           )}
@@ -248,23 +249,27 @@ export default function Profile() {
         {isOwnProfile ? (
           <>
             <div className="profile-actions">
-              <button className="btn" onClick={() => navigate('/home')}>
-                + Nova foto
+              <button className="profile-action-btn" onClick={() => navigate('/home')}>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                  <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+                  <circle cx="12" cy="13" r="4"/>
+                </svg>
               </button>
               <button 
-                className="btn-settings"
+                className="profile-action-btn"
                 onClick={() => navigate('/settings')}
               >
-                ⚙
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                  <circle cx="12" cy="12" r="3"/>
+                  <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+                </svg>
               </button>
             </div>
             
             {(invitesAvailable === -1 || invitesAvailable > 0) && (
               <button className="invites-badge" onClick={toggleInvitesPanel}>
-                <span className="sparkle">✨</span>
-                <span>
-                  <strong>{invitesAvailable === -1 ? '∞' : invitesAvailable}</strong> convites
-                </span>
+                <span className="invites-count">{invitesAvailable === -1 ? '∞' : invitesAvailable}</span>
+                <span className="invites-label">convites</span>
               </button>
             )}
           </>
@@ -336,7 +341,7 @@ export default function Profile() {
               className={`photo-grid-item ${index === 0 ? 'featured' : ''}`}
               onClick={() => navigate(`/post/${post.id}`, { state: { post, profile: viewProfile } })}
             >
-              <img 
+              <FadeImage 
                 src={post.photoURL} 
                 alt="" 
                 className={getFilterClass(post.filter)}

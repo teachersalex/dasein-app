@@ -90,8 +90,32 @@
 .profile-actions {
   display: flex;
   justify-content: center;
-  gap: 12px;
+  gap: 16px;
   margin-top: 24px;
+}
+
+.profile-action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  background: transparent;
+  border: 1px solid var(--color-border);
+  border-radius: 50%;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.profile-action-btn:hover {
+  border-color: var(--color-text-tertiary);
+  color: var(--color-text);
+  background: var(--color-surface);
+}
+
+.profile-action-btn:active {
+  transform: scale(0.95);
 }
 
 .btn-settings {
@@ -118,35 +142,29 @@
 .invites-badge {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  padding: 8px 16px;
-  border-radius: var(--radius-full);
+  gap: 8px;
+  background: transparent;
+  border: none;
+  padding: 8px 0;
   font-size: 12px;
-  color: var(--color-text-secondary);
-  margin-top: 16px;
+  font-weight: 300;
+  color: var(--color-text-tertiary);
+  margin-top: 20px;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: color 0.2s;
 }
 
 .invites-badge:hover {
-  border-color: var(--color-text-tertiary);
-  color: var(--color-text);
+  color: var(--color-text-secondary);
 }
 
-.invites-badge strong {
-  color: var(--color-text);
+.invites-count {
   font-weight: 400;
+  color: var(--color-text-secondary);
 }
 
-.sparkle {
-  animation: sparkle 2s ease-in-out infinite;
-}
-
-@keyframes sparkle {
-  0%, 100% { opacity: 0.5; }
-  50% { opacity: 1; }
+.invites-label {
+  font-weight: 300;
 }
 
 .invites-panel {

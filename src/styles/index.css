@@ -145,6 +145,7 @@ body {
   border: none;
   border-radius: var(--radius-full);
   cursor: pointer;
+  text-decoration: none;
   transition: transform var(--duration-fast), opacity var(--duration-fast);
   -webkit-user-select: none;
   user-select: none;

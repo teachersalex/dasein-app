@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
-import './Auth.css'
+import './Login.css'
 
 export default function Login() {
   const navigate = useNavigate()
@@ -24,7 +24,7 @@ export default function Login() {
       if (profile) {
         navigate('/home')
       } else {
-        setError('Conta não encontrada. Você precisa de um convite para entrar.')
+        setError('Conta não encontrada. Você precisa de um convite.')
       }
     } else {
       setError(result.error)
@@ -56,71 +56,66 @@ export default function Login() {
   }
 
   return (
-    <div className="auth-page">
-      <header className="auth-header">
-        <Link to="/" className="auth-back">← voltar</Link>
+    <div className="login-page">
+      <header className="login-header">
+        <Link to="/" className="login-back">← voltar</Link>
       </header>
       
-      <h1 className="auth-title">Entrar</h1>
-      <p className="auth-subtitle">Bem-vindo de volta</p>
-      
-      <div className="auth-spacer" />
-      
-      <button 
-        className="btn btn-google btn-full" 
-        onClick={handleGoogleLogin}
-        disabled={loading}
-      >
-        <GoogleIcon />
-        Continuar com Google
-      </button>
-      
-      <div className="divider">
-        <span>ou</span>
+      <div className="login-title-section">
+        <h1 className="login-title">Entrar</h1>
+        <p className="login-subtitle">Bem-vindo de volta</p>
       </div>
       
-      <form onSubmit={handleEmailLogin}>
-        <div className="field">
-          <label className="field-label">EMAIL</label>
-          <input
-            type="email"
-            className="input"
-            placeholder="seu@email.com"
-            value={email}
-            onChange={e => setEmail(e.target.value)}
-            required
-          />
-        </div>
-        
-        <div className="field">
-          <label className="field-label">SENHA</label>
-          <input
-            type="password"
-            className="input"
-            placeholder="sua senha"
-            value={password}
-            onChange={e => setPassword(e.target.value)}
-            required
-          />
-        </div>
-        
-        {error && <p className="auth-error">{error}</p>}
-        
-        {loading && (
-          <div className="auth-loading">
-            <div className="spinner spinner-sm" />
-            <span>Entrando...</span>
-          </div>
-        )}
-        
+      <div className="login-form-section">
         <button 
-          type="submit" 
-          className="btn btn-full"
+          className="btn-google" 
+          onClick={handleGoogleLogin}
           disabled={loading}
         >
-          Entrar
+          <GoogleIcon />
+          <span>Continuar com Google</span>
         </button>
-      </form>
+        
+        <div className="login-divider">
+          <span>ou</span>
+        </div>
+        
+        <form onSubmit={handleEmailLogin}>
+          <div className="login-field">
+            <label>EMAIL</label>
+            <input
+              type="email"
+              placeholder="seu@email.com"
+              value={email}
+              onChange={e => setEmail(e.target.value)}
+              required
+              autoComplete="email"
+            />
+          </div>
+          
+          <div className="login-field">
+            <label>SENHA</label>
+            <input
+              type="password"
+              placeholder="••••••••"
+              value={password}
+              onChange={e => setPassword(e.target.value)}
+              required
+              autoComplete="current-password"
+            />
+          </div>
+          
+          {error && <p className="login-error">{error}</p>}
+          
+          <button 
+            type="submit" 
+            className="btn btn-full"
+            disabled={loading}
+          >
+            {loading ? 'Entrando...' : 'Entrar'}
+          </button>
+        </form>
+      </div>
     </div>
   )
 }
