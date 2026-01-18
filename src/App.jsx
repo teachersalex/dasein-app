@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { Routes, Route, Navigate } from 'react-router-dom'
+import { Routes, Route, Navigate, useParams } from 'react-router-dom'
 import { AuthProvider, useAuth } from './hooks/useAuth'
 import { ToastProvider } from './components/Toast'
 
@@ -62,6 +62,28 @@ function PublicRoute({ children }) {
   return children
 }
 
+// Invite link handler: getdasein.app/DSEIN-XXXXX
+function InviteRoute() {
+  const { inviteCode } = useParams()
+  const { user, profile, loading } = useAuth()
+  
+  // If logged in, go home
+  if (!loading && user && profile) {
+    return <Navigate to="/home" replace />
+  }
+  
+  // Check if it looks like a valid invite code (DSEIN-XXXXX)
+  const isValidFormat = /^DSEIN-[A-Z0-9]{5}$/i.test(inviteCode)
+  
+  if (isValidFormat) {
+    // Pass code to Auth via state
+    return <Navigate to="/auth" state={{ inviteCode: inviteCode.toUpperCase() }} replace />
+  }
+  
+  // Not a valid invite code format, go to landing
+  return <Navigate to="/" replace />
+}
+
 export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
@@ -80,6 +102,9 @@ export default function App() {
             <Route path="/profile/:username" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
             <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
             <Route path="/post/:id" element={<ProtectedRoute><Post /></ProtectedRoute>} />
+            
+            {/* Invite link: getdasein.app/DSEIN-XXXXX */}
+            <Route path="/:inviteCode" element={<InviteRoute />} />
             
             {/* Fallback */}
             <Route path="*" element={<Navigate to="/" replace />} />

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Link, useNavigate, useSearchParams } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams, useLocation } from 'react-router-dom'
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
 import { useAuth } from '../hooks/useAuth'
 import { storage } from '../lib/firebase'
@@ -8,8 +8,9 @@ import './Auth.css'
 
 export default function Auth() {
   const navigate = useNavigate()
+  const location = useLocation()
   const [searchParams] = useSearchParams()
-  const { user, signupWithEmail, loginWithGoogle, createUserProfile, isUsernameTaken } = useAuth()
+  const { user, signupWithEmail, loginWithGoogle, createUserProfile, isUsernameTaken, getUserProfile } = useAuth()
   
   const [step, setStep] = useState('code') // code, signup, onboarding
   const [inviteCode, setInviteCode] = useState('')
@@ -28,7 +29,28 @@ export default function Auth() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
-  // Check if came from redirect
+  // Check if came from invite link (via location.state)
+  useEffect(() => {
+    const codeFromLink = location.state?.inviteCode
+    
+    if (codeFromLink) {
+      setInviteCode(codeFromLink)
+      setLoading(true)
+      
+      // Auto-validate the code
+      validateInviteCode(codeFromLink).then(result => {
+        if (result.valid) {
+          setInviteData(result.invite)
+          setStep('signup')
+        } else {
+          setError(result.error)
+        }
+        setLoading(false)
+      })
+    }
+  }, [location.state])
+
+  // Check if came from redirect (onboarding)
   useEffect(() => {
     const stepParam = searchParams.get('step')
     if (stepParam === 'onboarding' && user) {
@@ -80,7 +102,6 @@ export default function Auth() {
       setAuthUser(result.user)
       
       // Check if already has profile
-      const { getUserProfile } = useAuth()
       const profile = await getUserProfile(result.user.uid)
       
       if (profile) {
@@ -207,84 +228,21 @@ export default function Auth() {
       </header>
       
       {/* STEP 1: Code */}
-      <div className={`auth-step ${step === 'code' ? 'active' : ''}`}>
-        <h1 className="auth-title">Entrar</h1>
-        <p className="auth-subtitle">Digite seu código de convite</p>
-        
-        <div className="auth-spacer" />
-        
-        <div className="field">
-          <input
-            type="text"
-            className="input code-input"
-            placeholder="DSEIN-XXXXX"
-            value={inviteCode}
-            onChange={handleCodeInput}
-            maxLength={11}
-          />
-        </div>
-        
-        {error && <p className="auth-error">{error}</p>}
-        
-        {loading && (
-          <div className="auth-loading">
-            <div className="spinner spinner-sm" />
-            <span>Validando...</span>
-          </div>
-        )}
-        
-        <button
-          className="btn btn-full"
-          onClick={handleValidateCode}
-          disabled={!isCodeValid || loading}
-        >
-          Continuar
-        </button>
-      </div>
-      
-      {/* STEP 2: Signup */}
-      <div className={`auth-step ${step === 'signup' ? 'active' : ''}`}>
-        <h1 className="auth-title">Criar conta</h1>
-        <p className="auth-subtitle">Bem-vindo ao Dasein</p>
-        
-        <div className="auth-spacer" />
-        
-        <button 
-          className="btn btn-google btn-full" 
-          onClick={handleGoogleSignup}
-          disabled={loading}
-        >
-          <GoogleIcon />
-          Continuar com Google
-        </button>
-        
-        <div className="divider">
-          <span>ou</span>
-        </div>
-        
-        <form onSubmit={handleEmailSignup}>
-          <div className="field">
-            <label className="field-label">EMAIL</label>
-            <input
-              type="email"
-              className="input"
-              placeholder="seu@email.com"
-              value={email}
-              onChange={e => setEmail(e.target.value)}
-              required
-            />
-          </div>
+      {step === 'code' && (
+        <div className="auth-step">
+          <h1 className="auth-title">Entrar</h1>
+          <p className="auth-subtitle">Digite seu código de convite</p>
+          
+          <div className="auth-spacer" />
           
           <div className="field">
-            <label className="field-label">SENHA</label>
             <input
-              type="password"
-              className="input"
-              placeholder="mínimo 6 caracteres"
-              value={password}
-              onChange={e => setPassword(e.target.value)}
-              required
-              minLength={6}
+              type="text"
+              className="input code-input"
+              placeholder="DSEIN-XXXXX"
+              value={inviteCode}
+              onChange={handleCodeInput}
+              maxLength={11}
             />
           </div>
           
@@ -293,97 +251,166 @@ export default function Auth() {
           {loading && (
             <div className="auth-loading">
               <div className="spinner spinner-sm" />
-              <span>Criando conta...</span>
+              <span>Validando...</span>
             </div>
           )}
           
-          <button 
-            type="submit" 
+          <button
             className="btn btn-full"
+            onClick={handleValidateCode}
+            disabled={!isCodeValid || loading}
+          >
+            Continuar
+          </button>
+        </div>
+      )}
+      
+      {/* STEP 2: Signup */}
+      {step === 'signup' && (
+        <div className="auth-step">
+          <h1 className="auth-title">Criar conta</h1>
+          <p className="auth-subtitle">Bem-vindo ao Dasein</p>
+          
+          <div className="auth-spacer" />
+          
+          <button 
+            className="btn btn-google btn-full" 
+            onClick={handleGoogleSignup}
             disabled={loading}
           >
-            Criar conta
+            <GoogleIcon />
+            Continuar com Google
           </button>
-        </form>
-      </div>
-      
-      {/* STEP 3: Onboarding */}
-      <div className={`auth-step ${step === 'onboarding' ? 'active' : ''}`}>
-        <h1 className="auth-title">Seu perfil</h1>
-        <p className="auth-subtitle">Como quer ser chamado?</p>
-        
-        <div className="auth-spacer" />
-        
-        <label className="avatar-upload">
-          {avatarPreview ? (
-            <img src={avatarPreview} alt="Avatar" />
-          ) : (
-            <CameraIcon />
-          )}
-          <input
-            type="file"
-            accept="image/*"
-            onChange={handleAvatarSelect}
-            style={{ display: 'none' }}
-          />
-        </label>
-        
-        <p className="avatar-upload-hint">
-          Toque para adicionar foto · <a href="#" onClick={(e) => { e.preventDefault(); setAvatarFile(null); setAvatarPreview(null) }}>pular</a>
-        </p>
-        
-        <form onSubmit={handleOnboarding}>
-          <div className="field">
-            <label className="field-label">NOME</label>
-            <input
-              type="text"
-              className="input"
-              placeholder="Seu nome"
-              value={displayName}
-              onChange={e => setDisplayName(e.target.value)}
-              required
-            />
+          
+          <div className="divider">
+            <span>ou</span>
           </div>
           
-          <div className="field">
-            <label className="field-label">USERNAME</label>
-            <div className="username-wrapper">
-              <span className="username-prefix">@</span>
+          <form onSubmit={handleEmailSignup}>
+            <div className="field">
+              <label className="field-label">EMAIL</label>
+              <input
+                type="email"
+                className="input"
+                placeholder="seu@email.com"
+                value={email}
+                onChange={e => setEmail(e.target.value)}
+                required
+              />
+            </div>
+            
+            <div className="field">
+              <label className="field-label">SENHA</label>
+              <input
+                type="password"
+                className="input"
+                placeholder="mínimo 6 caracteres"
+                value={password}
+                onChange={e => setPassword(e.target.value)}
+                required
+                minLength={6}
+              />
+            </div>
+            
+            {error && <p className="auth-error">{error}</p>}
+            
+            {loading && (
+              <div className="auth-loading">
+                <div className="spinner spinner-sm" />
+                <span>Criando conta...</span>
+              </div>
+            )}
+            
+            <button 
+              type="submit" 
+              className="btn btn-full"
+              disabled={loading}
+            >
+              Criar conta
+            </button>
+          </form>
+        </div>
+      )}
+      
+      {/* STEP 3: Onboarding */}
+      {step === 'onboarding' && (
+        <div className="auth-step">
+          <h1 className="auth-title">Seu perfil</h1>
+          <p className="auth-subtitle">Como quer ser chamado?</p>
+          
+          <div className="auth-spacer" />
+          
+          <label className="avatar-upload">
+            {avatarPreview ? (
+              <img src={avatarPreview} alt="Avatar" />
+            ) : (
+              <CameraIcon />
+            )}
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handleAvatarSelect}
+              style={{ display: 'none' }}
+            />
+          </label>
+          
+          <p className="avatar-upload-hint">
+            Toque para adicionar foto · <a href="#" onClick={(e) => { e.preventDefault(); setAvatarFile(null); setAvatarPreview(null) }}>pular</a>
+          </p>
+          
+          <form onSubmit={handleOnboarding}>
+            <div className="field">
+              <label className="field-label">NOME</label>
               <input
                 type="text"
                 className="input"
-                placeholder="username"
-                value={username}
-                onChange={handleUsernameInput}
+                placeholder="Seu nome"
+                value={displayName}
+                onChange={e => setDisplayName(e.target.value)}
                 required
-                minLength={3}
               />
             </div>
-            {usernameStatus.text && (
-              <p className="field-hint" style={{ color: usernameStatus.color }}>
-                {usernameStatus.text}
-              </p>
-            )}
-          </div>
-          
-          {error && <p className="auth-error">{error}</p>}
-          
-          {loading && (
-            <div className="auth-loading">
-              <div className="spinner spinner-sm" />
-              <span>Finalizando...</span>
+            
+            <div className="field">
+              <label className="field-label">USERNAME</label>
+              <div className="username-wrapper">
+                <span className="username-prefix">@</span>
+                <input
+                  type="text"
+                  className="input"
+                  placeholder="username"
+                  value={username}
+                  onChange={handleUsernameInput}
+                  required
+                  minLength={3}
+                />
+              </div>
+              {usernameStatus.text && (
+                <p className="field-hint" style={{ color: usernameStatus.color }}>
+                  {usernameStatus.text}
+                </p>
+              )}
             </div>
-          )}
-          
-          <button 
-            type="submit" 
-            className="btn btn-full"
-            disabled={loading || username.length < 3}
-          >
-            Começar
-          </button>
-        </form>
-      </div>
+            
+            {error && <p className="auth-error">{error}</p>}
+            
+            {loading && (
+              <div className="auth-loading">
+                <div className="spinner spinner-sm" />
+                <span>Finalizando...</span>
+              </div>
+            )}
+            
+            <button 
+              type="submit" 
+              className="btn btn-full"
+              disabled={loading || username.length < 3}
+            >
+              Começar
+            </button>
+          </form>
+        </div>
+      )}
     </div>
   )
 }
@@ -401,7 +428,7 @@ function GoogleIcon() {
 
 function CameraIcon() {
   return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
       <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
       <circle cx="12" cy="13" r="4"/>
     </svg>
