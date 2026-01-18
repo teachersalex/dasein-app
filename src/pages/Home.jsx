@@ -125,7 +125,7 @@ export default function Home() {
   }, [])
 
   // ==========================================
-  // CAPTURE - exactly what user sees
+  // CAPTURE - 4:5 crop from center
   // ==========================================
   
   function capturePhoto() {
@@ -144,29 +144,29 @@ export default function Home() {
       const vw = video.videoWidth
       const vh = video.videoHeight
       
-      const displayRect = video.getBoundingClientRect()
-      const dw = displayRect.width
-      const dh = displayRect.height
-      
+      // Target aspect ratio: 4:5
+      const targetAspect = 4 / 5
       const videoAspect = vw / vh
-      const displayAspect = dw / dh
       
       let sx, sy, sw, sh
       
-      if (videoAspect > displayAspect) {
+      if (videoAspect > targetAspect) {
+        // Video is wider than 4:5 - crop sides
         sh = vh
-        sw = vh * displayAspect
+        sw = vh * targetAspect
         sx = (vw - sw) / 2
         sy = 0
       } else {
+        // Video is taller than 4:5 - crop top/bottom
         sw = vw
-        sh = vw / displayAspect
+        sh = vw / targetAspect
         sx = 0
         sy = (vh - sh) / 2
       }
       
+      // Output size (max 1080px wide)
       const outputW = Math.min(1080, sw)
-      const outputH = outputW * (dh / dw)
+      const outputH = outputW / targetAspect
       
       canvas.width = outputW
       canvas.height = outputH
@@ -267,27 +267,34 @@ export default function Home() {
       return
     }
     
-    if (Math.abs(deltaX) > 50 && now - touchState.current.lastFilterChange > 120) {
-      if (deltaX > 0) prevFilter()
-      else nextFilter()
-      
-      touchState.current.lastX = touch.clientX
-      touchState.current.lastFilterChange = now
+    const threshold = 50
+    const timeSinceLastChange = now - touchState.current.lastFilterChange
+    
+    if (timeSinceLastChange > 100) {
+      if (deltaX < -threshold) {
+        nextFilter()
+        touchState.current.lastX = touch.clientX
+        touchState.current.lastFilterChange = now
+      } else if (deltaX > threshold) {
+        prevFilter()
+        touchState.current.lastX = touch.clientX
+        touchState.current.lastFilterChange = now
+      }
     }
   }
   
   function handleTouchEnd(e) {
     if (!touchState.current.isDragging) return
-    touchState.current.isDragging = false
     
-    const deltaX = e.changedTouches[0].clientX - touchState.current.startX
-    const deltaY = Math.abs(e.changedTouches[0].clientY - touchState.current.startY)
-    const deltaTime = Date.now() - touchState.current.startTime
+    const duration = Date.now() - touchState.current.startTime
+    const totalX = e.changedTouches[0].clientX - touchState.current.startX
     
-    if (deltaTime < 250 && Math.abs(deltaX) > 30 && deltaY < 50) {
-      if (deltaX > 0) prevFilter()
-      else nextFilter()
+    if (duration < 200 && Math.abs(totalX) > 30) {
+      if (totalX < 0) nextFilter()
+      else prevFilter()
     }
+    
+    touchState.current.isDragging = false
   }
 
   // ==========================================
@@ -295,20 +302,18 @@ export default function Home() {
   // ==========================================
   
   async function handlePost() {
-    if (posting) return
+    if (posting || !filteredPhoto) return
+    
     setPosting(true)
     
-    const filter = FILTERS[filterIndex]
-    const result = await uploadPost(user.uid, filteredPhoto || photoData, caption, filter.id)
-    
-    if (result.success) {
-      if (navigator.vibrate) navigator.vibrate([10, 50, 10, 50, 10])
+    try {
+      await uploadPost(filteredPhoto, caption, user.uid)
       setScreen('success')
+      setCaption('')
       setPhotoData(null)
       setFilteredPhoto(null)
-      setCaption('')
-      setFilterIndex(0)
-    } else {
+    } catch (error) {
+      console.error('Post error:', error)
       alert('Erro ao postar. Tenta de novo.')
     }
     
@@ -362,6 +367,7 @@ export default function Home() {
               className={facingMode === 'user' ? 'mirror' : ''}
             />
             <div className="viewfinder-vignette" />
+            <div className="crop-overlay" />
           </div>
           
           <div className="camera-controls-overlay">
