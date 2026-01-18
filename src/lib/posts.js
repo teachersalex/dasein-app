@@ -7,9 +7,10 @@ import {
   getDocs,
   doc,
   getDoc,
+  deleteDoc,
   serverTimestamp 
 } from 'firebase/firestore'
-import { ref, uploadString, getDownloadURL } from 'firebase/storage'
+import { ref, uploadString, getDownloadURL, deleteObject } from 'firebase/storage'
 import { db, storage } from './firebase'
 
 // Upload de post
@@ -29,6 +30,7 @@ export async function uploadPost(userId, photoData, caption, filterName) {
     await addDoc(collection(db, 'posts'), {
       userId,
       photoURL,
+      storagePath: fileName,
       caption: caption || '',
       filter: filterName,
       createdAt: serverTimestamp()
@@ -87,5 +89,28 @@ export async function getPost(postId) {
   } catch (error) {
     console.error('Error getting post:', error)
     return null
+  }
+}
+
+// Deletar post
+export async function deletePost(postId, storagePath) {
+  try {
+    // Deleta do Firestore
+    await deleteDoc(doc(db, 'posts', postId))
+    
+    // Tenta deletar do Storage (pode falhar se path não existir)
+    if (storagePath) {
+      try {
+        const storageRef = ref(storage, storagePath)
+        await deleteObject(storageRef)
+      } catch (e) {
+        console.warn('Storage delete failed (may not exist):', e)
+      }
+    }
+    
+    return { success: true }
+  } catch (error) {
+    console.error('Error deleting post:', error)
+    return { success: false, error: error.message }
   }
 }

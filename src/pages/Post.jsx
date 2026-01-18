@@ -1,19 +1,23 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useParams, useLocation } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
-import { getPost } from '../lib/posts'
+import { getPost, deletePost } from '../lib/posts'
 import { getFilterClass } from '../lib/filters'
+import FadeImage from '../components/FadeImage'
 import './Post.css'
 
 export default function Post() {
   const navigate = useNavigate()
   const { id } = useParams()
   const location = useLocation()
-  const { getUserProfile } = useAuth()
+  const { user, getUserProfile } = useAuth()
   
   const [post, setPost] = useState(location.state?.post || null)
   const [author, setAuthor] = useState(location.state?.profile || null)
   const [loading, setLoading] = useState(!post)
+  const [deleting, setDeleting] = useState(false)
+
+  const isOwner = user && post && user.uid === post.userId
 
   useEffect(() => {
     if (!post) {
@@ -37,6 +41,31 @@ export default function Post() {
     if (uid) {
       const profile = await getUserProfile(uid)
       setAuthor(profile)
+    }
+  }
+
+  async function handleDelete() {
+    if (!confirm('Apagar esta foto?')) return
+    
+    setDeleting(true)
+    
+    const result = await deletePost(post.id, post.storagePath)
+    
+    if (result.success) {
+      navigate('/profile', { replace: true })
+    } else {
+      alert('Erro ao apagar foto.')
+      setDeleting(false)
+    }
+  }
+
+  function goToProfile() {
+    if (author?.username) {
+      if (isOwner) {
+        navigate('/profile')
+      } else {
+        navigate(`/profile/${author.username}`)
+      }
     }
   }
 
@@ -72,7 +101,7 @@ export default function Post() {
       const deltaY = Math.abs(e.changedTouches[0].clientY - startY)
       
       if (deltaX > 80 && deltaY < 50) {
-        navigate('/profile')
+        navigate(-1)
       }
     }
 
@@ -104,13 +133,23 @@ export default function Post() {
   return (
     <div className="post-page fade-in">
       <header className="post-header">
-        <button className="btn-back" onClick={() => navigate('/profile')}>
+        <button className="btn-back" onClick={() => navigate(-1)}>
           <BackIcon />
         </button>
+        
+        {isOwner && (
+          <button 
+            className="btn-delete" 
+            onClick={handleDelete}
+            disabled={deleting}
+          >
+            {deleting ? '...' : <TrashIcon />}
+          </button>
+        )}
       </header>
       
       <div className="post-photo-container">
-        <img 
+        <FadeImage 
           src={post.photoURL} 
           alt="" 
           className={`post-photo ${getFilterClass(post.filter)}`}
@@ -122,10 +161,10 @@ export default function Post() {
           <p className="post-caption">{post.caption}</p>
         )}
         
-        <div className="post-meta">
+        <div className="post-meta" onClick={goToProfile}>
           <div className="avatar avatar-sm">
             {author?.photoURL ? (
-              <img src={author.photoURL} alt={author.displayName} />
+              <FadeImage src={author.photoURL} alt={author.displayName} />
             ) : (
               author?.displayName?.charAt(0).toUpperCase() || '?'
             )}
@@ -145,6 +184,15 @@ function BackIcon() {
   return (
     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
       <path d="M19 12H5M12 19l-7-7 7-7"/>
+    </svg>
+  )
+}
+
+function TrashIcon() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+      <path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6h14z"/>
+      <path d="M10 11v6M14 11v6"/>
     </svg>
   )
 }
