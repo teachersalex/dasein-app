@@ -12,7 +12,7 @@ import './Profile.css'
 export default function Profile() {
   const navigate = useNavigate()
   const { username } = useParams()
-  const { user, profile, logout, getUserProfile } = useAuth()
+  const { user, profile, setProfile, logout, getUserProfile } = useAuth()
   
   const [viewProfile, setViewProfile] = useState(null)
   const [posts, setPosts] = useState([])
@@ -104,6 +104,13 @@ export default function Profile() {
       await navigator.clipboard.writeText(result.code)
       alert(`Convite copiado!\n\n${result.code}`)
       loadInvites()
+      
+      // Atualiza contadores locais (se não for infinito)
+      if (available !== -1) {
+        const newAvailable = available - 1
+        setProfile({ ...profile, invitesAvailable: newAvailable })
+        setViewProfile(prev => ({ ...prev, invitesAvailable: newAvailable }))
+      }
     } else {
       alert(result.error || 'Erro ao criar convite.')
     }
