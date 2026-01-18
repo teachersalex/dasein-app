@@ -36,7 +36,6 @@ export const FILTERS = [
       vignette: 0.12,
       grain: 0.06,
       grainSize: 1.2,
-      // Portra-specific: soft highlights, warm shadows
       toneMapping: 'portra'
     }
   },
@@ -53,7 +52,6 @@ export const FILTERS = [
       vignette: 0.2,
       grain: 0.04,
       grainSize: 1.0,
-      // Velvia: punchy, saturated
       toneMapping: 'velvia'
     }
   },
@@ -104,7 +102,6 @@ export const FILTERS = [
   }
 ]
 
-// WebGL context cache
 let glCanvas = null
 let gl = null
 let program = null
@@ -137,22 +134,19 @@ const FRAGMENT_SHADER = `
   uniform float u_grainSize;
   uniform float u_time;
   uniform vec2 u_resolution;
-  uniform int u_toneMapping; // 0 = none, 1 = portra, 2 = velvia
+  uniform int u_toneMapping;
   
   varying vec2 v_texCoord;
   
-  // Noise function for grain
   float random(vec2 co) {
     return fract(sin(dot(co.xy, vec2(12.9898, 78.233))) * 43758.5453);
   }
   
-  // Improved noise with size control
   float noise(vec2 uv, float size) {
     vec2 scaled = uv * u_resolution / size;
     return random(scaled + u_time);
   }
   
-  // Soft curve for highlights
   float softHighlight(float x, float compress) {
     float threshold = 1.0 - compress;
     if (x > threshold) {
@@ -162,15 +156,12 @@ const FRAGMENT_SHADER = `
     return x;
   }
   
-  // Portra-style tone curve
   vec3 portraTone(vec3 color) {
-    // Lift shadows warmly
     vec3 shadows = vec3(0.02, 0.01, -0.01);
     float lum = dot(color, vec3(0.299, 0.587, 0.114));
     float shadowMask = 1.0 - smoothstep(0.0, 0.4, lum);
     color += shadows * shadowMask;
     
-    // Soft highlight rolloff
     color.r = softHighlight(color.r, 0.15);
     color.g = softHighlight(color.g, 0.12);
     color.b = softHighlight(color.b, 0.1);
@@ -178,12 +169,9 @@ const FRAGMENT_SHADER = `
     return color;
   }
   
-  // Velvia-style tone curve
   vec3 velviaTone(vec3 color) {
-    // S-curve for punch
     color = color * color * (3.0 - 2.0 * color);
     
-    // Boost saturation in midtones
     float lum = dot(color, vec3(0.299, 0.587, 0.114));
     float midtoneMask = 1.0 - abs(lum - 0.5) * 2.0;
     vec3 saturated = mix(vec3(lum), color, 1.0 + 0.3 * midtoneMask);
@@ -194,19 +182,12 @@ const FRAGMENT_SHADER = `
   void main() {
     vec4 color = texture2D(u_image, v_texCoord);
     
-    // Luminance
     float lum = dot(color.rgb, vec3(0.299, 0.587, 0.114));
     
-    // Saturation
     color.rgb = mix(vec3(lum), color.rgb, u_saturation);
-    
-    // Contrast (around midpoint)
     color.rgb = (color.rgb - 0.5) * u_contrast + 0.5;
-    
-    // Brightness
     color.rgb *= u_brightness;
     
-    // Warmth (color temperature shift)
     if (u_warmth > 0.0) {
       color.r += u_warmth * 0.25;
       color.g += u_warmth * 0.1;
@@ -216,23 +197,19 @@ const FRAGMENT_SHADER = `
       color.b -= u_warmth * 0.25;
     }
     
-    // Shadow lift (affects darks only)
     float shadowMask = 1.0 - smoothstep(0.0, 0.5, lum);
     color.rgb += u_shadowLift * shadowMask;
     
-    // Highlight compression (affects brights only)
     color.r = softHighlight(color.r, u_highlightCompress);
     color.g = softHighlight(color.g, u_highlightCompress);
     color.b = softHighlight(color.b, u_highlightCompress);
     
-    // Tone mapping (film emulation)
     if (u_toneMapping == 1) {
       color.rgb = portraTone(color.rgb);
     } else if (u_toneMapping == 2) {
       color.rgb = velviaTone(color.rgb);
     }
     
-    // Vignette (elliptical, smooth)
     vec2 uv = v_texCoord;
     float aspectRatio = u_resolution.x / u_resolution.y;
     vec2 center = uv - 0.5;
@@ -241,18 +218,13 @@ const FRAGMENT_SHADER = `
     float vig = 1.0 - smoothstep(0.2, 1.0, dist) * u_vignette;
     color.rgb *= vig;
     
-    // Film grain (organic, luminance-aware)
     if (u_grain > 0.0) {
       float grainNoise = noise(v_texCoord, u_grainSize) - 0.5;
-      
-      // Grain more visible in midtones, less in shadows/highlights
       float grainMask = 1.0 - abs(lum - 0.5) * 1.5;
       grainMask = max(grainMask, 0.3);
-      
       color.rgb += grainNoise * u_grain * grainMask;
     }
     
-    // Final clamp
     color.rgb = clamp(color.rgb, 0.0, 1.0);
     
     gl_FragColor = color;
@@ -276,7 +248,6 @@ function initWebGL() {
     return false
   }
   
-  // Create vertex shader
   const vertexShader = gl.createShader(gl.VERTEX_SHADER)
   gl.shaderSource(vertexShader, VERTEX_SHADER)
   gl.compileShader(vertexShader)
@@ -286,7 +257,6 @@ function initWebGL() {
     return false
   }
   
-  // Create fragment shader
   const fragmentShader = gl.createShader(gl.FRAGMENT_SHADER)
   gl.shaderSource(fragmentShader, FRAGMENT_SHADER)
   gl.compileShader(fragmentShader)
@@ -296,7 +266,6 @@ function initWebGL() {
     return false
   }
   
-  // Create program
   program = gl.createProgram()
   gl.attachShader(program, vertexShader)
   gl.attachShader(program, fragmentShader)
@@ -307,7 +276,6 @@ function initWebGL() {
     return false
   }
   
-  // Position buffer (fullscreen quad)
   positionBuffer = gl.createBuffer()
   gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer)
   gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
@@ -315,7 +283,6 @@ function initWebGL() {
     -1, 1,   1, -1,   1, 1
   ]), gl.STATIC_DRAW)
   
-  // TexCoord buffer
   texCoordBuffer = gl.createBuffer()
   gl.bindBuffer(gl.ARRAY_BUFFER, texCoordBuffer)
   gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
@@ -328,7 +295,6 @@ function initWebGL() {
 
 export function applyFilter(photoData, filter) {
   return new Promise((resolve) => {
-    // No filter = return original
     if (!filter.settings) {
       resolve(photoData)
       return
@@ -345,27 +311,22 @@ export function applyFilter(photoData, filter) {
       
       const s = filter.settings
       
-      // Set canvas size
       glCanvas.width = img.width
       glCanvas.height = img.height
       gl.viewport(0, 0, img.width, img.height)
       
-      // Use program
       gl.useProgram(program)
       
-      // Position attribute
       const posLoc = gl.getAttribLocation(program, 'a_position')
       gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer)
       gl.enableVertexAttribArray(posLoc)
       gl.vertexAttribPointer(posLoc, 2, gl.FLOAT, false, 0, 0)
       
-      // TexCoord attribute
       const texLoc = gl.getAttribLocation(program, 'a_texCoord')
       gl.bindBuffer(gl.ARRAY_BUFFER, texCoordBuffer)
       gl.enableVertexAttribArray(texLoc)
       gl.vertexAttribPointer(texLoc, 2, gl.FLOAT, false, 0, 0)
       
-      // Create texture
       const texture = gl.createTexture()
       gl.bindTexture(gl.TEXTURE_2D, texture)
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE)
@@ -374,7 +335,6 @@ export function applyFilter(photoData, filter) {
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR)
       gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img)
       
-      // Set uniforms
       gl.uniform1f(gl.getUniformLocation(program, 'u_saturation'), s.saturation)
       gl.uniform1f(gl.getUniformLocation(program, 'u_contrast'), s.contrast)
       gl.uniform1f(gl.getUniformLocation(program, 'u_brightness'), s.brightness)
@@ -387,19 +347,15 @@ export function applyFilter(photoData, filter) {
       gl.uniform1f(gl.getUniformLocation(program, 'u_time'), Math.random() * 1000)
       gl.uniform2f(gl.getUniformLocation(program, 'u_resolution'), img.width, img.height)
       
-      // Tone mapping mode
       let toneMode = 0
       if (s.toneMapping === 'portra') toneMode = 1
       else if (s.toneMapping === 'velvia') toneMode = 2
       gl.uniform1i(gl.getUniformLocation(program, 'u_toneMapping'), toneMode)
       
-      // Draw
       gl.drawArrays(gl.TRIANGLES, 0, 6)
       
-      // Export
       const result = glCanvas.toDataURL('image/jpeg', 0.92)
       
-      // Cleanup
       gl.deleteTexture(texture)
       
       resolve(result)
@@ -414,7 +370,6 @@ export function applyFilter(photoData, filter) {
   })
 }
 
-// For CSS preview (limited - no grain)
 export function getFilterClass(filterId) {
   return `filter-${filterId}`
 }

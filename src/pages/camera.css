@@ -1,0 +1,200 @@
+/* ==========================================
+   DASEIN - Camera Screen
+   ========================================== */
+
+.camera-screen {
+  height: 100vh;
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  background: #000;
+  position: relative;
+}
+
+.camera-screen.ready .camera-viewfinder video {
+  opacity: 1;
+}
+
+/* Viewfinder */
+.camera-viewfinder {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+  background: #000;
+}
+
+.camera-viewfinder video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.camera-viewfinder video.mirror {
+  transform: scaleX(-1);
+}
+
+.camera-viewfinder.flipping video {
+  animation: viewfinderFlip 0.3s ease;
+}
+
+@keyframes viewfinderFlip {
+  0% { opacity: 1; }
+  50% { opacity: 0; }
+  100% { opacity: 1; }
+}
+
+/* Vignette */
+.viewfinder-vignette {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    ellipse at center,
+    transparent 60%,
+    rgba(0, 0, 0, 0.25) 100%
+  );
+  pointer-events: none;
+}
+
+/* Controls overlay */
+.camera-controls-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  pointer-events: none;
+}
+
+.camera-controls-overlay > * {
+  pointer-events: auto;
+}
+
+/* Top controls */
+.camera-top-controls {
+  padding: 16px 20px;
+  padding-top: calc(16px + var(--safe-top, 0px));
+  display: flex;
+  justify-content: flex-start;
+}
+
+/* Bottom controls */
+.camera-bottom-controls {
+  padding: 24px 20px;
+  padding-bottom: calc(32px + var(--safe-bottom, 0px));
+  background: linear-gradient(to top, rgba(0,0,0,0.5) 0%, transparent 100%);
+}
+
+.controls-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 40px;
+}
+
+.control-spacer {
+  width: 48px;
+}
+
+/* Control button */
+.control-btn {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s var(--ease-out);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.control-btn:active {
+  transform: scale(0.9);
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.control-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.flip-btn.flipping {
+  animation: flipBtnSpin 0.3s ease;
+}
+
+@keyframes flipBtnSpin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(180deg); }
+}
+
+/* Shutter button */
+.shutter-btn {
+  width: 80px;
+  height: 80px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  position: relative;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.shutter-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.shutter-outer {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.shutter-ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 3px solid white;
+  transition: all 0.15s var(--ease-out);
+  animation: shutterBreathe 3s ease-in-out infinite;
+}
+
+@keyframes shutterBreathe {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.02); opacity: 0.9; }
+}
+
+.shutter-inner {
+  width: 62px;
+  height: 62px;
+  border-radius: 50%;
+  background: white;
+  transition: all 0.15s var(--ease-out);
+}
+
+.shutter-btn:active .shutter-ring {
+  transform: scale(0.95);
+  animation: none;
+}
+
+.shutter-btn:active .shutter-inner {
+  transform: scale(0.85);
+}
+
+.shutter-btn.capturing .shutter-ring {
+  transform: scale(1.1);
+  opacity: 0.5;
+  animation: none;
+}
+
+.shutter-btn.capturing .shutter-inner {
+  transform: scale(0.7);
+}
