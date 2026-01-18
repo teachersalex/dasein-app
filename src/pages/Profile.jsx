@@ -101,8 +101,9 @@ export default function Profile() {
     const result = await createInvite(user.uid)
     
     if (result.success) {
-      await navigator.clipboard.writeText(result.code)
-      alert(`Convite copiado!\n\n${result.code}`)
+      const inviteLink = `getdasein.app/${result.code}`
+      await navigator.clipboard.writeText(inviteLink)
+      alert(`Convite copiado!\n\n${inviteLink}`)
       loadInvites()
       
       // Atualiza contadores locais (se não for infinito)
@@ -119,7 +120,7 @@ export default function Profile() {
   }
 
   async function copyInviteCode(code) {
-    await navigator.clipboard.writeText(code)
+    await navigator.clipboard.writeText(`getdasein.app/${code}`)
   }
 
   async function handleLogout() {
