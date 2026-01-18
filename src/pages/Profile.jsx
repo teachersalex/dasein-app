@@ -20,6 +20,7 @@ export default function Profile() {
   const [invitesPanelOpen, setInvitesPanelOpen] = useState(false)
   const [invites, setInvites] = useState([])
   const [generatingInvite, setGeneratingInvite] = useState(false)
+  const [copiedCode, setCopiedCode] = useState(null)
   
   // Follow state
   const [following, setFollowing] = useState(false)
@@ -71,8 +72,12 @@ export default function Profile() {
   }, [user, username, profile, isOwnProfile])
 
   async function loadInvites() {
-    const userInvites = await getUserInvites(user.uid)
-    setInvites(userInvites)
+    try {
+      const userInvites = await getUserInvites(user.uid)
+      setInvites(userInvites)
+    } catch (err) {
+      console.error('Erro ao carregar convites:', err)
+    }
   }
 
   function toggleInvitesPanel() {
@@ -98,29 +103,36 @@ export default function Profile() {
     
     setGeneratingInvite(true)
     
-    const result = await createInvite(user.uid)
-    
-    if (result.success) {
-      const inviteLink = `getdasein.app/${result.code}`
-      await navigator.clipboard.writeText(inviteLink)
-      alert(`Convite copiado!\n\n${inviteLink}`)
-      loadInvites()
+    try {
+      const result = await createInvite(user.uid)
       
-      // Atualiza contadores locais (se não for infinito)
-      if (available !== -1) {
-        const newAvailable = available - 1
-        setProfile({ ...profile, invitesAvailable: newAvailable })
-        setViewProfile(prev => ({ ...prev, invitesAvailable: newAvailable }))
+      if (result.success) {
+        const inviteLink = `getdasein.app/${result.code}`
+        await navigator.clipboard.writeText(inviteLink)
+        alert(`Convite copiado!\n\n${inviteLink}`)
+        await loadInvites()
+        
+        // Atualiza contadores locais (se não for infinito)
+        if (available !== -1) {
+          const newAvailable = available - 1
+          setProfile({ ...profile, invitesAvailable: newAvailable })
+          setViewProfile(prev => ({ ...prev, invitesAvailable: newAvailable }))
+        }
+      } else {
+        alert(result.error || 'Erro ao criar convite.')
       }
-    } else {
-      alert(result.error || 'Erro ao criar convite.')
+    } catch (err) {
+      console.error('Erro ao gerar convite:', err)
+      alert('Erro ao gerar convite. Tente novamente.')
+    } finally {
+      setGeneratingInvite(false)
     }
-    
-    setGeneratingInvite(false)
   }
 
   async function copyInviteCode(code) {
     await navigator.clipboard.writeText(`getdasein.app/${code}`)
+    setCopiedCode(code)
+    setTimeout(() => setCopiedCode(null), 2000)
   }
 
   async function handleLogout() {
@@ -319,8 +331,9 @@ export default function Profile() {
                       <button 
                         className="invite-copy"
                         onClick={() => copyInviteCode(inv.code)}
+                        style={copiedCode === inv.code ? { color: 'var(--color-success)' } : {}}
                       >
-                        copiar
+                        {copiedCode === inv.code ? 'copiado!' : 'copiar'}
                       </button>
                     )}
                   </div>
