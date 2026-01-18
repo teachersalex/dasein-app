@@ -5,7 +5,7 @@ import './Login.css'
 
 export default function Login() {
   const navigate = useNavigate()
-  const { loginWithEmail, loginWithGoogle, getUserProfile } = useAuth()
+  const { loginWithEmail, loginWithGoogle, getUserProfile, setProfile } = useAuth()
   
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -19,9 +19,10 @@ export default function Login() {
     const result = await loginWithGoogle()
     
     if (result.success) {
-      const profile = await getUserProfile(result.user.uid)
+      const existingProfile = await getUserProfile(result.user.uid)
       
-      if (profile) {
+      if (existingProfile) {
+        setProfile(existingProfile)
         navigate('/home')
       } else {
         setError('Conta não encontrada. Você precisa de um convite.')
@@ -41,9 +42,10 @@ export default function Login() {
     const result = await loginWithEmail(email, password)
     
     if (result.success) {
-      const profile = await getUserProfile(result.user.uid)
+      const existingProfile = await getUserProfile(result.user.uid)
       
-      if (profile) {
+      if (existingProfile) {
+        setProfile(existingProfile)
         navigate('/home')
       } else {
         navigate('/auth?step=onboarding')

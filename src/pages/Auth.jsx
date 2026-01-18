@@ -10,7 +10,7 @@ export default function Auth() {
   const navigate = useNavigate()
   const location = useLocation()
   const [searchParams] = useSearchParams()
-  const { user, signupWithEmail, loginWithGoogle, createUserProfile, isUsernameTaken, getUserProfile } = useAuth()
+  const { user, signupWithEmail, loginWithGoogle, createUserProfile, isUsernameTaken, getUserProfile, setProfile } = useAuth()
   
   const [step, setStep] = useState('code') // code, signup, onboarding
   const [inviteCode, setInviteCode] = useState('')
@@ -102,9 +102,10 @@ export default function Auth() {
       setAuthUser(result.user)
       
       // Check if already has profile
-      const profile = await getUserProfile(result.user.uid)
+      const existingProfile = await getUserProfile(result.user.uid)
       
-      if (profile) {
+      if (existingProfile) {
+        setProfile(existingProfile)
         navigate('/home')
       } else {
         await useInvite(inviteCode, result.user.uid)
@@ -211,6 +212,11 @@ export default function Auth() {
     })
     
     if (result.success) {
+      // Buscar o perfil criado e setar no state antes de navegar
+      const newProfile = await getUserProfile(authUser.uid)
+      if (newProfile) {
+        setProfile(newProfile)
+      }
       navigate('/home')
     } else {
       setError(result.error || 'Erro ao criar perfil')
