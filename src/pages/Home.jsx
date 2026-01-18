@@ -27,8 +27,7 @@ export default function Home() {
   const [caption, setCaption] = useState('')
   const [posting, setPosting] = useState(false)
 
-  // Refs para feedback visual (performance)
-  const previewRef = useRef(null)
+  // Ref para feedback visual do nome do filtro
   const filterNameRef = useRef(null)
 
   // ⚠️ CRITICAL - Processamento de filtros
@@ -85,7 +84,6 @@ export default function Home() {
       isDragging: true
     }
     
-    if (previewRef.current) previewRef.current.style.transition = 'none'
     if (filterNameRef.current) filterNameRef.current.style.transition = 'none'
   }
   
@@ -104,13 +102,8 @@ export default function Home() {
       return
     }
     
-    // Feedback visual 1:1
+    // Feedback visual só no nome do filtro
     const offset = deltaFromStart / 2.5
-    
-    if (previewRef.current) {
-      previewRef.current.style.transform = `translateX(${offset}px) scale(${1 - Math.abs(offset)/1000})`
-      previewRef.current.style.opacity = 1 - Math.abs(offset) / 500
-    }
     
     if (filterNameRef.current) {
       filterNameRef.current.style.transform = `translateX(calc(-50% + ${offset * 1.5}px))`
@@ -148,16 +141,8 @@ export default function Home() {
   }
   
   function resetVisualState(animate = false) {
-    const transition = animate ? 'transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.3s ease' : 'none'
-    
-    if (previewRef.current) {
-      previewRef.current.style.transition = transition
-      previewRef.current.style.transform = 'translateX(0) scale(1)'
-      previewRef.current.style.opacity = '1'
-    }
-    
     if (filterNameRef.current) {
-      filterNameRef.current.style.transition = transition
+      filterNameRef.current.style.transition = animate ? 'transform 0.3s ease, opacity 0.3s ease' : 'none'
       filterNameRef.current.style.transform = 'translateX(-50%)'
       filterNameRef.current.style.opacity = filterIndex !== 0 ? '1' : '0'
     }
@@ -231,7 +216,6 @@ export default function Home() {
       {screen === 'preview' && (
         <div className="preview-screen">
           <div 
-            ref={previewRef}
             className="preview-container"
             onTouchStart={handleTouchStart}
             onTouchMove={handleTouchMove}
@@ -251,7 +235,7 @@ export default function Home() {
             {FILTERS.map((filter, i) => (
               <button 
                 key={filter.id}
-                className={`filter-dot ${i === filterIndex ? 'active' : ''}`}
+                className={`filter-bar ${i === filterIndex ? 'active' : ''}`}
                 onClick={() => {
                   setFilterIndex(i)
                   if (navigator.vibrate) navigator.vibrate(5)

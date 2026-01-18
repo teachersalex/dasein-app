@@ -70,7 +70,7 @@
   transform: translateX(-50%) translateY(0);
 }
 
-/* Filter indicators */
+/* Filter indicators - barras analógicas */
 .filter-indicators {
   display: flex;
   align-items: center;
@@ -80,10 +80,9 @@
   background: var(--color-bg);
 }
 
-.filter-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
+.filter-bar {
+  width: 2px;
+  height: 16px;
   background: var(--color-text-muted);
   border: none;
   padding: 0;
@@ -92,13 +91,13 @@
   -webkit-tap-highlight-color: transparent;
 }
 
-.filter-dot:hover {
+.filter-bar:hover {
   background: var(--color-text-tertiary);
 }
 
-.filter-dot.active {
+.filter-bar.active {
   background: var(--color-text);
-  transform: scale(1.4);
+  height: 20px;
 }
 
 /* Preview actions */
