@@ -22,7 +22,7 @@ const [invites, setInvites] = useState([])
 const [generatingInvite, setGeneratingInvite] = useState(false)
 const [copiedCode, setCopiedCode] = useState(null)
 
-// Follow state
+// Follow state v
 const [following, setFollowing] = useState(false)
 const [followLoading, setFollowLoading] = useState(false)
 
