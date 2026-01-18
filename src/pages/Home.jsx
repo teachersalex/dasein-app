@@ -1,12 +1,24 @@
-import { useState, useRef, useEffect, useCallback } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { uploadPost } from '../lib/posts'
 import { FILTERS, applyFilter } from '../lib/filters'
+import HomeCamera from './HomeCamera'
+import { 
+  CameraIcon, 
+  RetakeIcon, 
+  ArrowIcon, 
+  BackIcon, 
+  CheckIcon, 
+  SuccessAnimation 
+} from './HomeIcons'
 import './Home.css'
-import './camera.css'
 import './preview.css'
 import './caption.css'
+
+// ==========================================
+// DASEIN - Home (Orchestrator)
+// ==========================================
 
 export default function Home() {
   const navigate = useNavigate()
@@ -18,188 +30,6 @@ export default function Home() {
   const [filteredPhoto, setFilteredPhoto] = useState(null)
   const [caption, setCaption] = useState('')
   const [posting, setPosting] = useState(false)
-  
-  const videoRef = useRef(null)
-  const canvasRef = useRef(null)
-  const streamRef = useRef(null)
-  const [facingMode, setFacingMode] = useState('environment')
-  
-  const [isCapturing, setIsCapturing] = useState(false)
-  const [isFlipping, setIsFlipping] = useState(false)
-  const [showFlash, setShowFlash] = useState(false)
-  const [cameraReady, setCameraReady] = useState(false)
-
-  // ==========================================
-  // CAMERA
-  // ==========================================
-  
-  const startCamera = useCallback(async () => {
-    try {
-      stopCamera()
-      setCameraReady(false)
-      setScreen('camera')
-      
-      // Simple constraints - no forced resolution
-      const constraints = {
-        video: { 
-          facingMode,
-          width: { ideal: 1280 },
-          height: { ideal: 720 }
-        },
-        audio: false
-      }
-      
-      const stream = await navigator.mediaDevices.getUserMedia(constraints)
-      streamRef.current = stream
-      
-      // Wait for DOM
-      await new Promise(resolve => setTimeout(resolve, 100))
-      
-      if (videoRef.current && streamRef.current) {
-        const video = videoRef.current
-        video.srcObject = streamRef.current
-        
-        // iOS fix: proper event chain
-        const handleCanPlay = () => {
-          video.play()
-            .then(() => setTimeout(() => setCameraReady(true), 100))
-            .catch(console.error)
-        }
-        
-        video.oncanplay = handleCanPlay
-        
-        // Fallback for iOS quirks
-        setTimeout(() => {
-          if (!cameraReady && streamRef.current) {
-            video.play().catch(() => {})
-            setCameraReady(true)
-          }
-        }, 800)
-      }
-      
-    } catch (error) {
-      console.error('Camera error:', error)
-      alert('Não foi possível acessar a câmera')
-      setScreen('home')
-    }
-  }, [facingMode])
-
-  function stopCamera() {
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach(track => track.stop())
-      streamRef.current = null
-    }
-    if (videoRef.current) {
-      videoRef.current.srcObject = null
-      videoRef.current.oncanplay = null
-    }
-    setCameraReady(false)
-  }
-
-  async function flipCamera() {
-    if (isFlipping) return
-    
-    setIsFlipping(true)
-    if (navigator.vibrate) navigator.vibrate(10)
-    
-    await new Promise(r => setTimeout(r, 150))
-    
-    stopCamera()
-    setFacingMode(mode => mode === 'environment' ? 'user' : 'environment')
-  }
-
-  useEffect(() => {
-    if (screen === 'camera') {
-      startCamera().then(() => {
-        setTimeout(() => setIsFlipping(false), 300)
-      })
-    }
-    
-    return () => {
-      if (screen !== 'camera') stopCamera()
-    }
-  }, [facingMode])
-
-  useEffect(() => {
-    return () => stopCamera()
-  }, [])
-
-  // ==========================================
-  // CAPTURE - 4:5 crop from center
-  // ==========================================
-  
-  function capturePhoto() {
-    if (!videoRef.current || !canvasRef.current || isCapturing || !cameraReady) return
-    
-    const video = videoRef.current
-    const canvas = canvasRef.current
-    const ctx = canvas.getContext('2d')
-    
-    if (video.videoWidth === 0 || video.videoHeight === 0) return
-    
-    setIsCapturing(true)
-    if (navigator.vibrate) navigator.vibrate(20)
-    
-    setTimeout(() => {
-      const vw = video.videoWidth
-      const vh = video.videoHeight
-      
-      // Target aspect ratio: 4:5
-      const targetAspect = 4 / 5
-      const videoAspect = vw / vh
-      
-      let sx, sy, sw, sh
-      
-      if (videoAspect > targetAspect) {
-        // Video is wider than 4:5 - crop sides
-        sh = vh
-        sw = vh * targetAspect
-        sx = (vw - sw) / 2
-        sy = 0
-      } else {
-        // Video is taller than 4:5 - crop top/bottom
-        sw = vw
-        sh = vw / targetAspect
-        sx = 0
-        sy = (vh - sh) / 2
-      }
-      
-      // Output size (max 1080px wide)
-      const outputW = Math.min(1080, sw)
-      const outputH = outputW / targetAspect
-      
-      canvas.width = outputW
-      canvas.height = outputH
-      
-      if (facingMode === 'user') {
-        ctx.translate(canvas.width, 0)
-        ctx.scale(-1, 1)
-      }
-      
-      ctx.drawImage(video, sx, sy, sw, sh, 0, 0, canvas.width, canvas.height)
-      
-      if (facingMode === 'user') {
-        ctx.setTransform(1, 0, 0, 1, 0, 0)
-      }
-      
-      setShowFlash(true)
-      setTimeout(() => setShowFlash(false), 120)
-      
-      if (navigator.vibrate) navigator.vibrate([10, 30, 10])
-      
-      const photo = canvas.toDataURL('image/jpeg', 0.92)
-      setPhotoData(photo)
-      setFilteredPhoto(photo)
-      setFilterIndex(0)
-      
-      setTimeout(() => {
-        stopCamera()
-        setScreen('preview')
-        setIsCapturing(false)
-      }, 150)
-      
-    }, 60)
-  }
 
   // ==========================================
   // FILTERS
@@ -236,6 +66,10 @@ export default function Home() {
       if (navigator.vibrate) navigator.vibrate(8)
     }
   }
+
+  // ==========================================
+  // TOUCH GESTURES (Preview)
+  // ==========================================
 
   const touchState = useRef({ 
     startX: 0, startY: 0, lastX: 0,
@@ -298,8 +132,21 @@ export default function Home() {
   }
 
   // ==========================================
-  // POST
+  // HANDLERS
   // ==========================================
+
+  function handleCapture(photo) {
+    setPhotoData(photo)
+    setFilteredPhoto(photo)
+    setFilterIndex(0)
+    setScreen('preview')
+  }
+
+  function handleRetake() {
+    setPhotoData(null)
+    setFilteredPhoto(null)
+    setScreen('camera')
+  }
   
   async function handlePost() {
     if (posting || !filteredPhoto) return
@@ -307,11 +154,22 @@ export default function Home() {
     setPosting(true)
     
     try {
-      await uploadPost(filteredPhoto, caption, user.uid)
-      setScreen('success')
-      setCaption('')
-      setPhotoData(null)
-      setFilteredPhoto(null)
+      // FIX: parâmetros na ordem correta
+      const result = await uploadPost(
+        user.uid, 
+        filteredPhoto, 
+        caption, 
+        FILTERS[filterIndex].name
+      )
+      
+      if (result.success) {
+        setScreen('success')
+        setCaption('')
+        setPhotoData(null)
+        setFilteredPhoto(null)
+      } else {
+        throw new Error(result.error || 'Upload failed')
+      }
     } catch (error) {
       console.error('Post error:', error)
       alert('Erro ao postar. Tenta de novo.')
@@ -320,25 +178,18 @@ export default function Home() {
     setPosting(false)
   }
 
-  function handleRetake() {
-    setPhotoData(null)
-    setFilteredPhoto(null)
-    startCamera()
-  }
-
   // ==========================================
   // RENDER
   // ==========================================
   
   return (
     <div className="home">
-      <div className={`capture-flash ${showFlash ? 'active' : ''}`} />
-      <canvas ref={canvasRef} style={{ display: 'none' }} />
       
+      {/* HOME SCREEN */}
       {screen === 'home' && (
         <div className="home-screen">
           <div className="home-content">
-            <button className="capture-btn" onClick={startCamera}>
+            <button className="capture-btn" onClick={() => setScreen('camera')}>
               <div className="capture-btn-ring" />
               <div className="capture-btn-icon">
                 <CameraIcon />
@@ -356,58 +207,15 @@ export default function Home() {
         </div>
       )}
       
+      {/* CAMERA SCREEN */}
       {screen === 'camera' && (
-        <div className={`camera-screen ${cameraReady ? 'ready' : ''}`}>
-          <div className={`camera-viewfinder ${isFlipping ? 'flipping' : ''}`}>
-            <video 
-              ref={videoRef} 
-              autoPlay 
-              playsInline 
-              muted
-              className={facingMode === 'user' ? 'mirror' : ''}
-            />
-            <div className="viewfinder-vignette" />
-            <div className="crop-overlay" />
-          </div>
-          
-          <div className="camera-controls-overlay">
-            <div className="camera-top-controls">
-              <button 
-                className="control-btn" 
-                onClick={() => { stopCamera(); setScreen('home') }}
-              >
-                <CloseIcon />
-              </button>
-            </div>
-            
-            <div className="camera-bottom-controls">
-              <div className="controls-row">
-                <div className="control-spacer" />
-                
-                <button 
-                  className={`shutter-btn ${isCapturing ? 'capturing' : ''}`}
-                  onClick={capturePhoto}
-                  disabled={!cameraReady || isCapturing}
-                >
-                  <div className="shutter-outer">
-                    <div className="shutter-ring" />
-                    <div className="shutter-inner" />
-                  </div>
-                </button>
-                
-                <button 
-                  className={`control-btn flip-btn ${isFlipping ? 'flipping' : ''}`}
-                  onClick={flipCamera}
-                  disabled={isFlipping}
-                >
-                  <FlipIcon />
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
+        <HomeCamera 
+          onCapture={handleCapture}
+          onClose={() => setScreen('home')}
+        />
       )}
       
+      {/* PREVIEW SCREEN */}
       {screen === 'preview' && (
         <div className="preview-screen">
           <div 
@@ -456,6 +264,7 @@ export default function Home() {
         </div>
       )}
       
+      {/* CAPTION SCREEN */}
       {screen === 'caption' && (
         <div className="caption-screen">
           <div className="caption-header">
@@ -493,6 +302,7 @@ export default function Home() {
         </div>
       )}
       
+      {/* SUCCESS SCREEN */}
       {screen === 'success' && (
         <div className="success-screen">
           <div className="success-content">
@@ -502,7 +312,7 @@ export default function Home() {
           </div>
           
           <div className="success-actions">
-            <button className="action-btn primary" onClick={startCamera}>
+            <button className="action-btn primary" onClick={() => setScreen('camera')}>
               <CameraIcon /><span>Nova foto</span>
             </button>
             
@@ -512,75 +322,6 @@ export default function Home() {
           </div>
         </div>
       )}
-    </div>
-  )
-}
-
-function CameraIcon() {
-  return (
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
-      <circle cx="12" cy="13" r="4"/>
-    </svg>
-  )
-}
-
-function CloseIcon() {
-  return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-      <path d="M18 6L6 18M6 6l12 12"/>
-    </svg>
-  )
-}
-
-function FlipIcon() {
-  return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M21 4H3M18 8l3-4-3-4M3 20h18M6 16l-3 4 3 4"/>
-      <rect x="7" y="8" width="10" height="8" rx="1"/>
-    </svg>
-  )
-}
-
-function RetakeIcon() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M1 4v6h6"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/>
-    </svg>
-  )
-}
-
-function ArrowIcon() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M5 12h14M12 5l7 7-7 7"/>
-    </svg>
-  )
-}
-
-function BackIcon() {
-  return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M19 12H5M12 19l-7-7 7-7"/>
-    </svg>
-  )
-}
-
-function CheckIcon() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-      <polyline points="20 6 9 17 4 12"/>
-    </svg>
-  )
-}
-
-function SuccessAnimation() {
-  return (
-    <div className="success-animation">
-      <svg viewBox="0 0 52 52">
-        <circle className="success-circle" cx="26" cy="26" r="24" fill="none" stroke="currentColor" strokeWidth="2"/>
-        <path className="success-check" d="M14 27l8 8 16-16" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/>
-      </svg>
     </div>
   )
 }
