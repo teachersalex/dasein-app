@@ -11,7 +11,7 @@ import {
   increment,
   serverTimestamp 
 } from 'firebase/firestore'
-import { db } from '../lib/firebase'
+import { db } from './firebase'
 
 // Gera código DSEIN-XXXXX
 export function generateInviteCode() {
