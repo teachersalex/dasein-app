@@ -108,8 +108,16 @@ export default function Profile() {
       
       if (result.success) {
         const inviteLink = `getdasein.app/${result.code}`
-        await navigator.clipboard.writeText(inviteLink)
-        alert(`Convite copiado!\n\n${inviteLink}`)
+        
+        // Tenta copiar, mas não falha se não conseguir
+        try {
+          await navigator.clipboard.writeText(inviteLink)
+          alert(`Convite copiado!\n\n${inviteLink}`)
+        } catch {
+          // Clipboard falhou (comum no mobile) - mostra o link pra copiar manualmente
+          alert(`Novo convite criado!\n\n${inviteLink}\n\n(Use o botão copiar na lista)`)
+        }
+        
         await loadInvites()
         
         // Atualiza contadores locais (se não for infinito)
@@ -130,9 +138,14 @@ export default function Profile() {
   }
 
   async function copyInviteCode(code) {
-    await navigator.clipboard.writeText(`getdasein.app/${code}`)
-    setCopiedCode(code)
-    setTimeout(() => setCopiedCode(null), 2000)
+    try {
+      await navigator.clipboard.writeText(`getdasein.app/${code}`)
+      setCopiedCode(code)
+      setTimeout(() => setCopiedCode(null), 2000)
+    } catch {
+      // Fallback: seleciona o texto pra copiar manualmente
+      alert(`Link: getdasein.app/${code}`)
+    }
   }
 
   async function handleLogout() {
