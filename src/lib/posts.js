@@ -92,6 +92,49 @@ export async function getPost(postId) {
   }
 }
 
+// Busca posts do feed (de quem o usuário segue)
+export async function getFeedPosts(followingIds, limit = 50) {
+  if (!followingIds || followingIds.length === 0) {
+    return []
+  }
+
+  try {
+    // Firestore 'in' query supports max 30 items
+    const chunks = []
+    for (let i = 0; i < followingIds.length; i += 30) {
+      chunks.push(followingIds.slice(i, i + 30))
+    }
+
+    let allPosts = []
+
+    for (const chunk of chunks) {
+      const q = query(
+        collection(db, 'posts'),
+        where('userId', 'in', chunk),
+        orderBy('createdAt', 'desc')
+      )
+      
+      const snapshot = await getDocs(q)
+      
+      snapshot.forEach(doc => {
+        const data = doc.data()
+        allPosts.push({
+          id: doc.id,
+          ...data,
+          createdAt: data.createdAt?.toMillis() || Date.now()
+        })
+      })
+    }
+
+    // Sort by date and limit
+    allPosts.sort((a, b) => b.createdAt - a.createdAt)
+    return allPosts.slice(0, limit)
+  } catch (error) {
+    console.error('Error getting feed posts:', error)
+    return []
+  }
+}
+
 // Deletar post
 export async function deletePost(postId, storagePath) {
   try {

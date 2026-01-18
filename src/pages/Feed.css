@@ -1,0 +1,173 @@
+.feed-page {
+  min-height: 100vh;
+  min-height: 100dvh;
+  padding-bottom: 80px;
+}
+
+.feed-header {
+  position: sticky;
+  top: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  background: var(--color-bg);
+  z-index: 100;
+}
+
+.feed-title {
+  font-size: 20px;
+  font-weight: 300;
+  letter-spacing: 0.5px;
+}
+
+.feed-profile-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  transition: transform 0.15s;
+}
+
+.feed-profile-btn:active {
+  transform: scale(0.9);
+}
+
+/* Empty state */
+.feed-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+  text-align: center;
+  padding: 20px;
+}
+
+.feed-empty p {
+  color: var(--color-text-secondary);
+  font-weight: 300;
+}
+
+.feed-empty-hint {
+  margin-top: 8px;
+  font-size: 13px;
+  color: var(--color-text-muted);
+}
+
+/* Feed list */
+.feed-list {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  padding: 0 0 24px;
+}
+
+/* Feed item */
+.feed-item {
+  display: flex;
+  flex-direction: column;
+}
+
+.feed-item-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 20px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.feed-item-header:active {
+  background: var(--color-surface);
+}
+
+.feed-item-meta {
+  display: flex;
+  flex-direction: column;
+}
+
+.feed-item-author {
+  font-size: 14px;
+  font-weight: 400;
+}
+
+.feed-item-time {
+  font-size: 12px;
+  font-weight: 200;
+  color: var(--color-text-muted);
+  margin-top: 2px;
+}
+
+.feed-item-photo {
+  cursor: pointer;
+  overflow: hidden;
+}
+
+.feed-item-photo img {
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+  transition: transform 0.2s;
+}
+
+.feed-item-photo:active img {
+  transform: scale(0.98);
+}
+
+.feed-item-caption {
+  padding: 12px 20px 0;
+  font-size: 14px;
+  font-weight: 300;
+  line-height: 1.5;
+  color: var(--color-text-secondary);
+}
+
+/* Bottom nav */
+.feed-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  padding: 12px 20px;
+  padding-bottom: max(12px, env(safe-area-inset-bottom));
+  background: var(--color-bg);
+  border-top: 1px solid var(--color-border);
+}
+
+.feed-nav-btn {
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  transition: color 0.15s, transform 0.15s;
+}
+
+.feed-nav-btn:active {
+  transform: scale(0.9);
+}
+
+.feed-nav-btn.active {
+  color: var(--color-text);
+}
+
+.feed-nav-capture {
+  width: 56px;
+  height: 56px;
+  background: var(--color-text);
+  color: var(--color-bg);
+  border-radius: 50%;
+  margin-top: -20px;
+}
+
+.feed-nav-capture:active {
+  background: var(--color-text-secondary);
+}

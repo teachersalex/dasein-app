@@ -10,6 +10,7 @@ import Home from './pages/Home'
 import Profile from './pages/Profile'
 import Settings from './pages/Settings'
 import Post from './pages/Post'
+import Feed from './pages/Feed'
 
 // Protected Route wrapper
 function ProtectedRoute({ children }) {
@@ -61,6 +62,7 @@ export default function App() {
           
           {/* Protected routes */}
           <Route path="/home" element={<ProtectedRoute><Home /></ProtectedRoute>} />
+          <Route path="/feed" element={<ProtectedRoute><Feed /></ProtectedRoute>} />
           <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
           <Route path="/profile/:username" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
           <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />

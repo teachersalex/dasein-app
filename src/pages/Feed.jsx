@@ -1,0 +1,213 @@
+import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { useAuth } from '../hooks/useAuth'
+import { getFeedPosts } from '../lib/posts'
+import { getFollowing } from '../lib/follows'
+import { getFilterClass } from '../lib/filters'
+import FadeImage from '../components/FadeImage'
+import './Feed.css'
+
+export default function Feed() {
+  const navigate = useNavigate()
+  const { user, profile } = useAuth()
+  
+  const [posts, setPosts] = useState([])
+  const [profiles, setProfiles] = useState({}) // userId -> profile
+  const [loading, setLoading] = useState(true)
+  const [empty, setEmpty] = useState(false)
+
+  useEffect(() => {
+    if (user) {
+      loadFeed()
+    }
+  }, [user])
+
+  async function loadFeed() {
+    setLoading(true)
+    
+    // Get who user follows
+    const following = await getFollowing(user.uid)
+    
+    if (following.length === 0) {
+      setEmpty(true)
+      setLoading(false)
+      return
+    }
+
+    // Build profiles map
+    const profilesMap = {}
+    following.forEach(p => {
+      profilesMap[p.id] = p
+    })
+    setProfiles(profilesMap)
+
+    // Get posts from followed users
+    const followingIds = following.map(p => p.id)
+    const feedPosts = await getFeedPosts(followingIds)
+    
+    setPosts(feedPosts)
+    setEmpty(feedPosts.length === 0)
+    setLoading(false)
+  }
+
+  function formatTime(timestamp) {
+    if (!timestamp) return ''
+    
+    const date = new Date(timestamp)
+    const now = new Date()
+    const diff = now - date
+    const minutes = Math.floor(diff / 60000)
+    const hours = Math.floor(diff / 3600000)
+    const days = Math.floor(diff / 86400000)
+
+    if (minutes < 1) return 'agora'
+    if (minutes < 60) return `${minutes}min`
+    if (hours < 24) return `${hours}h`
+    if (days < 7) return `${days}d`
+    return date.toLocaleDateString('pt-BR', { day: 'numeric', month: 'short' })
+  }
+
+  function goToProfile(username) {
+    navigate(`/profile/${username}`)
+  }
+
+  function goToPost(post) {
+    const author = profiles[post.userId]
+    navigate(`/post/${post.id}`, { state: { post, profile: author } })
+  }
+
+  if (loading) {
+    return (
+      <div className="screen-center">
+        <div className="spinner" />
+      </div>
+    )
+  }
+
+  return (
+    <div className="feed-page fade-in">
+      <header className="feed-header">
+        <h1 className="feed-title">Feed</h1>
+        <button 
+          className="feed-profile-btn"
+          onClick={() => navigate('/profile')}
+        >
+          <div className="avatar avatar-sm">
+            {profile?.photoURL ? (
+              <FadeImage src={profile.photoURL} alt={profile.displayName} />
+            ) : (
+              profile?.displayName?.charAt(0).toUpperCase() || '?'
+            )}
+          </div>
+        </button>
+      </header>
+
+      {empty ? (
+        <div className="feed-empty">
+          <p>Nenhum post ainda.</p>
+          <p className="feed-empty-hint">
+            Siga pessoas para ver as fotos delas aqui.
+          </p>
+          <button 
+            className="btn" 
+            onClick={() => navigate('/profile')}
+            style={{ marginTop: 24 }}
+          >
+            Meu perfil
+          </button>
+        </div>
+      ) : (
+        <div className="feed-list">
+          {posts.map(post => {
+            const author = profiles[post.userId]
+            return (
+              <article key={post.id} className="feed-item">
+                <header 
+                  className="feed-item-header"
+                  onClick={() => author && goToProfile(author.username)}
+                >
+                  <div className="avatar avatar-sm">
+                    {author?.photoURL ? (
+                      <FadeImage src={author.photoURL} alt={author.displayName} />
+                    ) : (
+                      author?.displayName?.charAt(0).toUpperCase() || '?'
+                    )}
+                  </div>
+                  <div className="feed-item-meta">
+                    <span className="feed-item-author">{author?.displayName || 'Usuário'}</span>
+                    <span className="feed-item-time">{formatTime(post.createdAt)}</span>
+                  </div>
+                </header>
+                
+                <div 
+                  className="feed-item-photo"
+                  onClick={() => goToPost(post)}
+                >
+                  <FadeImage 
+                    src={post.photoURL} 
+                    alt=""
+                    className={getFilterClass(post.filter)}
+                  />
+                </div>
+                
+                {post.caption && (
+                  <p className="feed-item-caption">{post.caption}</p>
+                )}
+              </article>
+            )
+          })}
+        </div>
+      )}
+
+      <nav className="feed-nav">
+        <button 
+          className="feed-nav-btn active"
+          onClick={() => navigate('/feed')}
+        >
+          <FeedIcon />
+        </button>
+        <button 
+          className="feed-nav-btn feed-nav-capture"
+          onClick={() => navigate('/home')}
+        >
+          <CaptureIcon />
+        </button>
+        <button 
+          className="feed-nav-btn"
+          onClick={() => navigate('/profile')}
+        >
+          <ProfileIcon />
+        </button>
+      </nav>
+    </div>
+  )
+}
+
+function FeedIcon() {
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+      <rect x="3" y="3" width="7" height="7" rx="1"/>
+      <rect x="14" y="3" width="7" height="7" rx="1"/>
+      <rect x="3" y="14" width="7" height="7" rx="1"/>
+      <rect x="14" y="14" width="7" height="7" rx="1"/>
+    </svg>
+  )
+}
+
+function CaptureIcon() {
+  return (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+      <circle cx="12" cy="12" r="10"/>
+      <circle cx="12" cy="12" r="4"/>
+    </svg>
+  )
+}
+
+function ProfileIcon() {
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+      <circle cx="12" cy="8" r="4"/>
+      <path d="M4 20c0-4 4-6 8-6s8 2 8 6"/>
+    </svg>
+  )
+}
