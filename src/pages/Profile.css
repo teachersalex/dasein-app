@@ -38,7 +38,21 @@
   font-size: 14px;
   font-weight: 300;
   color: var(--color-text-secondary);
+  margin-bottom: 8px;
+}
+
+/* 🌱 Convidado por */
+.profile-invited-by {
+  font-size: 12px;
+  font-weight: 300;
+  color: var(--color-text-tertiary);
   margin-bottom: 16px;
+  cursor: pointer;
+  transition: color 0.15s;
+}
+
+.profile-invited-by:hover {
+  color: var(--color-text-secondary);
 }
 
 /* Stats */

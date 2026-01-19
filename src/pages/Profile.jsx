@@ -27,6 +27,9 @@ export default function Profile() {
   const [followLoading, setFollowLoading] = useState(false)
 
   const [modalType, setModalType] = useState(null)
+  
+  // 🌱 Quem convidou
+  const [inviterProfile, setInviterProfile] = useState(null)
 
   const isOwnProfile = !username || (profile && username === profile.username)
 
@@ -39,6 +42,12 @@ export default function Profile() {
         if (user) {
           const userPosts = await getUserPosts(user.uid)
           setPosts(userPosts)
+        }
+        
+        // Carregar quem convidou
+        if (profile?.invitedBy) {
+          const inviter = await getUserProfile(profile.invitedBy)
+          setInviterProfile(inviter)
         }
       } else {
         const otherProfile = await getUserByUsername(username)
@@ -53,6 +62,12 @@ export default function Profile() {
           
           const userPosts = await getUserPosts(otherProfile.id)
           setPosts(userPosts)
+          
+          // Carregar quem convidou
+          if (otherProfile.invitedBy) {
+            const inviter = await getUserProfile(otherProfile.invitedBy)
+            setInviterProfile(inviter)
+          }
         } else {
           setViewProfile(null)
         }
@@ -232,6 +247,16 @@ export default function Profile() {
         
         <h1 className="profile-name">{viewProfile.displayName}</h1>
         <p className="profile-username">@{viewProfile.username}</p>
+        
+        {/* 🌱 Convidado por */}
+        {inviterProfile && (
+          <p 
+            className="profile-invited-by"
+            onClick={() => navigate(`/profile/${inviterProfile.username}`)}
+          >
+            convidado por @{inviterProfile.username}
+          </p>
+        )}
         
         <div className="profile-stats">
           <div className="stat">
