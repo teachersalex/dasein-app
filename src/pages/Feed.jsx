@@ -157,6 +157,12 @@ export default function Feed() {
           <CaptureIcon />
         </button>
         <button 
+          className="feed-nav-btn feed-nav-soon"
+          disabled
+        >
+          <SoonIcon />
+        </button>
+        <button 
           className="feed-nav-btn"
           onClick={() => navigate('/profile')}
         >
@@ -188,9 +194,19 @@ function SparkIcon() {
 
 function CaptureIcon() {
   return (
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
       <circle cx="12" cy="12" r="10"/>
       <circle cx="12" cy="12" r="4"/>
+    </svg>
+  )
+}
+
+function SoonIcon() {
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" opacity="0.4">
+      <circle cx="6" cy="12" r="1.5"/>
+      <circle cx="12" cy="12" r="1.5"/>
+      <circle cx="18" cy="12" r="1.5"/>
     </svg>
   )
 }
