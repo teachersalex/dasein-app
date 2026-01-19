@@ -389,7 +389,15 @@ export default function Profile() {
             <div 
               key={post.id} 
               className={`photo-grid-item ${index === 0 ? 'featured' : ''}`}
-              onClick={() => navigate(`/post/${post.id}`, { state: { post, profile: viewProfile } })}
+              onClick={() => navigate(`/post/${post.id}`, { 
+                state: { 
+                  post, 
+                  profile: viewProfile,
+                  posts,
+                  profiles: { [viewProfile.id]: viewProfile },
+                  index
+                } 
+              })}
             >
               <FadeImage 
                 src={post.photoURL} 
