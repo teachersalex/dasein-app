@@ -39,6 +39,11 @@ export default function Activity() {
     
     setActivities(items)
     
+    // Marcar como visto — remove o badge no Feed
+    if (items.length > 0) {
+      localStorage.setItem('lastActivitySeen', items[0].createdAt.toString())
+    }
+    
     // Carregar perfis únicos
     const uniqueUserIds = [...new Set(items.map(a => a.userId))]
     const profilesMap = {}

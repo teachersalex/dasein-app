@@ -1,7 +1,9 @@
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { useFeed } from '../hooks/useQueries'
 import { getFilterClass } from '../lib/filters'
+import { getReceivedLikes } from '../lib/likes'
 import FadeImage from '../components/FadeImage'
 import './Feed.css'
 
@@ -11,6 +13,27 @@ export default function Feed() {
   const { user, profile } = useAuth()
   
   const { data, isLoading, error } = useFeed(user?.uid)
+  const [hasNewActivity, setHasNewActivity] = useState(false)
+
+  // Checar se tem atividade nova
+  useEffect(() => {
+    if (!user) return
+    
+    async function checkActivity() {
+      const likes = await getReceivedLikes(user.uid, 1)
+      if (likes.length === 0) {
+        setHasNewActivity(false)
+        return
+      }
+      
+      const lastActivity = likes[0].createdAt?.toMillis() || 0
+      const lastSeen = parseInt(localStorage.getItem('lastActivitySeen') || '0')
+      
+      setHasNewActivity(lastActivity > lastSeen)
+    }
+    
+    checkActivity()
+  }, [user])
 
   function formatTime(timestamp) {
     if (!timestamp) return ''
@@ -149,6 +172,7 @@ export default function Feed() {
           onClick={() => navigate('/activity')}
         >
           <SparkIcon />
+          {hasNewActivity && <span className="nav-badge" />}
         </button>
         <button 
           className="feed-nav-btn feed-nav-capture"
