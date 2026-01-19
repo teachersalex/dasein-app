@@ -24,7 +24,7 @@ export default function Login() {
       
       if (existingProfile) {
         setProfile(existingProfile)
-        navigate('/home')
+        navigate('/feed')
       } else {
         setError('Conta não encontrada. Você precisa de um convite.')
       }
@@ -47,7 +47,7 @@ export default function Login() {
       
       if (existingProfile) {
         setProfile(existingProfile)
-        navigate('/home')
+        navigate('/feed')
       } else {
         navigate('/auth?step=onboarding')
       }

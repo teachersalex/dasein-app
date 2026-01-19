@@ -43,7 +43,7 @@ function PublicRoute({ children }) {
   }
   
   // ⚠️ Checa user E profile (onboarding pode estar incompleto)
-  return (user && profile) ? <Navigate to="/home" replace /> : children
+  return (user && profile) ? <Navigate to="/feed" replace /> : children
 }
 
 // 🔒 Handler: getdasein.app/DSEIN-XXXXX
@@ -52,7 +52,7 @@ function InviteRoute() {
   const { user, profile, loading } = useAuth()
   
   if (!loading && user && profile) {
-    return <Navigate to="/home" replace />
+    return <Navigate to="/feed" replace />
   }
   
   // 🔒 Formato do convite - mudar quebra convites existentes

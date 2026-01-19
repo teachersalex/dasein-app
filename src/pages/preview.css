@@ -19,7 +19,6 @@
   background: #000;
   position: relative;
   overflow: hidden;
-  /* Swipe horizontal na foto */
   touch-action: pan-y pinch-zoom;
   cursor: grab;
 }
@@ -28,12 +27,12 @@
   cursor: grabbing;
 }
 
+/* 🔒 pointer-events: none é essencial pro swipe funcionar */
 .preview-image {
   width: 100%;
   height: 100%;
   object-fit: contain;
   animation: previewZoomIn 0.35s var(--ease-out);
-  /* Não bloqueia touch events do container */
   pointer-events: none;
   user-select: none;
   -webkit-user-select: none;
@@ -86,7 +85,7 @@
   opacity: 1;
 }
 
-/* Filter indicators - ENGRENAGEM VISÍVEL */
+/* 🔒 ENGRENAGEM - valores aprovados, não alterar */
 .filter-indicators {
   display: flex;
   align-items: center;
@@ -104,7 +103,7 @@
   cursor: grabbing;
 }
 
-/* Cada barra - COR SÓLIDA VISÍVEL */
+/* 🔒 BARRAS - cor sólida (#444/#fff), não usar variáveis ou background-clip */
 .filter-bar {
   width: 3px;
   height: 14px;

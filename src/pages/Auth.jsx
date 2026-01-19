@@ -100,7 +100,7 @@ export default function Auth() {
       
       if (existingProfile) {
         setProfile(existingProfile)
-        navigate('/home')
+        navigate('/feed')
       } else {
         // ⚠️ useInvite marca o convite como usado
         await useInvite(inviteCode, result.user.uid)
@@ -207,7 +207,7 @@ export default function Auth() {
       if (newProfile) {
         setProfile(newProfile)
       }
-      navigate('/home')
+      navigate('/feed')
     } else {
       setError(result.error || 'Erro ao criar perfil')
     }

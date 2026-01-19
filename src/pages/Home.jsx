@@ -5,7 +5,6 @@ import { uploadPost } from '../lib/posts'
 import { FILTERS, applyFilter } from '../lib/filters'
 import HomeCamera from './HomeCamera'
 import { 
-  CameraIcon, 
   RetakeIcon, 
   ArrowIcon, 
   BackIcon, 
@@ -20,7 +19,7 @@ export default function Home() {
   const navigate = useNavigate()
   const { user } = useAuth()
   
-  const [screen, setScreen] = useState('home')
+  const [screen, setScreen] = useState('camera')
   const [photoData, setPhotoData] = useState(null)
   const [filterIndex, setFilterIndex] = useState(0)
   const [filteredPhoto, setFilteredPhoto] = useState(null)
@@ -96,26 +95,23 @@ export default function Home() {
     const deltaY = Math.abs(touch.clientY - touchState.current.startY)
     const now = Date.now()
     
-    // Se arrastar muito vertical, cancela
-    if (deltaY > 60) {
+    if (deltaY > 80) {
       touchState.current.isDragging = false
-      resetVisualState(true)
+      resetVisualState()
       return
     }
     
-    // Feedback visual no nome do filtro
-    const offset = deltaFromStart / 3
+    // Feedback visual só no nome do filtro
+    const offset = deltaFromStart / 2.5
     
     if (filterNameRef.current) {
-      filterNameRef.current.style.transform = `translateX(${offset}px)`
-      filterNameRef.current.style.opacity = Math.max(0.3, 1 - Math.abs(offset) / 80)
+      filterNameRef.current.style.transform = `translateX(${offset * 1.5}px)`
+      filterNameRef.current.style.opacity = 1 - Math.abs(offset) / 100
     }
     
-    // 🔒 ENGRENAGEM - troca de filtro com threshold menor pra sensibilidade
-    const threshold = 35  // Era 50, agora mais sensível
-    const cooldown = 80   // Era 100, agora mais rápido
-    
-    if (now - touchState.current.lastFilterChange > cooldown) {
+    // Troca de filtro
+    const threshold = 50
+    if (now - touchState.current.lastFilterChange > 100) {
       if (deltaFromLast < -threshold) {
         nextFilter()
         touchState.current.lastX = touch.clientX
@@ -146,7 +142,7 @@ export default function Home() {
   function resetVisualState(animate = false) {
     if (filterNameRef.current) {
       filterNameRef.current.style.transition = animate ? 'transform 0.3s ease, opacity 0.3s ease' : 'none'
-      filterNameRef.current.style.transform = 'translateX(0)'
+      filterNameRef.current.style.transform = 'translateY(0)'
       filterNameRef.current.style.opacity = filterIndex !== 0 ? '1' : '0'
     }
   }
@@ -183,6 +179,8 @@ export default function Home() {
         setCaption('')
         setPhotoData(null)
         setFilteredPhoto(null)
+        // Redireciona pro feed após 1.5s
+        setTimeout(() => navigate('/feed'), 1500)
       } else {
         throw new Error(result.error || 'Upload failed')
       }
@@ -197,33 +195,13 @@ export default function Home() {
   return (
     <div className="home">
       
-      {screen === 'home' && (
-        <div className="home-screen">
-          <div className="home-content">
-            <button className="capture-btn" onClick={() => setScreen('camera')}>
-              <div className="capture-btn-ring" />
-              <div className="capture-btn-icon"><CameraIcon /></div>
-            </button>
-            <p className="home-hint">capturar</p>
-          </div>
-          <button className="home-profile-link" onClick={() => navigate('/profile')}>
-            meu perfil →
-          </button>
-        </div>
-      )}
-      
       {screen === 'camera' && (
-        <HomeCamera onCapture={handleCapture} onClose={() => setScreen('home')} />
+        <HomeCamera onCapture={handleCapture} onClose={() => navigate('/feed')} />
       )}
       
       {screen === 'preview' && (
         <div className="preview-screen">
-          <div 
-            className="preview-container"
-            onTouchStart={handleTouchStart}
-            onTouchMove={handleTouchMove}
-            onTouchEnd={handleTouchEnd}
-          >
+          <div className="preview-container">
             {filteredPhoto ? (
               <img src={filteredPhoto} alt="Preview" className="preview-image" />
             ) : (
@@ -306,14 +284,6 @@ export default function Home() {
             <SuccessAnimation />
             <h2 className="success-title">Publicado</h2>
             <p className="success-subtitle">Seu momento foi salvo</p>
-          </div>
-          <div className="success-actions">
-            <button className="action-btn primary" onClick={() => setScreen('camera')}>
-              <CameraIcon /><span>Nova foto</span>
-            </button>
-            <button className="action-btn ghost" onClick={() => navigate('/profile')}>
-              <span>Ver perfil</span><ArrowIcon />
-            </button>
           </div>
         </div>
       )}
