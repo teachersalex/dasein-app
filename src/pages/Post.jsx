@@ -23,6 +23,10 @@ function PostItem({
   const [showHeart, setShowHeart] = useState(false)
   const [liking, setLiking] = useState(false)
   
+  // 🔒 Flag para evitar animação no load inicial
+  const hasLoadedRef = useRef(false)
+  const [canAnimate, setCanAnimate] = useState(false)
+  
   // Tap detection
   const tapTimer = useRef(null)
   const tapCount = useRef(0)
@@ -30,7 +34,14 @@ function PostItem({
   // 🔒 Carrega likes UMA vez quando monta
   useEffect(() => {
     if (user && post) {
-      hasLiked(user.uid, post.id).then(setLiked)
+      hasLiked(user.uid, post.id).then(result => {
+        setLiked(result)
+        // Permite animação só depois do primeiro load
+        setTimeout(() => {
+          hasLoadedRef.current = true
+          setCanAnimate(true)
+        }, 100)
+      })
       loadLikers()
     }
   }, [user, post?.id])
@@ -128,7 +139,7 @@ function PostItem({
       <div className="post-info">
         <div className="post-actions">
           <button 
-            className={`btn-like ${liked ? 'liked' : ''}`}
+            className={`btn-like ${liked ? 'liked' : ''} ${canAnimate ? 'can-animate' : ''}`}
             onClick={handleLike}
             disabled={liking}
           >
