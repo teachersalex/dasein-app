@@ -96,23 +96,26 @@ export default function Home() {
     const deltaY = Math.abs(touch.clientY - touchState.current.startY)
     const now = Date.now()
     
-    if (deltaY > 80) {
+    // Se arrastar muito vertical, cancela
+    if (deltaY > 60) {
       touchState.current.isDragging = false
-      resetVisualState()
+      resetVisualState(true)
       return
     }
     
-    // Feedback visual só no nome do filtro
-    const offset = deltaFromStart / 2.5
+    // Feedback visual no nome do filtro
+    const offset = deltaFromStart / 3
     
     if (filterNameRef.current) {
-      filterNameRef.current.style.transform = `translateX(${offset * 1.5}px)`
-      filterNameRef.current.style.opacity = 1 - Math.abs(offset) / 100
+      filterNameRef.current.style.transform = `translateX(${offset}px)`
+      filterNameRef.current.style.opacity = Math.max(0.3, 1 - Math.abs(offset) / 80)
     }
     
-    // Troca de filtro
-    const threshold = 50
-    if (now - touchState.current.lastFilterChange > 100) {
+    // 🔒 ENGRENAGEM - troca de filtro com threshold menor pra sensibilidade
+    const threshold = 35  // Era 50, agora mais sensível
+    const cooldown = 80   // Era 100, agora mais rápido
+    
+    if (now - touchState.current.lastFilterChange > cooldown) {
       if (deltaFromLast < -threshold) {
         nextFilter()
         touchState.current.lastX = touch.clientX
@@ -143,7 +146,7 @@ export default function Home() {
   function resetVisualState(animate = false) {
     if (filterNameRef.current) {
       filterNameRef.current.style.transition = animate ? 'transform 0.3s ease, opacity 0.3s ease' : 'none'
-      filterNameRef.current.style.transform = 'translateY(0)'
+      filterNameRef.current.style.transform = 'translateX(0)'
       filterNameRef.current.style.opacity = filterIndex !== 0 ? '1' : '0'
     }
   }

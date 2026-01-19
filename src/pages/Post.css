@@ -95,6 +95,33 @@
   opacity: 0;
 }
 
+.post-actions {
+  margin-bottom: 16px;
+}
+
+.btn-like {
+  background: none;
+  border: none;
+  padding: 8px;
+  margin: -8px;
+  cursor: pointer;
+  transition: transform 0.15s ease;
+}
+
+.btn-like:active {
+  transform: scale(0.85);
+}
+
+.btn-like.liked svg {
+  animation: heartPop 0.3s ease;
+}
+
+@keyframes heartPop {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.25); }
+  100% { transform: scale(1); }
+}
+
 @keyframes infoIn {
   to {
     opacity: 1;

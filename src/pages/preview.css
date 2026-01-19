@@ -48,61 +48,85 @@
 /* Filter controls - área preta abaixo da foto */
 .filter-controls {
   background: var(--color-bg);
-  padding: 16px 20px 8px;
+  padding: 20px 20px 8px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 12px;
+  gap: 16px;
+  position: relative;
+  z-index: 10;
 }
 
-/* Filter name - na área preta */
+/* Filter name - texto na área preta, NÃO sobre a foto */
 .filter-name {
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 400;
   color: var(--color-text-secondary);
-  letter-spacing: 0.5px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
   opacity: 0;
-  transform: translateY(4px);
-  transition: all 0.25s var(--ease-out);
-  height: 18px;
+  transition: opacity 0.25s var(--ease-out), transform 0.25s var(--ease-out);
+  min-height: 20px;
+  /* Garante que fica no fluxo normal, não flutua */
+  position: relative;
 }
 
 .filter-name.visible {
   opacity: 1;
-  transform: translateY(0);
 }
 
-/* Filter indicators - barras analógicas com área de toque grande */
+/* Filter indicators - ENGRENAGEM com área de toque generosa */
 .filter-indicators {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 4px;
-  padding: 12px 20px;
-  touch-action: pan-y;
+  gap: 0;
+  /* Área de toque GRANDE - altura generosa pra arrastar */
+  min-height: 64px;
+  padding: 0 40px;
+  /* Permite drag horizontal, bloqueia scroll vertical durante drag */
+  touch-action: none;
+  cursor: grab;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
+.filter-indicators:active {
+  cursor: grabbing;
+}
+
+/* Cada barra é um botão com área de toque invisível grande */
 .filter-bar {
-  width: 2px;
+  /* Visual: barra fina */
+  width: 3px;
   height: 16px;
   background: var(--color-text-muted);
+  border-radius: 2px;
+  
+  /* Reset */
   border: none;
-  padding: 20px 8px;
-  margin: 0 -8px;
-  cursor: pointer;
-  transition: all 0.25s var(--ease-out);
-  -webkit-tap-highlight-color: transparent;
+  
+  /* Área de toque: padding grande ao redor da barra visual */
+  padding: 24px 10px;
+  margin: 0;
+  
+  /* Faz o background só aparecer no centro (a barra visual) */
   background-clip: content-box;
+  
+  cursor: pointer;
+  transition: height 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), 
+              background 0.15s ease;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .filter-bar:hover {
-  background: var(--color-text-tertiary);
+  background-color: var(--color-text-tertiary);
   background-clip: content-box;
 }
 
 .filter-bar.active {
-  background: var(--color-text);
-  height: 22px;
+  background-color: var(--color-text);
+  height: 24px;
   background-clip: content-box;
 }
 

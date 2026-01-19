@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate, useParams, useLocation } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { getPost, deletePost } from '../lib/posts'
+import { likePost, unlikePost, hasLiked } from '../lib/likes'
 import { getFilterClass } from '../lib/filters'
 import FadeImage from '../components/FadeImage'
 import './Post.css'
@@ -17,6 +18,8 @@ export default function Post() {
   const [author, setAuthor] = useState(location.state?.profile || null)
   const [loading, setLoading] = useState(!post)
   const [deleting, setDeleting] = useState(false)
+  const [liked, setLiked] = useState(false)
+  const [liking, setLiking] = useState(false)
 
   // 🔒 SECURITY - só dono pode deletar
   const isOwner = user && post && user.uid === post.userId
@@ -28,6 +31,13 @@ export default function Post() {
       loadAuthor()
     }
   }, [id])
+
+  // Checar se já curtiu
+  useEffect(() => {
+    if (user && post) {
+      hasLiked(user.uid, post.id).then(setLiked)
+    }
+  }, [user, post?.id])
 
   async function loadPost() {
     const postData = await getPost(id)
@@ -60,6 +70,24 @@ export default function Post() {
       alert('Erro ao apagar foto.')
       setDeleting(false)
     }
+  }
+
+  async function handleLike() {
+    if (!user || liking) return
+    
+    setLiking(true)
+    const newLiked = !liked
+    setLiked(newLiked) // Optimistic update
+    
+    const result = newLiked
+      ? await likePost(user.uid, post.id, post.userId)
+      : await unlikePost(user.uid, post.id)
+    
+    if (!result.success) {
+      setLiked(!newLiked) // Rollback
+    }
+    
+    setLiking(false)
   }
 
   function goToProfile() {
@@ -160,6 +188,16 @@ export default function Post() {
       </div>
       
       <div className="post-info">
+        <div className="post-actions">
+          <button 
+            className={`btn-like ${liked ? 'liked' : ''}`}
+            onClick={handleLike}
+            disabled={liking}
+          >
+            <HeartIcon liked={liked} />
+          </button>
+        </div>
+        
         {post.caption && (
           <p className="post-caption">{post.caption}</p>
         )}
@@ -196,6 +234,25 @@ function TrashIcon() {
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
       <path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6h14z"/>
       <path d="M10 11v6M14 11v6"/>
+    </svg>
+  )
+}
+
+function HeartIcon({ liked }) {
+  return (
+    <svg width="26" height="26" viewBox="0 0 24 24" strokeWidth="1.5">
+      <defs>
+        <linearGradient id="silverGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#d0d0d0" />
+          <stop offset="50%" stopColor="#a0a0a0" />
+          <stop offset="100%" stopColor="#c0c0c0" />
+        </linearGradient>
+      </defs>
+      <path 
+        d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"
+        fill={liked ? "url(#silverGrad)" : "none"}
+        stroke={liked ? "url(#silverGrad)" : "#666"}
+      />
     </svg>
   )
 }
