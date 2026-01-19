@@ -144,8 +144,7 @@
   transform: scale(0.85);
 }
 
-/* 🔒 Animação só depois do load inicial */
-.btn-like.can-animate.liked svg {
+.btn-like.liked svg {
   animation: heartPop 0.3s ease;
 }
 
@@ -235,12 +234,18 @@
   }
 }
 
-/* Actions row */
+/* Actions row - 🔒 esconde até dados carregarem */
 .post-actions {
   display: flex;
   align-items: center;
   gap: 12px;
   margin-bottom: 16px;
+  opacity: 0;
+  transition: opacity 0.25s ease;
+}
+
+.post-actions.data-ready {
+  opacity: 1;
 }
 
 /* Likers avatars */
@@ -259,12 +264,6 @@
 .likers-avatars {
   display: flex;
   margin-left: 8px;
-  opacity: 0;
-  animation: fadeInSoft 0.3s ease 0.15s forwards;
-}
-
-@keyframes fadeInSoft {
-  to { opacity: 1; }
 }
 
 .liker-avatar {

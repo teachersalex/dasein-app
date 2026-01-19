@@ -23,9 +23,8 @@ function PostItem({
   const [showHeart, setShowHeart] = useState(false)
   const [liking, setLiking] = useState(false)
   
-  // 🔒 Flag para evitar animação no load inicial
-  const hasLoadedRef = useRef(false)
-  const [canAnimate, setCanAnimate] = useState(false)
+  // 🔒 Esconde ações até dados chegarem
+  const [dataReady, setDataReady] = useState(false)
   
   // Tap detection
   const tapTimer = useRef(null)
@@ -34,15 +33,30 @@ function PostItem({
   // 🔒 Carrega likes UMA vez quando monta
   useEffect(() => {
     if (user && post) {
-      hasLiked(user.uid, post.id).then(result => {
-        setLiked(result)
-        // Permite animação só depois do primeiro load
-        setTimeout(() => {
-          hasLoadedRef.current = true
-          setCanAnimate(true)
-        }, 100)
-      })
-      loadLikers()
+      loadAllData()
+    }
+    
+    async function loadAllData() {
+      // Busca tudo em paralelo
+      const [likedResult, likesResult] = await Promise.all([
+        hasLiked(user.uid, post.id),
+        getPostLikes(post.id)
+      ])
+      
+      // Seta os dados
+      setLiked(likedResult)
+      setLikers(likesResult)
+      
+      // Carrega perfis dos likers
+      const profiles = {}
+      for (const like of likesResult.slice(0, 10)) {
+        const p = await getUserProfile(like.userId)
+        if (p) profiles[like.userId] = p
+      }
+      setLikersProfiles(profiles)
+      
+      // Agora sim, mostra tudo
+      setDataReady(true)
     }
   }, [user, post?.id])
   
@@ -137,9 +151,9 @@ function PostItem({
       </div>
       
       <div className="post-info">
-        <div className="post-actions">
+        <div className={`post-actions ${dataReady ? 'data-ready' : ''}`}>
           <button 
-            className={`btn-like ${liked ? 'liked' : ''} ${canAnimate ? 'can-animate' : ''}`}
+            className={`btn-like ${liked ? 'liked' : ''}`}
             onClick={handleLike}
             disabled={liking}
           >
