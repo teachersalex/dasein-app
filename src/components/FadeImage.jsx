@@ -1,5 +1,6 @@
 import { useState } from 'react'
 
+// ✅ SAFE - componente utilitário simples
 export default function FadeImage({ src, alt = '', className = '', style = {} }) {
   const [loaded, setLoaded] = useState(false)
 

@@ -72,7 +72,7 @@ export default function Settings() {
       // Resize image
       const resized = await resizeImage(file, 400)
       
-      // Upload
+      // ⚠️ CRITICAL - formato bate com Storage rules: avatars/{uid}_*
       const fileName = `avatars/${user.uid}_${Date.now()}.jpg`
       const storageRef = ref(storage, fileName)
       await uploadBytes(storageRef, resized)
@@ -302,7 +302,7 @@ export default function Settings() {
   )
 }
 
-// Helper: resize image
+// 🔒 AVATAR - maxSize=400 é padrão do app, não alterar sem testar
 function resizeImage(file, maxSize) {
   return new Promise((resolve) => {
     const reader = new FileReader()

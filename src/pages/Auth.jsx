@@ -6,18 +6,18 @@ import { storage } from '../lib/firebase'
 import { validateInviteCode, useInvite } from '../lib/invites'
 import './Auth.css'
 
+// 🔒 Fluxo de onboarding: code → signup → onboarding → home
 export default function Auth() {
   const navigate = useNavigate()
   const location = useLocation()
   const [searchParams] = useSearchParams()
   const { user, signupWithEmail, loginWithGoogle, createUserProfile, isUsernameTaken, getUserProfile, setProfile } = useAuth()
   
-  const [step, setStep] = useState('code') // code, signup, onboarding
+  const [step, setStep] = useState('code')
   const [inviteCode, setInviteCode] = useState('')
   const [inviteData, setInviteData] = useState(null)
   const [authUser, setAuthUser] = useState(null)
   
-  // Form states
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [displayName, setDisplayName] = useState('')
@@ -29,7 +29,7 @@ export default function Auth() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
-  // Check if came from invite link (via location.state)
+  // Auto-validate invite from link (via location.state)
   useEffect(() => {
     const codeFromLink = location.state?.inviteCode
     
@@ -37,7 +37,6 @@ export default function Auth() {
       setInviteCode(codeFromLink)
       setLoading(true)
       
-      // Auto-validate the code
       validateInviteCode(codeFromLink).then(result => {
         if (result.valid) {
           setInviteData(result.invite)
@@ -50,7 +49,7 @@ export default function Auth() {
     }
   }, [location.state])
 
-  // Check if came from redirect (onboarding)
+  // Handle redirect for onboarding
   useEffect(() => {
     const stepParam = searchParams.get('step')
     if (stepParam === 'onboarding' && user) {
@@ -59,9 +58,7 @@ export default function Auth() {
     }
   }, [searchParams, user])
 
-  // ==========================================
-  // STEP 1: Code validation
-  // ==========================================
+  // === Step 1: Code ===
   
   function handleCodeInput(e) {
     let value = e.target.value.toUpperCase()
@@ -88,9 +85,7 @@ export default function Auth() {
     setLoading(false)
   }
 
-  // ==========================================
-  // STEP 2: Signup
-  // ==========================================
+  // === Step 2: Signup ===
   
   async function handleGoogleSignup() {
     setLoading(true)
@@ -101,13 +96,13 @@ export default function Auth() {
     if (result.success) {
       setAuthUser(result.user)
       
-      // Check if already has profile
       const existingProfile = await getUserProfile(result.user.uid)
       
       if (existingProfile) {
         setProfile(existingProfile)
         navigate('/home')
       } else {
+        // ⚠️ useInvite marca o convite como usado
         await useInvite(inviteCode, result.user.uid)
         setDisplayName(result.user.displayName || '')
         setStep('onboarding')
@@ -137,9 +132,7 @@ export default function Auth() {
     setLoading(false)
   }
 
-  // ==========================================
-  // STEP 3: Onboarding
-  // ==========================================
+  // === Step 3: Onboarding ===
   
   function handleUsernameInput(e) {
     const value = e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, '')
@@ -148,7 +141,6 @@ export default function Auth() {
     if (value.length >= 3) {
       setUsernameStatus({ text: 'Verificando...', color: 'var(--color-text-tertiary)' })
       
-      // Debounce
       clearTimeout(window.usernameTimeout)
       window.usernameTimeout = setTimeout(async () => {
         const taken = await isUsernameTaken(value)
@@ -190,7 +182,6 @@ export default function Auth() {
     
     setLoading(true)
     
-    // Upload avatar
     let photoURL = null
     if (avatarFile) {
       try {
@@ -202,7 +193,7 @@ export default function Auth() {
       }
     }
     
-    // Create profile
+    // 🔒 createUserProfile define campos iniciais do usuário
     const result = await createUserProfile(authUser.uid, {
       displayName,
       username,
@@ -212,7 +203,6 @@ export default function Auth() {
     })
     
     if (result.success) {
-      // Buscar o perfil criado e setar no state antes de navegar
       const newProfile = await getUserProfile(authUser.uid)
       if (newProfile) {
         setProfile(newProfile)
@@ -233,7 +223,7 @@ export default function Auth() {
         <Link to="/" className="auth-back">← voltar</Link>
       </header>
       
-      {/* STEP 1: Code */}
+      {/* Step 1: Code */}
       {step === 'code' && (
         <div className="auth-step">
           <h1 className="auth-title">Entrar</h1>
@@ -271,7 +261,7 @@ export default function Auth() {
         </div>
       )}
       
-      {/* STEP 2: Signup */}
+      {/* Step 2: Signup */}
       {step === 'signup' && (
         <div className="auth-step">
           <h1 className="auth-title">Criar conta</h1>
@@ -338,7 +328,7 @@ export default function Auth() {
         </div>
       )}
       
-      {/* STEP 3: Onboarding */}
+      {/* Step 3: Onboarding */}
       {step === 'onboarding' && (
         <div className="auth-step">
           <h1 className="auth-title">Seu perfil</h1>

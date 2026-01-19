@@ -13,10 +13,10 @@ import {
 import { ref, uploadString, getDownloadURL, deleteObject } from 'firebase/storage'
 import { db, storage } from './firebase'
 
-// Upload de post
+// 🔒 ORDEM DOS PARAMS: uploadPost(userId, photoData, caption, filterName)
+// Chamado em Home.jsx - NÃO alterar ordem
 export async function uploadPost(userId, photoData, caption, filterName) {
   try {
-    // Upload para Storage
     const timestamp = Date.now()
     const randomId = Math.random().toString(36).substring(2, 11)
     const fileName = `photos/${userId}/${timestamp}_${randomId}.jpg`
@@ -26,7 +26,6 @@ export async function uploadPost(userId, photoData, caption, filterName) {
     
     const photoURL = await getDownloadURL(storageRef)
     
-    // Salva no Firestore
     await addDoc(collection(db, 'posts'), {
       userId,
       photoURL,
@@ -43,7 +42,6 @@ export async function uploadPost(userId, photoData, caption, filterName) {
   }
 }
 
-// Busca posts de um usuário
 export async function getUserPosts(userId) {
   try {
     const q = query(
@@ -71,7 +69,6 @@ export async function getUserPosts(userId) {
   }
 }
 
-// Busca post por ID
 export async function getPost(postId) {
   try {
     const docRef = doc(db, 'posts', postId)
@@ -92,14 +89,13 @@ export async function getPost(postId) {
   }
 }
 
-// Busca posts do feed (de quem o usuário segue)
+// ⚠️ Firestore 'in' query max 30 items - chunking necessário
 export async function getFeedPosts(followingIds, limit = 50) {
   if (!followingIds || followingIds.length === 0) {
     return []
   }
 
   try {
-    // Firestore 'in' query supports max 30 items
     const chunks = []
     for (let i = 0; i < followingIds.length; i += 30) {
       chunks.push(followingIds.slice(i, i + 30))
@@ -126,7 +122,6 @@ export async function getFeedPosts(followingIds, limit = 50) {
       })
     }
 
-    // Sort by date and limit
     allPosts.sort((a, b) => b.createdAt - a.createdAt)
     return allPosts.slice(0, limit)
   } catch (error) {
@@ -135,13 +130,10 @@ export async function getFeedPosts(followingIds, limit = 50) {
   }
 }
 
-// Deletar post
 export async function deletePost(postId, storagePath) {
   try {
-    // Deleta do Firestore
     await deleteDoc(doc(db, 'posts', postId))
     
-    // Tenta deletar do Storage (pode falhar se path não existir)
     if (storagePath) {
       try {
         const storageRef = ref(storage, storagePath)

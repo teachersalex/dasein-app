@@ -2,10 +2,7 @@ import { useState, useRef, useEffect, useCallback } from 'react'
 import { CloseIcon, FlipIcon } from './HomeIcons'
 import './camera.css'
 
-// ==========================================
-// DASEIN - Camera Screen
-// ==========================================
-
+// 🔒 Câmera com crop 4:5 - contrato com Home.jsx via onCapture(base64)
 export default function HomeCamera({ onCapture, onClose }) {
   const videoRef = useRef(null)
   const canvasRef = useRef(null)
@@ -17,9 +14,7 @@ export default function HomeCamera({ onCapture, onClose }) {
   const [showFlash, setShowFlash] = useState(false)
   const [cameraReady, setCameraReady] = useState(false)
 
-  // ==========================================
-  // CAMERA CONTROLS
-  // ==========================================
+  // === Camera Controls ===
   
   const startCamera = useCallback(async () => {
     try {
@@ -92,10 +87,7 @@ export default function HomeCamera({ onCapture, onClose }) {
     setFacingMode(mode => mode === 'environment' ? 'user' : 'environment')
   }
 
-  // ==========================================
-  // CAPTURE - 4:5 crop from center
-  // ==========================================
-  
+  // ⚠️ CRITICAL - Crop 4:5 e output base64 JPEG
   function capturePhoto() {
     if (!videoRef.current || !canvasRef.current || isCapturing || !cameraReady) return
     
@@ -112,7 +104,7 @@ export default function HomeCamera({ onCapture, onClose }) {
       const vw = video.videoWidth
       const vh = video.videoHeight
       
-      // Target aspect ratio: 4:5
+      // 🔒 Aspect ratio 4:5 - padrão Dasein
       const targetAspect = 4 / 5
       const videoAspect = vw / vh
       
@@ -130,7 +122,6 @@ export default function HomeCamera({ onCapture, onClose }) {
         sy = (vh - sh) / 2
       }
       
-      // Output size (max 1080px wide)
       const outputW = Math.min(1080, sw)
       const outputH = outputW / targetAspect
       
@@ -153,6 +144,7 @@ export default function HomeCamera({ onCapture, onClose }) {
       
       if (navigator.vibrate) navigator.vibrate([10, 30, 10])
       
+      // 🔒 Output: base64 JPEG - contrato com Home.jsx
       const photo = canvas.toDataURL('image/jpeg', 0.92)
       
       setTimeout(() => {
@@ -164,9 +156,7 @@ export default function HomeCamera({ onCapture, onClose }) {
     }, 60)
   }
 
-  // ==========================================
-  // LIFECYCLE
-  // ==========================================
+  // === Lifecycle ===
 
   useEffect(() => {
     startCamera().then(() => {
@@ -178,10 +168,6 @@ export default function HomeCamera({ onCapture, onClose }) {
     return () => stopCamera()
   }, [])
 
-  // ==========================================
-  // RENDER
-  // ==========================================
-  
   return (
     <>
       <div className={`capture-flash ${showFlash ? 'active' : ''}`} />

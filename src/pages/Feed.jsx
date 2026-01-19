@@ -5,6 +5,7 @@ import { getFilterClass } from '../lib/filters'
 import FadeImage from '../components/FadeImage'
 import './Feed.css'
 
+// ✅ SAFE - Feed de posts de quem o usuário segue
 export default function Feed() {
   const navigate = useNavigate()
   const { user, profile } = useAuth()

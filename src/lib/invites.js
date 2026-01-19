@@ -13,7 +13,7 @@ import {
 } from 'firebase/firestore'
 import { db } from './firebase'
 
-// Gera código DSEIN-XXXXX
+// 🔒 Formato: DSEIN-XXXXX (5 chars alfanuméricos)
 export function generateInviteCode() {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
   let code = 'DSEIN-'
@@ -23,10 +23,10 @@ export function generateInviteCode() {
   return code
 }
 
-// Valida código de convite
 export async function validateInviteCode(code) {
   const normalizedCode = code.trim().toUpperCase()
   
+  // 🔒 Regex do formato - mudar quebra convites existentes
   if (!normalizedCode.match(/^DSEIN-[A-Z0-9]{5}$/)) {
     return { valid: false, error: 'Formato inválido' }
   }
@@ -51,7 +51,7 @@ export async function validateInviteCode(code) {
   }
 }
 
-// Marca convite como usado
+// 🔒 useInvite(code, userId) - chamado após auth no Auth.jsx
 export async function useInvite(code, userId) {
   const normalizedCode = code.trim().toUpperCase()
   
@@ -68,10 +68,8 @@ export async function useInvite(code, userId) {
   }
 }
 
-// Cria novo convite
 export async function createInvite(userId) {
   try {
-    // Checa se usuário pode criar convites
     const userRef = doc(db, 'users', userId)
     const userSnap = await getDoc(userRef)
     
@@ -81,11 +79,12 @@ export async function createInvite(userId) {
     
     const user = userSnap.data()
     
+    // -1 = convites infinitos (admin)
     if (user.invitesAvailable !== -1 && user.invitesAvailable <= 0) {
       return { success: false, error: 'Você não tem convites disponíveis' }
     }
     
-    // Gera código único
+    // Retry loop para código único
     let code
     let attempts = 0
     
@@ -102,7 +101,6 @@ export async function createInvite(userId) {
       return { success: false, error: 'Erro ao gerar código. Tente novamente.' }
     }
     
-    // Cria o convite
     const inviteRef = doc(db, 'invites', code)
     await setDoc(inviteRef, {
       code,
@@ -113,7 +111,6 @@ export async function createInvite(userId) {
       status: 'available'
     })
     
-    // Decrementa convites disponíveis
     if (user.invitesAvailable !== -1) {
       await updateDoc(userRef, {
         invitesAvailable: increment(-1)
@@ -126,7 +123,6 @@ export async function createInvite(userId) {
   }
 }
 
-// Lista convites do usuário
 export async function getUserInvites(userId) {
   try {
     const q = query(

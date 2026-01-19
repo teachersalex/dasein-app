@@ -2,9 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { getUserPosts, getFeedPosts, getPost, uploadPost, deletePost } from '../lib/posts'
 import { getFollowers, getFollowing, getUserByUsername, followUser, unfollowUser, isFollowing } from '../lib/follows'
 
-// ==========================================
-// FEED
-// ==========================================
+// === Feed ===
 
 export function useFeed(userId) {
   return useQuery({
@@ -27,13 +25,11 @@ export function useFeed(userId) {
       return { posts, profiles: profilesMap, empty: posts.length === 0 }
     },
     enabled: !!userId,
-    staleTime: 1000 * 60 * 2  // 2 min
+    staleTime: 1000 * 60 * 2
   })
 }
 
-// ==========================================
-// POSTS
-// ==========================================
+// === Posts ===
 
 export function useUserPosts(userId) {
   return useQuery({
@@ -51,6 +47,7 @@ export function usePost(postId) {
   })
 }
 
+// ⚠️ Ordem dos params no mutationFn: userId, photoData, caption, filter
 export function useCreatePost() {
   const queryClient = useQueryClient()
   
@@ -78,9 +75,7 @@ export function useDeletePost() {
   })
 }
 
-// ==========================================
-// PROFILE
-// ==========================================
+// === Profile ===
 
 export function useProfileByUsername(username) {
   return useQuery({
@@ -90,9 +85,7 @@ export function useProfileByUsername(username) {
   })
 }
 
-// ==========================================
-// FOLLOWERS / FOLLOWING
-// ==========================================
+// === Followers / Following ===
 
 export function useFollowers(userId) {
   return useQuery({

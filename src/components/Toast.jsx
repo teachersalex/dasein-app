@@ -2,6 +2,7 @@ import { createContext, useContext, useState, useCallback } from 'react'
 
 const ToastContext = createContext(null)
 
+// 🔒 Provider - envolvido por App.jsx
 export function ToastProvider({ children }) {
   const [toast, setToast] = useState(null)
 

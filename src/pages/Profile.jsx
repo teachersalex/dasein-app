@@ -9,6 +9,7 @@ import FollowModal from '../components/FollowModal'
 import FadeImage from '../components/FadeImage'
 import './Profile.css'
 
+// ✅ SAFE - Perfil próprio ou de outro usuário
 export default function Profile() {
   const navigate = useNavigate()
   const { username } = useParams()
@@ -22,41 +23,34 @@ export default function Profile() {
   const [generatingInvite, setGeneratingInvite] = useState(false)
   const [copiedCode, setCopiedCode] = useState(null)
 
-  // Follow state
   const [following, setFollowing] = useState(false)
   const [followLoading, setFollowLoading] = useState(false)
 
-  // Modal state
-  const [modalType, setModalType] = useState(null) // 'followers' | 'following' | null
+  const [modalType, setModalType] = useState(null)
 
   const isOwnProfile = !username || (profile && username === profile.username)
 
-  // Load profile (own or other user's)
   useEffect(() => {
     async function loadProfile() {
       setLoading(true)
 
       if (!username || (profile && username === profile.username)) {
-        // Own profile
         setViewProfile(profile)
         if (user) {
           const userPosts = await getUserPosts(user.uid)
           setPosts(userPosts)
         }
       } else {
-        // Load other user's profile
         const otherProfile = await getUserByUsername(username)
         
         if (otherProfile) {
           setViewProfile(otherProfile)
           
-          // Check if following
           if (user) {
             const isFollow = await isFollowing(user.uid, otherProfile.id)
             setFollowing(isFollow)
           }
           
-          // Load their posts
           const userPosts = await getUserPosts(otherProfile.id)
           setPosts(userPosts)
         } else {
@@ -110,18 +104,15 @@ export default function Profile() {
       if (result.success) {
         const inviteLink = `getdasein.app/${result.code}`
         
-        // Tenta copiar, mas não falha se não conseguir
         try {
           await navigator.clipboard.writeText(inviteLink)
           alert(`Convite copiado!\n\n${inviteLink}`)
         } catch {
-          // Clipboard falhou (comum no mobile) - mostra o link pra copiar manualmente
           alert(`Novo convite criado!\n\n${inviteLink}\n\n(Use o botão copiar na lista)`)
         }
         
         await loadInvites()
         
-        // Atualiza contadores locais (se não for infinito)
         if (available !== -1) {
           const newAvailable = available - 1
           setProfile({ ...profile, invitesAvailable: newAvailable })
@@ -144,7 +135,6 @@ export default function Profile() {
       setCopiedCode(code)
       setTimeout(() => setCopiedCode(null), 2000)
     } catch {
-      // Fallback: seleciona o texto pra copiar manualmente
       alert(`Link: getdasein.app/${code}`)
     }
   }
@@ -154,7 +144,6 @@ export default function Profile() {
     navigate('/')
   }
 
-  // Follow/Unfollow handlers
   async function handleFollow() {
     if (!viewProfile || followLoading) return
 
@@ -164,7 +153,6 @@ export default function Profile() {
 
     if (result.success) {
       setFollowing(true)
-      // Update local counter
       setViewProfile(prev => ({
         ...prev,
         followersCount: (prev.followersCount || 0) + 1
@@ -183,7 +171,6 @@ export default function Profile() {
 
     if (result.success) {
       setFollowing(false)
-      // Update local counter
       setViewProfile(prev => ({
         ...prev,
         followersCount: Math.max(0, (prev.followersCount || 0) - 1)
@@ -193,7 +180,6 @@ export default function Profile() {
     setFollowLoading(false)
   }
 
-  // Loading state
   if (loading) {
     return (
       <div className="screen-center">
@@ -202,7 +188,6 @@ export default function Profile() {
     )
   }
 
-  // Profile not found
   if (!viewProfile) {
     return (
       <div className="screen-center">
@@ -224,7 +209,6 @@ export default function Profile() {
 
   return (
     <div className="profile-page fade-in">
-      {/* Back button for other profiles */}
       {!isOwnProfile && (
         <button
           className="profile-back"
@@ -249,7 +233,6 @@ export default function Profile() {
         <h1 className="profile-name">{viewProfile.displayName}</h1>
         <p className="profile-username">@{viewProfile.username}</p>
         
-        {/* Stats - clickable */}
         <div className="profile-stats">
           <div className="stat">
             <span className="stat-number">{posts.length}</span>
@@ -279,7 +262,6 @@ export default function Profile() {
           </p>
         )}
         
-        {/* Actions - different for own profile vs others */}
         {isOwnProfile ? (
           <>
             <div className="profile-actions">
@@ -400,7 +382,6 @@ export default function Profile() {
         </button>
       )}
 
-      {/* Follow Modal */}
       {modalType && (
         <FollowModal 
           userId={viewProfile.id}

@@ -12,11 +12,13 @@ export default function Post() {
   const location = useLocation()
   const { user, getUserProfile } = useAuth()
   
+  // ✅ SAFE - location.state é otimização (evita fetch se já tem dados)
   const [post, setPost] = useState(location.state?.post || null)
   const [author, setAuthor] = useState(location.state?.profile || null)
   const [loading, setLoading] = useState(!post)
   const [deleting, setDeleting] = useState(false)
 
+  // 🔒 SECURITY - só dono pode deletar
   const isOwner = user && post && user.uid === post.userId
 
   useEffect(() => {
@@ -49,6 +51,7 @@ export default function Post() {
     
     setDeleting(true)
     
+    // ⚠️ CRITICAL - deletePost(id, storagePath) ordem inviolável
     const result = await deletePost(post.id, post.storagePath)
     
     if (result.success) {

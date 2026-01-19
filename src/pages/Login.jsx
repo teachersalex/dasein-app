@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import './Login.css'
 
+// ✅ SAFE - página de login para usuários existentes
 export default function Login() {
   const navigate = useNavigate()
   const { loginWithEmail, loginWithGoogle, getUserProfile, setProfile } = useAuth()

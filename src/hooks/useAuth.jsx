@@ -22,6 +22,7 @@ import { auth, db } from '../lib/firebase'
 
 const AuthContext = createContext(null)
 
+// 🔒 Provider principal - envolve todo o app
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null)
   const [profile, setProfile] = useState(null)
@@ -44,9 +45,10 @@ export function AuthProvider({ children }) {
     return unsubscribe
   }, [])
 
+  // 🔒 Contrato do context - páginas dependem desses campos
   const value = {
-    user,
-    profile,
+    user,           // Firebase Auth user
+    profile,        // Firestore profile (pode ser null mesmo com user)
     loading,
     setProfile,
     loginWithEmail,
@@ -74,9 +76,7 @@ export function useAuth() {
   return context
 }
 
-// ==========================================
-// AUTH FUNCTIONS
-// ==========================================
+// === Auth Functions ===
 
 async function loginWithEmail(email, password) {
   try {
@@ -107,9 +107,7 @@ async function loginWithGoogle() {
   }
 }
 
-// ==========================================
-// PROFILE FUNCTIONS
-// ==========================================
+// === Profile Functions ===
 
 async function getUserProfile(uid) {
   try {
@@ -126,6 +124,7 @@ async function getUserProfile(uid) {
   }
 }
 
+// ⚠️ Campos iniciais do perfil - invitesAvailable usado em invites.js
 async function createUserProfile(uid, data) {
   try {
     const userRef = doc(db, 'users', uid)
@@ -173,9 +172,7 @@ async function isUsernameTaken(username) {
   }
 }
 
-// ==========================================
-// ERROR MESSAGES
-// ==========================================
+// === Error Messages ===
 
 function getErrorMessage(code) {
   const messages = {

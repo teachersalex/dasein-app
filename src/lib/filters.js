@@ -1,7 +1,7 @@
-// ==========================================
-// DASEIN FILTERS - Advanced WebGL Engine
-// ==========================================
+// DASEIN FILTERS - WebGL Engine
+// 🔒 FILTERS[].name e FILTERS[].settings são usados em Home.jsx e Post.jsx
 
+// 🔒 Estrutura: { name: string, id: string, settings: object|null }
 export const FILTERS = [
   { 
     name: 'Original', 
@@ -101,6 +101,10 @@ export const FILTERS = [
     }
   }
 ]
+
+// ✅ SAFE - adicionar novos filtros no array acima
+
+// === WebGL internals (não mexer sem entender GLSL) ===
 
 let glCanvas = null
 let gl = null
@@ -293,6 +297,7 @@ function initWebGL() {
   return true
 }
 
+// 🔒 applyFilter(photoData, filter) - chamado em Home.jsx useEffect
 export function applyFilter(photoData, filter) {
   return new Promise((resolve) => {
     if (!filter.settings) {

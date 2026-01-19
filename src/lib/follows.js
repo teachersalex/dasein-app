@@ -13,9 +13,8 @@ import {
 } from 'firebase/firestore'
 import { db } from './firebase'
 
-// ==========================================
-// FOLLOW / UNFOLLOW
-// ==========================================
+// 🔒 Composite key pattern - garante unicidade e lookup O(1)
+// followId = `${currentUserId}_${targetUserId}`
 
 export async function followUser(currentUserId, targetUserId) {
   if (currentUserId === targetUserId) {
@@ -23,23 +22,21 @@ export async function followUser(currentUserId, targetUserId) {
   }
 
   try {
+    // 🔒 NÃO alterar formato do ID
     const followId = `${currentUserId}_${targetUserId}`
     const followRef = doc(db, 'follows', followId)
     
-    // Check if already following
     const existing = await getDoc(followRef)
     if (existing.exists()) {
       return { success: false, error: 'Você já segue este usuário' }
     }
 
-    // Create follow document
     await setDoc(followRef, {
       followerId: currentUserId,
       followingId: targetUserId,
       createdAt: serverTimestamp()
     })
 
-    // Update counters
     const currentUserRef = doc(db, 'users', currentUserId)
     const targetUserRef = doc(db, 'users', targetUserId)
 
@@ -63,16 +60,13 @@ export async function unfollowUser(currentUserId, targetUserId) {
     const followId = `${currentUserId}_${targetUserId}`
     const followRef = doc(db, 'follows', followId)
 
-    // Check if following
     const existing = await getDoc(followRef)
     if (!existing.exists()) {
       return { success: false, error: 'Você não segue este usuário' }
     }
 
-    // Delete follow document
     await deleteDoc(followRef)
 
-    // Update counters
     const currentUserRef = doc(db, 'users', currentUserId)
     const targetUserRef = doc(db, 'users', targetUserId)
 
@@ -91,10 +85,6 @@ export async function unfollowUser(currentUserId, targetUserId) {
   }
 }
 
-// ==========================================
-// CHECK FOLLOW STATUS
-// ==========================================
-
 export async function isFollowing(currentUserId, targetUserId) {
   try {
     const followId = `${currentUserId}_${targetUserId}`
@@ -107,10 +97,7 @@ export async function isFollowing(currentUserId, targetUserId) {
   }
 }
 
-// ==========================================
-// GET FOLLOWERS / FOLLOWING
-// ==========================================
-
+// ⚠️ N+1 queries - OK para MVP, considerar desnormalização se escalar
 export async function getFollowers(userId) {
   try {
     const q = query(
@@ -125,7 +112,6 @@ export async function getFollowers(userId) {
       followerIds.push(doc.data().followerId)
     })
 
-    // Get profiles
     const profiles = await Promise.all(
       followerIds.map(id => getUserProfileById(id))
     )
@@ -151,7 +137,6 @@ export async function getFollowing(userId) {
       followingIds.push(doc.data().followingId)
     })
 
-    // Get profiles
     const profiles = await Promise.all(
       followingIds.map(id => getUserProfileById(id))
     )
@@ -163,7 +148,6 @@ export async function getFollowing(userId) {
   }
 }
 
-// Helper to get profile by ID
 async function getUserProfileById(uid) {
   try {
     const docRef = doc(db, 'users', uid)
@@ -177,10 +161,6 @@ async function getUserProfileById(uid) {
     return null
   }
 }
-
-// ==========================================
-// GET PROFILE BY USERNAME
-// ==========================================
 
 export async function getUserByUsername(username) {
   try {

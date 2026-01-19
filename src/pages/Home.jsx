@@ -106,7 +106,7 @@ export default function Home() {
     const offset = deltaFromStart / 2.5
     
     if (filterNameRef.current) {
-      filterNameRef.current.style.transform = `translateX(calc(-50% + ${offset * 1.5}px))`
+      filterNameRef.current.style.transform = `translateX(${offset * 1.5}px)`
       filterNameRef.current.style.opacity = 1 - Math.abs(offset) / 100
     }
     
@@ -143,7 +143,7 @@ export default function Home() {
   function resetVisualState(animate = false) {
     if (filterNameRef.current) {
       filterNameRef.current.style.transition = animate ? 'transform 0.3s ease, opacity 0.3s ease' : 'none'
-      filterNameRef.current.style.transform = 'translateX(-50%)'
+      filterNameRef.current.style.transform = 'translateY(0)'
       filterNameRef.current.style.opacity = filterIndex !== 0 ? '1' : '0'
     }
   }
@@ -215,33 +215,36 @@ export default function Home() {
       
       {screen === 'preview' && (
         <div className="preview-screen">
-          <div 
-            className="preview-container"
-            onTouchStart={handleTouchStart}
-            onTouchMove={handleTouchMove}
-            onTouchEnd={handleTouchEnd}
-          >
+          <div className="preview-container">
             {filteredPhoto ? (
               <img src={filteredPhoto} alt="Preview" className="preview-image" />
             ) : (
               <div className="preview-loading"><div className="spinner" /></div>
             )}
+          </div>
+          
+          <div className="filter-controls">
             <div ref={filterNameRef} className={`filter-name ${filterIndex !== 0 ? 'visible' : ''}`}>
               {FILTERS[filterIndex].name}
             </div>
-          </div>
-          
-          <div className="filter-indicators">
-            {FILTERS.map((filter, i) => (
-              <button 
-                key={filter.id}
-                className={`filter-bar ${i === filterIndex ? 'active' : ''}`}
-                onClick={() => {
-                  setFilterIndex(i)
-                  if (navigator.vibrate) navigator.vibrate(5)
-                }}
-              />
-            ))}
+            
+            <div 
+              className="filter-indicators"
+              onTouchStart={handleTouchStart}
+              onTouchMove={handleTouchMove}
+              onTouchEnd={handleTouchEnd}
+            >
+              {FILTERS.map((filter, i) => (
+                <button 
+                  key={filter.id}
+                  className={`filter-bar ${i === filterIndex ? 'active' : ''}`}
+                  onClick={() => {
+                    setFilterIndex(i)
+                    if (navigator.vibrate) navigator.vibrate(5)
+                  }}
+                />
+              ))}
+            </div>
           </div>
           
           <div className="preview-actions">

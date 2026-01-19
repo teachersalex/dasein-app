@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import './Landing.css'
 
+// ✅ SAFE - página inicial estática
 const words = [
   'existir',
   'to exist',

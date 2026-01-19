@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { getFollowers, getFollowing } from '../lib/follows'
 import './FollowModal.css'
 
+// ✅ SAFE - modal de seguidores/seguindo
 export default function FollowModal({ userId, type, onClose }) {
   const navigate = useNavigate()
   const [users, setUsers] = useState([])
