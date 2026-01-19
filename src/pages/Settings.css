@@ -4,6 +4,11 @@
   padding-bottom: 40px;
 }
 
+/* 🔒 Safe-area fix para o header */
+.settings-page .page-header {
+  padding-top: max(16px, env(safe-area-inset-top));
+}
+
 .settings-content {
   max-width: 440px;
   margin: 0 auto;
