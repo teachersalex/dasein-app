@@ -5,6 +5,7 @@ import { useFeed } from '../hooks/useQueries'
 import { getFilterClass } from '../lib/filters'
 import { getReceivedLikes } from '../lib/likes'
 import FadeImage from '../components/FadeImage'
+import DoubleTapPhoto from '../components/DoubleTapPhoto'
 import './Feed.css'
 
 // ✅ SAFE - Feed de posts de quem o usuário segue
@@ -140,14 +141,14 @@ export default function Feed() {
                   </div>
                 </header>
                 
-                <div 
-                  className="feed-item-photo"
-                  onClick={() => goToPost(post, author)}
-                >
-                  <FadeImage 
-                    src={post.photoURL} 
-                    alt=""
+                <div className="feed-item-photo">
+                  <DoubleTapPhoto 
+                    src={post.photoURL}
                     className={getFilterClass(post.filter)}
+                    postId={post.id}
+                    postOwnerId={post.userId}
+                    userId={user?.uid}
+                    onClick={() => goToPost(post, author)}
                   />
                 </div>
                 

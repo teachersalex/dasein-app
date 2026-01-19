@@ -80,10 +80,6 @@ export default function Activity() {
     }
   }
 
-  function goToPost(postId) {
-    navigate(`/post/${postId}`)
-  }
-
   if (loading) {
     return (
       <div className="activity-page">
@@ -118,11 +114,12 @@ export default function Activity() {
             const actorProfile = profiles[activity.userId]
             
             return (
-              <div key={activity.id} className="activity-item">
-                <div 
-                  className="activity-avatar"
-                  onClick={() => goToProfile(actorProfile?.username)}
-                >
+              <div 
+                key={activity.id} 
+                className="activity-item"
+                onClick={() => goToProfile(actorProfile?.username)}
+              >
+                <div className="activity-avatar">
                   <div className="avatar avatar-sm">
                     {actorProfile?.photoURL ? (
                       <FadeImage src={actorProfile.photoURL} alt={actorProfile.displayName} />
@@ -134,10 +131,7 @@ export default function Activity() {
                 
                 <div className="activity-content">
                   <p className="activity-text">
-                    <span 
-                      className="activity-name"
-                      onClick={() => goToProfile(actorProfile?.username)}
-                    >
+                    <span className="activity-name">
                       {actorProfile?.displayName || 'Alguém'}
                     </span>
                     {activity.type === 'like' && ' curtiu sua foto'}
@@ -145,15 +139,6 @@ export default function Activity() {
                   </p>
                   <span className="activity-time">{formatTime(activity.createdAt)}</span>
                 </div>
-                
-                {activity.type === 'like' && (
-                  <button 
-                    className="activity-post-btn"
-                    onClick={() => goToPost(activity.postId)}
-                  >
-                    Ver
-                  </button>
-                )}
               </div>
             )
           })}

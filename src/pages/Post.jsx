@@ -1,8 +1,8 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useNavigate, useParams, useLocation } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { getPost, deletePost } from '../lib/posts'
-import { likePost, unlikePost, hasLiked } from '../lib/likes'
+import { likePost, unlikePost, hasLiked, getPostLikes } from '../lib/likes'
 import { getFilterClass } from '../lib/filters'
 import FadeImage from '../components/FadeImage'
 import './Post.css'
@@ -20,6 +20,11 @@ export default function Post() {
   const [deleting, setDeleting] = useState(false)
   const [liked, setLiked] = useState(false)
   const [liking, setLiking] = useState(false)
+  const [showHeart, setShowHeart] = useState(false)
+  const [likers, setLikers] = useState([])
+  const [likersProfiles, setLikersProfiles] = useState({})
+  const [showLikers, setShowLikers] = useState(false)
+  const lastTap = useRef(0)
 
   // 🔒 SECURITY - só dono pode deletar
   const isOwner = user && post && user.uid === post.userId
@@ -36,8 +41,22 @@ export default function Post() {
   useEffect(() => {
     if (user && post) {
       hasLiked(user.uid, post.id).then(setLiked)
+      loadLikers()
     }
   }, [user, post?.id])
+
+  async function loadLikers() {
+    const likes = await getPostLikes(post.id)
+    setLikers(likes)
+    
+    // Carregar perfis de quem curtiu
+    const profiles = {}
+    for (const like of likes.slice(0, 10)) {
+      const p = await getUserProfile(like.userId)
+      if (p) profiles[like.userId] = p
+    }
+    setLikersProfiles(profiles)
+  }
 
   async function loadPost() {
     const postData = await getPost(id)
@@ -85,9 +104,34 @@ export default function Post() {
     
     if (!result.success) {
       setLiked(!newLiked) // Rollback
+    } else if (newLiked) {
+      loadLikers() // Atualiza lista
     }
     
     setLiking(false)
+  }
+
+  async function handleDoubleTap(e) {
+    const now = Date.now()
+    const DOUBLE_TAP_DELAY = 300
+    
+    if (now - lastTap.current < DOUBLE_TAP_DELAY) {
+      // Double tap!
+      e.preventDefault()
+      
+      if (navigator.vibrate) navigator.vibrate(10)
+      
+      setShowHeart(true)
+      setTimeout(() => setShowHeart(false), 1000)
+      
+      if (!liked) {
+        setLiked(true)
+        await likePost(user.uid, post.id, post.userId)
+        loadLikers()
+      }
+    }
+    
+    lastTap.current = now
   }
 
   function goToProfile() {
@@ -179,12 +223,18 @@ export default function Post() {
         )}
       </header>
       
-      <div className="post-photo-container">
+      <div className="post-photo-container" onClick={handleDoubleTap}>
         <FadeImage 
           src={post.photoURL} 
           alt="" 
           className={`post-photo ${getFilterClass(post.filter)}`}
         />
+        
+        {showHeart && (
+          <div className="post-heart-animation">
+            <HeartAnimated />
+          </div>
+        )}
       </div>
       
       <div className="post-info">
@@ -196,6 +246,32 @@ export default function Post() {
           >
             <HeartIcon liked={liked} />
           </button>
+          
+          {likers.length > 0 && (
+            <button 
+              className="btn-likers"
+              onClick={() => setShowLikers(true)}
+            >
+              <div className="likers-avatars">
+                {likers.slice(0, 3).map((like, i) => {
+                  const p = likersProfiles[like.userId]
+                  return (
+                    <div 
+                      key={like.id} 
+                      className="liker-avatar"
+                      style={{ zIndex: 3 - i }}
+                    >
+                      {p?.photoURL ? (
+                        <FadeImage src={p.photoURL} alt="" />
+                      ) : (
+                        <span>{p?.displayName?.charAt(0) || '?'}</span>
+                      )}
+                    </div>
+                  )
+                })}
+              </div>
+            </button>
+          )}
         </div>
         
         {post.caption && (
@@ -217,6 +293,51 @@ export default function Post() {
           </div>
         </div>
       </div>
+      
+      {/* Modal de quem curtiu */}
+      {showLikers && (
+        <div className="likers-modal" onClick={() => setShowLikers(false)}>
+          <div className="likers-content" onClick={e => e.stopPropagation()}>
+            <header className="likers-header">
+              <h2>Curtidas</h2>
+              <button onClick={() => setShowLikers(false)}>
+                <CloseIcon />
+              </button>
+            </header>
+            
+            <div className="likers-list">
+              {likers.map(like => {
+                const p = likersProfiles[like.userId]
+                return (
+                  <div 
+                    key={like.id}
+                    className="liker-item"
+                    onClick={() => {
+                      setShowLikers(false)
+                      if (p?.username) {
+                        if (like.userId === user?.uid) {
+                          navigate('/profile')
+                        } else {
+                          navigate(`/profile/${p.username}`)
+                        }
+                      }
+                    }}
+                  >
+                    <div className="avatar avatar-sm">
+                      {p?.photoURL ? (
+                        <FadeImage src={p.photoURL} alt={p.displayName} />
+                      ) : (
+                        <span>{p?.displayName?.charAt(0) || '?'}</span>
+                      )}
+                    </div>
+                    <span className="liker-name">{p?.displayName || 'Usuário'}</span>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
@@ -253,6 +374,32 @@ function HeartIcon({ liked }) {
         fill={liked ? "url(#silverGrad)" : "none"}
         stroke={liked ? "url(#silverGrad)" : "#666"}
       />
+    </svg>
+  )
+}
+
+function HeartAnimated() {
+  return (
+    <svg width="80" height="80" viewBox="0 0 24 24">
+      <defs>
+        <linearGradient id="silverGradBig" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#e0e0e0" />
+          <stop offset="50%" stopColor="#a8a8a8" />
+          <stop offset="100%" stopColor="#c0c0c0" />
+        </linearGradient>
+      </defs>
+      <path 
+        d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"
+        fill="url(#silverGradBig)"
+      />
+    </svg>
+  )
+}
+
+function CloseIcon() {
+  return (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <path d="M18 6L6 18M6 6l12 12"/>
     </svg>
   )
 }

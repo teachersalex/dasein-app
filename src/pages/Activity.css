@@ -57,15 +57,12 @@
   align-items: center;
   gap: 12px;
   padding: 12px 20px;
+  cursor: pointer;
   transition: background 0.15s ease;
 }
 
 .activity-item:active {
   background: var(--color-surface);
-}
-
-.activity-avatar {
-  cursor: pointer;
 }
 
 .activity-content {
@@ -82,11 +79,6 @@
 
 .activity-name {
   font-weight: 400;
-  cursor: pointer;
-}
-
-.activity-name:hover {
-  text-decoration: underline;
 }
 
 .activity-time {
@@ -94,26 +86,4 @@
   color: var(--color-text-muted);
   margin-top: 2px;
   display: block;
-}
-
-.activity-post-btn {
-  padding: 8px 16px;
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: 8px;
-  font-family: inherit;
-  font-size: 13px;
-  font-weight: 400;
-  color: var(--color-text-secondary);
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-
-.activity-post-btn:hover {
-  background: var(--color-bg-elevated);
-  color: var(--color-text);
-}
-
-.activity-post-btn:active {
-  transform: scale(0.95);
 }
