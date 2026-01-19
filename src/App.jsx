@@ -11,6 +11,7 @@ import Profile from './pages/Profile'
 import Settings from './pages/Settings'
 import Post from './pages/Post'
 import Feed from './pages/Feed'
+import Activity from './pages/Activity'
 
 // ✅ SAFE - pode ajustar tempos
 const queryClient = new QueryClient({
@@ -80,6 +81,7 @@ export default function App() {
             {/* 🔒 Protegidas - mudar paths quebra links salvos */}
             <Route path="/home" element={<ProtectedRoute><Home /></ProtectedRoute>} />
             <Route path="/feed" element={<ProtectedRoute><Feed /></ProtectedRoute>} />
+            <Route path="/activity" element={<ProtectedRoute><Activity /></ProtectedRoute>} />
             <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
             <Route path="/profile/:username" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
             <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
