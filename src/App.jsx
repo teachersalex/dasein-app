@@ -13,6 +13,7 @@ import Post from './pages/Post'
 import Feed from './pages/Feed'
 import Activity from './pages/Activity'
 import Discover from './pages/Discover'
+import Admin from './pages/Admin'
 
 // ✅ SAFE - pode ajustar tempos
 const queryClient = new QueryClient({
@@ -88,6 +89,7 @@ export default function App() {
             <Route path="/profile/:username" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
             <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
             <Route path="/post/:id" element={<ProtectedRoute><Post /></ProtectedRoute>} />
+            <Route path="/admin" element={<ProtectedRoute><Admin /></ProtectedRoute>} />
             
             {/* Convites */}
             <Route path="/:inviteCode" element={<InviteRoute />} />
