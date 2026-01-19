@@ -54,7 +54,9 @@ export default function Discover() {
 
     const timer = setTimeout(async () => {
       setSearching(true)
-      const users = await searchUsers(query.trim())
+      // 🔒 Remove @ do início se usuário digitar @username
+      const cleanQuery = query.trim().replace(/^@/, '')
+      const users = await searchUsers(cleanQuery)
       // Não mostrar a si mesmo nos resultados
       setResults(users.filter(u => u.id !== user?.uid))
       setSearching(false)
