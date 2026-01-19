@@ -218,7 +218,12 @@ export default function Home() {
       
       {screen === 'preview' && (
         <div className="preview-screen">
-          <div className="preview-container">
+          <div 
+            className="preview-container"
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
+          >
             {filteredPhoto ? (
               <img src={filteredPhoto} alt="Preview" className="preview-image" />
             ) : (

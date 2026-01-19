@@ -19,6 +19,13 @@
   background: #000;
   position: relative;
   overflow: hidden;
+  /* Swipe horizontal na foto */
+  touch-action: pan-y pinch-zoom;
+  cursor: grab;
+}
+
+.preview-container:active {
+  cursor: grabbing;
 }
 
 .preview-image {
@@ -26,6 +33,10 @@
   height: 100%;
   object-fit: contain;
   animation: previewZoomIn 0.35s var(--ease-out);
+  /* Não bloqueia touch events do container */
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 @keyframes previewZoomIn {
@@ -75,16 +86,14 @@
   opacity: 1;
 }
 
-/* Filter indicators - ENGRENAGEM com área de toque generosa */
+/* Filter indicators - ENGRENAGEM VISÍVEL */
 .filter-indicators {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0;
-  /* Área de toque GRANDE - altura generosa pra arrastar */
-  min-height: 64px;
-  padding: 0 40px;
-  /* Permite drag horizontal, bloqueia scroll vertical durante drag */
+  gap: 12px;
+  min-height: 48px;
+  padding: 12px 40px;
   touch-action: none;
   cursor: grab;
   user-select: none;
@@ -95,24 +104,15 @@
   cursor: grabbing;
 }
 
-/* Cada barra é um botão com área de toque invisível grande */
+/* Cada barra - COR SÓLIDA VISÍVEL */
 .filter-bar {
-  /* Visual: barra fina */
   width: 3px;
-  height: 16px;
-  background: var(--color-text-muted);
-  border-radius: 2px;
-  
-  /* Reset */
+  height: 14px;
+  background: #444;
   border: none;
-  
-  /* Área de toque: padding grande ao redor da barra visual */
-  padding: 24px 10px;
+  padding: 0;
   margin: 0;
-  
-  /* Faz o background só aparecer no centro (a barra visual) */
-  background-clip: content-box;
-  
+  border-radius: 2px;
   cursor: pointer;
   transition: height 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), 
               background 0.15s ease;
@@ -120,14 +120,12 @@
 }
 
 .filter-bar:hover {
-  background-color: var(--color-text-tertiary);
-  background-clip: content-box;
+  background: #666;
 }
 
 .filter-bar.active {
-  background-color: var(--color-text);
-  height: 24px;
-  background-clip: content-box;
+  background: #fff;
+  height: 22px;
 }
 
 /* Preview actions */
