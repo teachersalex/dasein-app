@@ -1,10 +1,12 @@
 .post-page {
-  min-height: 100vh;
-  min-height: 100dvh;
+  height: 100vh;
+  height: 100dvh;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
 }
 
+/* Header fixo */
 .post-header {
   position: fixed;
   top: 0;
@@ -17,6 +19,15 @@
   justify-content: space-between;
   align-items: center;
   background: linear-gradient(to bottom, rgba(10, 10, 10, 0.95) 0%, transparent 100%);
+  pointer-events: none;
+}
+
+.post-header > * {
+  pointer-events: auto;
+}
+
+.header-spacer {
+  flex: 1;
 }
 
 .btn-back {
@@ -36,14 +47,6 @@
 .btn-back:active {
   transform: scale(0.85);
   opacity: 0.5;
-}
-
-/* Indicador de posição no swipe */
-.post-position {
-  font-size: 13px;
-  font-weight: 300;
-  color: var(--color-text-muted);
-  letter-spacing: 0.5px;
 }
 
 .btn-delete {
@@ -72,28 +75,47 @@
   cursor: not-allowed;
 }
 
+/* 🔒 Container de scroll vertical */
+.posts-scroll-container {
+  flex: 1;
+  overflow-y: scroll;
+  overflow-x: hidden;
+  scroll-snap-type: y mandatory;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.posts-scroll-container::-webkit-scrollbar {
+  display: none;
+}
+
+/* Cada post ocupa a tela toda */
+.post-scroll-item {
+  height: 100vh;
+  height: 100dvh;
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+}
+
+/* Item individual */
+.post-item {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
 .post-photo-container {
   position: relative;
   flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding-top: calc(70px + env(safe-area-inset-top, 0px));
-  animation: photoIn 0.25s ease forwards;
+  padding-top: calc(60px + env(safe-area-inset-top, 0px));
   cursor: pointer;
   user-select: none;
   -webkit-user-select: none;
-}
-
-@keyframes photoIn {
-  from {
-    opacity: 0;
-    transform: scale(0.96);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
+  overflow: hidden;
 }
 
 .post-photo {
@@ -105,10 +127,10 @@
 
 .post-info {
   padding: 20px 20px 44px;
-  animation: infoIn 0.3s ease 0.1s forwards;
-  opacity: 0;
+  padding-bottom: max(44px, env(safe-area-inset-bottom, 0px) + 20px);
 }
 
+/* Like button */
 .btn-like {
   background: none;
   border: none;
@@ -132,12 +154,7 @@
   100% { transform: scale(1); }
 }
 
-@keyframes infoIn {
-  to {
-    opacity: 1;
-  }
-}
-
+/* Caption */
 .post-caption {
   font-size: 15px;
   font-weight: 300;
@@ -145,6 +162,7 @@
   margin-bottom: 20px;
 }
 
+/* Meta (autor) */
 .post-meta {
   display: flex;
   align-items: center;

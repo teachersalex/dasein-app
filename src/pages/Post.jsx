@@ -7,67 +7,40 @@ import { getFilterClass } from '../lib/filters'
 import FadeImage from '../components/FadeImage'
 import './Post.css'
 
-export default function Post() {
-  const navigate = useNavigate()
-  const { id } = useParams()
-  const location = useLocation()
-  const { user, getUserProfile } = useAuth()
-  
-  // ✅ Suporte a swipe entre posts
-  const allPosts = location.state?.posts || []
-  const allProfiles = location.state?.profiles || {}
-  const initialIndex = location.state?.index ?? -1
-  
-  const [currentIndex, setCurrentIndex] = useState(initialIndex)
-  const [post, setPost] = useState(location.state?.post || null)
-  const [author, setAuthor] = useState(location.state?.profile || null)
-  const [loading, setLoading] = useState(!post)
-  const [deleting, setDeleting] = useState(false)
-  
-  // Like state
+// ✅ Componente individual de cada post (evita re-mount)
+function PostItem({ 
+  post, 
+  author, 
+  user, 
+  getUserProfile,
+  isVisible,
+  onAuthorClick 
+}) {
   const [liked, setLiked] = useState(false)
-  const [liking, setLiking] = useState(false)
-  const [showHeart, setShowHeart] = useState(false)
   const [likers, setLikers] = useState([])
   const [likersProfiles, setLikersProfiles] = useState({})
   const [showLikers, setShowLikers] = useState(false)
+  const [showHeart, setShowHeart] = useState(false)
+  const [liking, setLiking] = useState(false)
   
   // Tap detection
   const tapTimer = useRef(null)
   const tapCount = useRef(0)
   
-  // Swipe detection
-  const touchStart = useRef({ x: 0, y: 0 })
-
-  // 🔒 SECURITY - só dono pode deletar
-  const isOwner = user && post && user.uid === post.userId
-  
-  // Swipe habilitado apenas se temos array de posts
-  const canSwipe = allPosts.length > 1
-
-  useEffect(() => {
-    if (!post) {
-      loadPost()
-    } else if (!author) {
-      loadAuthor()
-    }
-  }, [id])
-
-  // Checar se já curtiu + carregar likers
+  // 🔒 Carrega likes UMA vez quando monta
   useEffect(() => {
     if (user && post) {
       hasLiked(user.uid, post.id).then(setLiked)
       loadLikers()
     }
   }, [user, post?.id])
-
+  
   async function loadLikers() {
     if (!post?.id) return
     
     const likes = await getPostLikes(post.id)
     setLikers(likes)
     
-    // Carregar perfis de quem curtiu
     const profiles = {}
     for (const like of likes.slice(0, 10)) {
       const p = await getUserProfile(like.userId)
@@ -75,47 +48,11 @@ export default function Post() {
     }
     setLikersProfiles(profiles)
   }
-
-  async function loadPost() {
-    const postData = await getPost(id)
-    if (postData) {
-      setPost(postData)
-      loadAuthor(postData.userId)
-    }
-    setLoading(false)
-  }
-
-  async function loadAuthor(userId) {
-    const uid = userId || post?.userId
-    if (uid) {
-      const profile = await getUserProfile(uid)
-      setAuthor(profile)
-    }
-  }
-
-  async function handleDelete() {
-    if (!confirm('Apagar esta foto?')) return
-    
-    setDeleting(true)
-    
-    // ⚠️ CRITICAL - deletePost(id, storagePath) ordem inviolável
-    const result = await deletePost(post.id, post.storagePath)
-    
-    if (result.success) {
-      navigate('/profile', { replace: true })
-    } else {
-      alert('Erro ao apagar foto.')
-      setDeleting(false)
-    }
-  }
-
-  // Like com optimistic update
+  
   const handleLike = useCallback(async () => {
     if (!user || liking) return
     
     const newLiked = !liked
-    
-    // Optimistic update imediato
     setLiked(newLiked)
     setLiking(true)
     
@@ -124,7 +61,6 @@ export default function Post() {
       : await unlikePost(user.uid, post.id)
     
     if (!result.success) {
-      // Rollback se falhou
       setLiked(!newLiked)
     } else if (newLiked) {
       loadLikers()
@@ -132,105 +68,30 @@ export default function Post() {
     
     setLiking(false)
   }, [user, post, liked, liking])
-
-  // Single tap vs Double tap na foto
-  const handlePhotoTap = useCallback((e) => {
+  
+  const handlePhotoTap = useCallback(() => {
     tapCount.current++
     
     if (tapCount.current === 1) {
-      // Primeiro tap - espera pra ver se vem outro
       tapTimer.current = setTimeout(() => {
-        // Single tap - não faz nada (já está no post)
         tapCount.current = 0
       }, 300)
     } else if (tapCount.current === 2) {
-      // Double tap!
       clearTimeout(tapTimer.current)
       tapCount.current = 0
       
-      // Vibração
       if (navigator.vibrate) navigator.vibrate(10)
       
-      // Animação do coração
       setShowHeart(true)
       setTimeout(() => setShowHeart(false), 1000)
       
-      // Curtir se ainda não curtiu
       if (!liked && user) {
         setLiked(true)
         likePost(user.uid, post.id, post.userId).then(() => loadLikers())
       }
     }
   }, [liked, user, post])
-
-  // Swipe entre posts
-  const handleTouchStart = useCallback((e) => {
-    touchStart.current = {
-      x: e.touches[0].clientX,
-      y: e.touches[0].clientY
-    }
-  }, [])
-
-  const handleTouchEnd = useCallback((e) => {
-    const deltaX = e.changedTouches[0].clientX - touchStart.current.x
-    const deltaY = Math.abs(e.changedTouches[0].clientY - touchStart.current.y)
-    
-    // Swipe horizontal (não vertical)
-    if (Math.abs(deltaX) > 80 && deltaY < 50) {
-      if (canSwipe) {
-        if (deltaX < 0 && currentIndex < allPosts.length - 1) {
-          // Swipe left → próximo post
-          goToPost(currentIndex + 1)
-        } else if (deltaX > 0 && currentIndex > 0) {
-          // Swipe right → post anterior
-          goToPost(currentIndex - 1)
-        } else if (deltaX > 0 && currentIndex === 0) {
-          // Swipe right no primeiro → voltar
-          navigate(-1)
-        }
-      } else if (deltaX > 0) {
-        // Sem swipe habilitado, swipe right volta
-        navigate(-1)
-      }
-    }
-  }, [canSwipe, currentIndex, allPosts.length, navigate])
-
-  function goToPost(index) {
-    const newPost = allPosts[index]
-    const newAuthor = allProfiles[newPost.userId]
-    
-    setCurrentIndex(index)
-    setPost(newPost)
-    setAuthor(newAuthor)
-    setLiked(false)
-    setLikers([])
-    setLikersProfiles({})
-    
-    // Recarregar likes do novo post
-    if (user && newPost) {
-      hasLiked(user.uid, newPost.id).then(setLiked)
-      getPostLikes(newPost.id).then(async (likes) => {
-        setLikers(likes)
-        const profiles = {}
-        for (const like of likes.slice(0, 10)) {
-          const p = await getUserProfile(like.userId)
-          if (p) profiles[like.userId] = p
-        }
-        setLikersProfiles(profiles)
-      })
-    }
-  }
-
-  function goToProfile() {
-    if (author?.username) {
-      if (isOwner) {
-        navigate('/profile')
-      } else {
-        navigate(`/profile/${author.username}`)
-      }
-    }
-  }
-
+  
   function formatTime(timestamp) {
     if (!timestamp) return ''
     
@@ -247,52 +108,9 @@ export default function Post() {
     if (days < 7) return `há ${days} dias`
     return date.toLocaleDateString('pt-BR')
   }
-
-  if (loading) {
-    return (
-      <div className="screen-center">
-        <div className="spinner" />
-      </div>
-    )
-  }
-
-  if (!post) {
-    return (
-      <div className="screen-center">
-        <p className="text-caption">Post não encontrado</p>
-      </div>
-    )
-  }
-
+  
   return (
-    <div 
-      className="post-page fade-in"
-      onTouchStart={handleTouchStart}
-      onTouchEnd={handleTouchEnd}
-    >
-      <header className="post-header">
-        <button className="btn-back" onClick={() => navigate(-1)}>
-          <BackIcon />
-        </button>
-        
-        {/* Indicador de posição se swipe habilitado */}
-        {canSwipe && (
-          <span className="post-position">
-            {currentIndex + 1} / {allPosts.length}
-          </span>
-        )}
-        
-        {isOwner && (
-          <button 
-            className="btn-delete" 
-            onClick={handleDelete}
-            disabled={deleting}
-          >
-            {deleting ? '...' : <TrashIcon />}
-          </button>
-        )}
-      </header>
-      
+    <div className="post-item">
       <div className="post-photo-container" onClick={handlePhotoTap}>
         <FadeImage 
           src={post.photoURL} 
@@ -348,7 +166,7 @@ export default function Post() {
           <p className="post-caption">{post.caption}</p>
         )}
         
-        <div className="post-meta" onClick={goToProfile}>
+        <div className="post-meta" onClick={onAuthorClick}>
           <div className="avatar avatar-sm">
             {author?.photoURL ? (
               <FadeImage src={author.photoURL} alt={author.displayName} />
@@ -366,51 +184,250 @@ export default function Post() {
       
       {/* Modal de quem curtiu */}
       {showLikers && (
-        <div className="likers-modal" onClick={() => setShowLikers(false)}>
-          <div className="likers-content" onClick={e => e.stopPropagation()}>
-            <header className="likers-header">
-              <h2>Curtidas</h2>
-              <button onClick={() => setShowLikers(false)}>
-                <CloseIcon />
-              </button>
-            </header>
-            
-            <div className="likers-list">
-              {likers.map(like => {
-                const p = likersProfiles[like.userId]
-                return (
-                  <div 
-                    key={like.id}
-                    className="liker-item"
-                    onClick={() => {
-                      setShowLikers(false)
-                      if (p?.username) {
-                        if (like.userId === user?.uid) {
-                          navigate('/profile')
-                        } else {
-                          navigate(`/profile/${p.username}`)
-                        }
-                      }
-                    }}
-                  >
-                    <div className="avatar avatar-sm">
-                      {p?.photoURL ? (
-                        <FadeImage src={p.photoURL} alt={p.displayName} />
-                      ) : (
-                        <span>{p?.displayName?.charAt(0) || '?'}</span>
-                      )}
-                    </div>
-                    <span className="liker-name">{p?.displayName || 'Usuário'}</span>
-                  </div>
-                )
-              })}
-            </div>
-          </div>
-        </div>
+        <LikersModal 
+          likers={likers}
+          likersProfiles={likersProfiles}
+          user={user}
+          onClose={() => setShowLikers(false)}
+        />
       )}
     </div>
   )
 }
+
+// ✅ Modal de likers separado
+function LikersModal({ likers, likersProfiles, user, onClose }) {
+  const navigate = useNavigate()
+  
+  return (
+    <div className="likers-modal" onClick={onClose}>
+      <div className="likers-content" onClick={e => e.stopPropagation()}>
+        <header className="likers-header">
+          <h2>Curtidas</h2>
+          <button onClick={onClose}>
+            <CloseIcon />
+          </button>
+        </header>
+        
+        <div className="likers-list">
+          {likers.map(like => {
+            const p = likersProfiles[like.userId]
+            return (
+              <div 
+                key={like.id}
+                className="liker-item"
+                onClick={() => {
+                  onClose()
+                  if (p?.username) {
+                    if (like.userId === user?.uid) {
+                      navigate('/profile')
+                    } else {
+                      navigate(`/profile/${p.username}`)
+                    }
+                  }
+                }}
+              >
+                <div className="avatar avatar-sm">
+                  {p?.photoURL ? (
+                    <FadeImage src={p.photoURL} alt={p.displayName} />
+                  ) : (
+                    <span>{p?.displayName?.charAt(0) || '?'}</span>
+                  )}
+                </div>
+                <span className="liker-name">{p?.displayName || 'Usuário'}</span>
+              </div>
+            )
+          })}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ✅ Componente principal
+export default function Post() {
+  const navigate = useNavigate()
+  const { id } = useParams()
+  const location = useLocation()
+  const { user, getUserProfile } = useAuth()
+  
+  // Dados do contexto (vindo do Profile ou Feed)
+  const allPosts = location.state?.posts || []
+  const allProfiles = location.state?.profiles || {}
+  const initialIndex = location.state?.index ?? 0
+  
+  // Fallback: post único
+  const [singlePost, setSinglePost] = useState(location.state?.post || null)
+  const [singleAuthor, setSingleAuthor] = useState(location.state?.profile || null)
+  const [loading, setLoading] = useState(!singlePost && allPosts.length === 0)
+  
+  // Refs para scroll
+  const containerRef = useRef(null)
+  const itemRefs = useRef({})
+  
+  // Estado do post visível (para o header)
+  const [visibleIndex, setVisibleIndex] = useState(initialIndex)
+  const [deleting, setDeleting] = useState(false)
+  
+  // Posts a renderizar
+  const posts = allPosts.length > 0 ? allPosts : (singlePost ? [singlePost] : [])
+  const currentPost = posts[visibleIndex]
+  const currentAuthor = allPosts.length > 0 
+    ? allProfiles[currentPost?.userId] 
+    : singleAuthor
+  
+  // 🔒 Só dono pode deletar
+  const isOwner = user && currentPost && user.uid === currentPost.userId
+  
+  // Carregar post único se não veio pelo state
+  useEffect(() => {
+    if (!singlePost && allPosts.length === 0) {
+      loadSinglePost()
+    }
+  }, [id])
+  
+  // Scroll inicial para o post clicado
+  useEffect(() => {
+    if (posts.length > 0 && itemRefs.current[initialIndex]) {
+      // Pequeno delay para garantir que o DOM está pronto
+      setTimeout(() => {
+        itemRefs.current[initialIndex]?.scrollIntoView({ 
+          behavior: 'instant',
+          block: 'start'
+        })
+      }, 50)
+    }
+  }, [posts.length, initialIndex])
+  
+  // Intersection Observer para detectar post visível
+  useEffect(() => {
+    if (posts.length <= 1) return
+    
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            const index = parseInt(entry.target.dataset.index, 10)
+            setVisibleIndex(index)
+          }
+        })
+      },
+      { 
+        root: containerRef.current,
+        threshold: 0.6 
+      }
+    )
+    
+    Object.values(itemRefs.current).forEach(ref => {
+      if (ref) observer.observe(ref)
+    })
+    
+    return () => observer.disconnect()
+  }, [posts.length])
+  
+  async function loadSinglePost() {
+    const postData = await getPost(id)
+    if (postData) {
+      setSinglePost(postData)
+      const profile = await getUserProfile(postData.userId)
+      setSingleAuthor(profile)
+    }
+    setLoading(false)
+  }
+  
+  async function handleDelete() {
+    if (!confirm('Apagar esta foto?')) return
+    
+    setDeleting(true)
+    
+    const result = await deletePost(currentPost.id, currentPost.storagePath)
+    
+    if (result.success) {
+      navigate('/profile', { replace: true })
+    } else {
+      alert('Erro ao apagar foto.')
+      setDeleting(false)
+    }
+  }
+  
+  function goToAuthorProfile(post, author) {
+    if (!author?.username) return
+    
+    if (user?.uid === post.userId) {
+      navigate('/profile')
+    } else {
+      navigate(`/profile/${author.username}`)
+    }
+  }
+  
+  if (loading) {
+    return (
+      <div className="screen-center">
+        <div className="spinner" />
+      </div>
+    )
+  }
+  
+  if (posts.length === 0) {
+    return (
+      <div className="screen-center">
+        <p className="text-caption">Post não encontrado</p>
+      </div>
+    )
+  }
+  
+  return (
+    <div className="post-page">
+      {/* Header fixo */}
+      <header className="post-header">
+        <button className="btn-back" onClick={() => navigate(-1)}>
+          <BackIcon />
+        </button>
+        
+        <div className="header-spacer" />
+        
+        {isOwner && (
+          <button 
+            className="btn-delete" 
+            onClick={handleDelete}
+            disabled={deleting}
+          >
+            {deleting ? '...' : <TrashIcon />}
+          </button>
+        )}
+      </header>
+      
+      {/* Container com scroll vertical */}
+      <div className="posts-scroll-container" ref={containerRef}>
+        {posts.map((post, index) => {
+          const author = allPosts.length > 0 
+            ? allProfiles[post.userId] 
+            : singleAuthor
+          
+          return (
+            <div 
+              key={post.id}
+              ref={el => itemRefs.current[index] = el}
+              data-index={index}
+              className="post-scroll-item"
+            >
+              <PostItem
+                post={post}
+                author={author}
+                user={user}
+                getUserProfile={getUserProfile}
+                isVisible={visibleIndex === index}
+                onAuthorClick={() => goToAuthorProfile(post, author)}
+              />
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
+// ========== ICONS ==========
 
 function BackIcon() {
   return (
