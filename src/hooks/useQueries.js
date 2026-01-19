@@ -1,6 +1,8 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { getUserPosts, getFeedPosts, getPost, uploadPost, deletePost } from '../lib/posts'
 import { getFollowers, getFollowing, getUserByUsername, followUser, unfollowUser, isFollowing } from '../lib/follows'
+import { doc, getDoc } from 'firebase/firestore'
+import { db } from '../lib/firebase'
 
 // === Feed ===
 
@@ -10,16 +12,21 @@ export function useFeed(userId) {
     queryFn: async () => {
       const following = await getFollowing(userId)
       
-      if (following.length === 0) {
-        return { posts: [], profiles: {}, empty: true }
-      }
-
       const profilesMap = {}
       following.forEach(p => {
         profilesMap[p.id] = p
       })
 
+      // Incluir o próprio usuário no feed
+      const ownProfile = await getOwnProfile(userId)
+      if (ownProfile) {
+        profilesMap[userId] = ownProfile
+      }
+
+      // IDs: quem você segue + você mesmo
       const followingIds = following.map(p => p.id)
+      followingIds.push(userId)
+      
       const posts = await getFeedPosts(followingIds)
       
       return { posts, profiles: profilesMap, empty: posts.length === 0 }
@@ -27,6 +34,19 @@ export function useFeed(userId) {
     enabled: !!userId,
     staleTime: 1000 * 60 * 2
   })
+}
+
+async function getOwnProfile(userId) {
+  try {
+    const docRef = doc(db, 'users', userId)
+    const docSnap = await getDoc(docRef)
+    if (docSnap.exists()) {
+      return { id: docSnap.id, ...docSnap.data() }
+    }
+    return null
+  } catch {
+    return null
+  }
 }
 
 // === Posts ===

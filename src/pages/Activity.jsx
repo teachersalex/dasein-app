@@ -39,7 +39,7 @@ export default function Activity() {
     
     setActivities(items)
     
-    // Marcar como visto — remove o badge no Feed
+    // Marcar como visto – remove o badge no Feed
     if (items.length > 0) {
       localStorage.setItem('lastActivitySeen', items[0].createdAt.toString())
     }
@@ -172,10 +172,10 @@ function ActivityNav({ navigate }) {
         <CaptureIcon />
       </button>
       <button 
-        className="feed-nav-btn feed-nav-soon"
-        disabled
+        className="feed-nav-btn"
+        onClick={() => navigate('/discover')}
       >
-        <SoonIcon />
+        <DiscoverIcon />
       </button>
       <button 
         className="feed-nav-btn"
@@ -223,12 +223,11 @@ function CaptureIcon() {
   )
 }
 
-function SoonIcon() {
+function DiscoverIcon() {
   return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" opacity="0.4">
-      <circle cx="6" cy="12" r="1.5"/>
-      <circle cx="12" cy="12" r="1.5"/>
-      <circle cx="18" cy="12" r="1.5"/>
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+      <circle cx="11" cy="11" r="8"/>
+      <path d="M21 21l-4.35-4.35"/>
     </svg>
   )
 }

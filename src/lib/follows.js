@@ -8,6 +8,7 @@ import {
   query,
   where,
   getDocs,
+  limit,
   increment,
   serverTimestamp 
 } from 'firebase/firestore'
@@ -180,5 +181,36 @@ export async function getUserByUsername(username) {
   } catch (error) {
     console.error('Error getting user by username:', error)
     return null
+  }
+}
+
+// 🔍 Busca por username - para Descoberta
+export async function searchUsers(searchTerm, maxResults = 20) {
+  if (!searchTerm || searchTerm.length < 1) {
+    return []
+  }
+
+  try {
+    const term = searchTerm.toLowerCase().trim()
+    
+    // Busca "começa com" usando range query
+    const q = query(
+      collection(db, 'users'),
+      where('username', '>=', term),
+      where('username', '<=', term + '\uf8ff'),
+      limit(maxResults)
+    )
+    
+    const snapshot = await getDocs(q)
+    const users = []
+    
+    snapshot.forEach(doc => {
+      users.push({ id: doc.id, ...doc.data() })
+    })
+
+    return users
+  } catch (error) {
+    console.error('Error searching users:', error)
+    return []
   }
 }
