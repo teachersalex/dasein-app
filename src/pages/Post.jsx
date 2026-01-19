@@ -26,6 +26,9 @@ function PostItem({
   // 🔒 Esconde ações até dados chegarem
   const [dataReady, setDataReady] = useState(false)
   
+  // 🔒 Animação só quando usuário clica
+  const [justLiked, setJustLiked] = useState(false)
+  
   // Tap detection
   const tapTimer = useRef(null)
   const tapCount = useRef(0)
@@ -80,6 +83,12 @@ function PostItem({
     const newLiked = !liked
     setLiked(newLiked)
     setLiking(true)
+    
+    // 🔒 Animação só quando curte (não quando descurte)
+    if (newLiked) {
+      setJustLiked(true)
+      setTimeout(() => setJustLiked(false), 350)
+    }
     
     const result = newLiked
       ? await likePost(user.uid, post.id, post.userId)
@@ -153,7 +162,7 @@ function PostItem({
       <div className="post-info">
         <div className={`post-actions ${dataReady ? 'data-ready' : ''}`}>
           <button 
-            className={`btn-like ${liked ? 'liked' : ''}`}
+            className={`btn-like ${liked ? 'liked' : ''} ${justLiked ? 'just-liked' : ''}`}
             onClick={handleLike}
             disabled={liking}
           >

@@ -144,7 +144,8 @@
   transform: scale(0.85);
 }
 
-.btn-like.liked svg {
+/* 🔒 Animação só quando usuário clica pra curtir */
+.btn-like.just-liked svg {
   animation: heartPop 0.3s ease;
 }
 
