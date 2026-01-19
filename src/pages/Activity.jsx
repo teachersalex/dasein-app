@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { getReceivedLikes } from '../lib/likes'
+import { getInviteActivities } from '../lib/invites'
 import FadeImage from '../components/FadeImage'
 import './Activity.css'
 
@@ -25,8 +26,11 @@ export default function Activity() {
     // Buscar likes recebidos
     const likes = await getReceivedLikes(user.uid, 30)
     
-    // Transformar em atividades
-    const items = likes.map(like => ({
+    // Buscar notificações de convites usados
+    const inviteActivities = await getInviteActivities(user.uid, 20)
+    
+    // Transformar likes em atividades
+    const likeItems = likes.map(like => ({
       id: like.id,
       type: 'like',
       userId: like.userId,
@@ -34,7 +38,16 @@ export default function Activity() {
       createdAt: like.createdAt?.toMillis() || Date.now()
     }))
     
-    // Ordenar por data
+    // Transformar convites em atividades
+    const inviteItems = inviteActivities.map(activity => ({
+      id: activity.id,
+      type: 'invite_used',
+      userId: activity.userId,
+      createdAt: activity.createdAt?.toMillis() || Date.now()
+    }))
+    
+    // Combinar e ordenar por data
+    const items = [...likeItems, ...inviteItems]
     items.sort((a, b) => b.createdAt - a.createdAt)
     
     setActivities(items)
@@ -135,6 +148,7 @@ export default function Activity() {
                       {actorProfile?.displayName || 'Alguém'}
                     </span>
                     {activity.type === 'like' && ' curtiu sua foto'}
+                    {activity.type === 'invite_used' && ' entrou pelo seu convite 🌱'}
                     {activity.type === 'visit' && ' visitou seu perfil'}
                   </p>
                   <span className="activity-time">{formatTime(activity.createdAt)}</span>

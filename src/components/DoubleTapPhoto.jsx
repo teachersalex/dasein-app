@@ -1,9 +1,12 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useCallback } from 'react'
 import { likePost, hasLiked } from '../lib/likes'
 import FadeImage from './FadeImage'
 import './DoubleTapPhoto.css'
 
-// Double tap pra curtir com animação do coração prata
+// Double tap pra curtir, single tap pra abrir
+// Lógica limpa: espera 300ms após primeiro tap
+// Se vier segundo tap → curte
+// Se não → abre post
 export default function DoubleTapPhoto({ 
   src, 
   alt = '', 
@@ -14,16 +17,29 @@ export default function DoubleTapPhoto({
   onClick
 }) {
   const [showHeart, setShowHeart] = useState(false)
-  const lastTap = useRef(0)
+  const [isLiking, setIsLiking] = useState(false)
+  const tapTimer = useRef(null)
+  const tapCount = useRef(0)
 
-  async function handleTap(e) {
-    const now = Date.now()
-    const DOUBLE_TAP_DELAY = 300
+  const handleTap = useCallback(async (e) => {
+    e.preventDefault()
+    e.stopPropagation()
     
-    if (now - lastTap.current < DOUBLE_TAP_DELAY) {
-      // Double tap!
-      e.preventDefault()
-      e.stopPropagation()
+    tapCount.current++
+    
+    if (tapCount.current === 1) {
+      // Primeiro tap - espera pra ver se vem outro
+      tapTimer.current = setTimeout(() => {
+        // Single tap confirmado → abre post
+        if (tapCount.current === 1) {
+          onClick?.()
+        }
+        tapCount.current = 0
+      }, 300)
+    } else if (tapCount.current === 2) {
+      // Double tap! Cancela o timer do single tap
+      clearTimeout(tapTimer.current)
+      tapCount.current = 0
       
       // Vibração
       if (navigator.vibrate) navigator.vibrate(10)
@@ -32,23 +48,19 @@ export default function DoubleTapPhoto({
       setShowHeart(true)
       setTimeout(() => setShowHeart(false), 1000)
       
-      // Curtir (se ainda não curtiu)
-      const alreadyLiked = await hasLiked(userId, postId)
-      if (!alreadyLiked) {
-        await likePost(userId, postId, postOwnerId)
-      }
-    } else {
-      // Single tap - espera pra ver se vem outro
-      lastTap.current = now
-      
-      // Delay antes de executar onClick (pra dar tempo do double tap)
-      setTimeout(() => {
-        if (Date.now() - lastTap.current >= DOUBLE_TAP_DELAY) {
-          onClick?.()
+      // Curtir (se não estiver já curtindo)
+      if (!isLiking && userId && postId) {
+        setIsLiking(true)
+        
+        const alreadyLiked = await hasLiked(userId, postId)
+        if (!alreadyLiked) {
+          await likePost(userId, postId, postOwnerId)
         }
-      }, DOUBLE_TAP_DELAY)
+        
+        setIsLiking(false)
+      }
     }
-  }
+  }, [onClick, userId, postId, postOwnerId, isLiking])
 
   return (
     <div className="double-tap-container" onClick={handleTap}>

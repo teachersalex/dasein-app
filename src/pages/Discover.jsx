@@ -86,14 +86,17 @@ export default function Discover() {
           <SearchIcon />
           <input
             ref={inputRef}
-            type="text"
+            type="search"
             className="search-input"
-            placeholder="Buscar por @username"
+            placeholder="Buscar pessoas"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             autoCapitalize="none"
             autoCorrect="off"
+            autoComplete="off"
             spellCheck="false"
+            data-form-type="other"
+            data-lpignore="true"
           />
           {query && (
             <button className="search-clear" onClick={handleClear}>

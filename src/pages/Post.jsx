@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { useNavigate, useParams, useLocation } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { getPost, deletePost } from '../lib/posts'
@@ -13,21 +13,37 @@ export default function Post() {
   const location = useLocation()
   const { user, getUserProfile } = useAuth()
   
-  // ✅ SAFE - location.state é otimização (evita fetch se já tem dados)
+  // ✅ Suporte a swipe entre posts
+  const allPosts = location.state?.posts || []
+  const allProfiles = location.state?.profiles || {}
+  const initialIndex = location.state?.index ?? -1
+  
+  const [currentIndex, setCurrentIndex] = useState(initialIndex)
   const [post, setPost] = useState(location.state?.post || null)
   const [author, setAuthor] = useState(location.state?.profile || null)
   const [loading, setLoading] = useState(!post)
   const [deleting, setDeleting] = useState(false)
+  
+  // Like state
   const [liked, setLiked] = useState(false)
   const [liking, setLiking] = useState(false)
   const [showHeart, setShowHeart] = useState(false)
   const [likers, setLikers] = useState([])
   const [likersProfiles, setLikersProfiles] = useState({})
   const [showLikers, setShowLikers] = useState(false)
-  const lastTap = useRef(0)
+  
+  // Tap detection
+  const tapTimer = useRef(null)
+  const tapCount = useRef(0)
+  
+  // Swipe detection
+  const touchStart = useRef({ x: 0, y: 0 })
 
   // 🔒 SECURITY - só dono pode deletar
   const isOwner = user && post && user.uid === post.userId
+  
+  // Swipe habilitado apenas se temos array de posts
+  const canSwipe = allPosts.length > 1
 
   useEffect(() => {
     if (!post) {
@@ -37,7 +53,7 @@ export default function Post() {
     }
   }, [id])
 
-  // Checar se já curtiu
+  // Checar se já curtiu + carregar likers
   useEffect(() => {
     if (user && post) {
       hasLiked(user.uid, post.id).then(setLiked)
@@ -46,6 +62,8 @@ export default function Post() {
   }, [user, post?.id])
 
   async function loadLikers() {
+    if (!post?.id) return
+    
     const likes = await getPostLikes(post.id)
     setLikers(likes)
     
@@ -91,47 +109,116 @@ export default function Post() {
     }
   }
 
-  async function handleLike() {
+  // Like com optimistic update
+  const handleLike = useCallback(async () => {
     if (!user || liking) return
     
-    setLiking(true)
     const newLiked = !liked
-    setLiked(newLiked) // Optimistic update
+    
+    // Optimistic update imediato
+    setLiked(newLiked)
+    setLiking(true)
     
     const result = newLiked
       ? await likePost(user.uid, post.id, post.userId)
       : await unlikePost(user.uid, post.id)
     
     if (!result.success) {
-      setLiked(!newLiked) // Rollback
+      // Rollback se falhou
+      setLiked(!newLiked)
     } else if (newLiked) {
-      loadLikers() // Atualiza lista
+      loadLikers()
     }
     
     setLiking(false)
-  }
+  }, [user, post, liked, liking])
 
-  async function handleDoubleTap(e) {
-    const now = Date.now()
-    const DOUBLE_TAP_DELAY = 300
+  // Single tap vs Double tap na foto
+  const handlePhotoTap = useCallback((e) => {
+    tapCount.current++
     
-    if (now - lastTap.current < DOUBLE_TAP_DELAY) {
+    if (tapCount.current === 1) {
+      // Primeiro tap - espera pra ver se vem outro
+      tapTimer.current = setTimeout(() => {
+        // Single tap - não faz nada (já está no post)
+        tapCount.current = 0
+      }, 300)
+    } else if (tapCount.current === 2) {
       // Double tap!
-      e.preventDefault()
+      clearTimeout(tapTimer.current)
+      tapCount.current = 0
       
+      // Vibração
       if (navigator.vibrate) navigator.vibrate(10)
       
+      // Animação do coração
       setShowHeart(true)
       setTimeout(() => setShowHeart(false), 1000)
       
-      if (!liked) {
+      // Curtir se ainda não curtiu
+      if (!liked && user) {
         setLiked(true)
-        await likePost(user.uid, post.id, post.userId)
-        loadLikers()
+        likePost(user.uid, post.id, post.userId).then(() => loadLikers())
       }
     }
+  }, [liked, user, post])
+
+  // Swipe entre posts
+  const handleTouchStart = useCallback((e) => {
+    touchStart.current = {
+      x: e.touches[0].clientX,
+      y: e.touches[0].clientY
+    }
+  }, [])
+
+  const handleTouchEnd = useCallback((e) => {
+    const deltaX = e.changedTouches[0].clientX - touchStart.current.x
+    const deltaY = Math.abs(e.changedTouches[0].clientY - touchStart.current.y)
     
-    lastTap.current = now
+    // Swipe horizontal (não vertical)
+    if (Math.abs(deltaX) > 80 && deltaY < 50) {
+      if (canSwipe) {
+        if (deltaX < 0 && currentIndex < allPosts.length - 1) {
+          // Swipe left → próximo post
+          goToPost(currentIndex + 1)
+        } else if (deltaX > 0 && currentIndex > 0) {
+          // Swipe right → post anterior
+          goToPost(currentIndex - 1)
+        } else if (deltaX > 0 && currentIndex === 0) {
+          // Swipe right no primeiro → voltar
+          navigate(-1)
+        }
+      } else if (deltaX > 0) {
+        // Sem swipe habilitado, swipe right volta
+        navigate(-1)
+      }
+    }
+  }, [canSwipe, currentIndex, allPosts.length, navigate])
+
+  function goToPost(index) {
+    const newPost = allPosts[index]
+    const newAuthor = allProfiles[newPost.userId]
+    
+    setCurrentIndex(index)
+    setPost(newPost)
+    setAuthor(newAuthor)
+    setLiked(false)
+    setLikers([])
+    setLikersProfiles({})
+    
+    // Recarregar likes do novo post
+    if (user && newPost) {
+      hasLiked(user.uid, newPost.id).then(setLiked)
+      getPostLikes(newPost.id).then(async (likes) => {
+        setLikers(likes)
+        const profiles = {}
+        for (const like of likes.slice(0, 10)) {
+          const p = await getUserProfile(like.userId)
+          if (p) profiles[like.userId] = p
+        }
+        setLikersProfiles(profiles)
+      })
+    }
   }
 
   function goToProfile() {
@@ -161,34 +248,6 @@ export default function Post() {
     return date.toLocaleDateString('pt-BR')
   }
 
-  // Swipe to go back
-  useEffect(() => {
-    let startX = 0
-    let startY = 0
-
-    function handleTouchStart(e) {
-      startX = e.touches[0].clientX
-      startY = e.touches[0].clientY
-    }
-
-    function handleTouchEnd(e) {
-      const deltaX = e.changedTouches[0].clientX - startX
-      const deltaY = Math.abs(e.changedTouches[0].clientY - startY)
-      
-      if (deltaX > 80 && deltaY < 50) {
-        navigate(-1)
-      }
-    }
-
-    document.addEventListener('touchstart', handleTouchStart, { passive: true })
-    document.addEventListener('touchend', handleTouchEnd, { passive: true })
-
-    return () => {
-      document.removeEventListener('touchstart', handleTouchStart)
-      document.removeEventListener('touchend', handleTouchEnd)
-    }
-  }, [navigate])
-
   if (loading) {
     return (
       <div className="screen-center">
@@ -206,11 +265,22 @@ export default function Post() {
   }
 
   return (
-    <div className="post-page fade-in">
+    <div 
+      className="post-page fade-in"
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
+    >
       <header className="post-header">
         <button className="btn-back" onClick={() => navigate(-1)}>
           <BackIcon />
         </button>
+        
+        {/* Indicador de posição se swipe habilitado */}
+        {canSwipe && (
+          <span className="post-position">
+            {currentIndex + 1} / {allPosts.length}
+          </span>
+        )}
         
         {isOwner && (
           <button 
@@ -223,7 +293,7 @@ export default function Post() {
         )}
       </header>
       
-      <div className="post-photo-container" onClick={handleDoubleTap}>
+      <div className="post-photo-container" onClick={handlePhotoTap}>
         <FadeImage 
           src={post.photoURL} 
           alt="" 

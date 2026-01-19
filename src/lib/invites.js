@@ -57,14 +57,48 @@ export async function useInvite(code, userId) {
   
   try {
     const inviteRef = doc(db, 'invites', normalizedCode)
+    const inviteSnap = await getDoc(inviteRef)
+    
+    if (!inviteSnap.exists()) {
+      return { success: false, error: 'Convite não encontrado' }
+    }
+    
+    const invite = inviteSnap.data()
+    
+    // Atualizar convite como usado
     await updateDoc(inviteRef, {
       usedBy: userId,
       usedAt: serverTimestamp(),
       status: 'used'
     })
-    return { success: true }
+    
+    // 🔔 Criar atividade para quem convidou
+    if (invite.createdBy) {
+      await createInviteUsedActivity(invite.createdBy, userId)
+    }
+    
+    return { success: true, invitedBy: invite.createdBy }
   } catch (error) {
     return { success: false, error: 'Erro ao usar convite.' }
+  }
+}
+
+// 🔔 Notificar criador do convite que alguém entrou
+async function createInviteUsedActivity(inviterUserId, newUserId) {
+  try {
+    const activityId = `invite_${newUserId}_${Date.now()}`
+    
+    await setDoc(doc(db, 'activities', activityId), {
+      type: 'invite_used',
+      userId: newUserId,           // quem entrou
+      targetUserId: inviterUserId, // quem convidou (recebe a notificação)
+      createdAt: serverTimestamp()
+    })
+    
+    return { success: true }
+  } catch (error) {
+    console.error('Error creating invite activity:', error)
+    return { success: false }
   }
 }
 
@@ -140,6 +174,29 @@ export async function getUserInvites(userId) {
     
     return invites
   } catch (error) {
+    return []
+  }
+}
+
+// 🔍 Buscar atividades de convite para um usuário
+export async function getInviteActivities(userId, limitCount = 20) {
+  try {
+    const q = query(
+      collection(db, 'activities'),
+      where('targetUserId', '==', userId),
+      where('type', '==', 'invite_used')
+    )
+    
+    const snapshot = await getDocs(q)
+    
+    const activities = snapshot.docs
+      .map(doc => ({ id: doc.id, ...doc.data() }))
+      .sort((a, b) => (b.createdAt?.toMillis() || 0) - (a.createdAt?.toMillis() || 0))
+      .slice(0, limitCount)
+    
+    return activities
+  } catch (error) {
+    console.error('Error getting invite activities:', error)
     return []
   }
 }

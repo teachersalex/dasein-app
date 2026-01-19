@@ -57,8 +57,16 @@ export default function Feed() {
     navigate(`/profile/${username}`)
   }
 
-  function goToPost(post, author) {
-    navigate(`/post/${post.id}`, { state: { post, profile: author } })
+  function goToPost(post, author, index) {
+    navigate(`/post/${post.id}`, { 
+      state: { 
+        post, 
+        profile: author,
+        posts,      // Array completo para swipe
+        profiles,   // Mapa de perfis
+        index       // Posição atual
+      } 
+    })
   }
 
   if (isLoading) {
@@ -120,7 +128,7 @@ export default function Feed() {
         </div>
       ) : (
         <div className="feed-list">
-          {posts.map(post => {
+          {posts.map((post, index) => {
             const author = profiles[post.userId]
             return (
               <article key={post.id} className="feed-item">
@@ -148,7 +156,7 @@ export default function Feed() {
                     postId={post.id}
                     postOwnerId={post.userId}
                     userId={user?.uid}
-                    onClick={() => goToPost(post, author)}
+                    onClick={() => goToPost(post, author, index)}
                   />
                 </div>
                 
