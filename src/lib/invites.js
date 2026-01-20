@@ -209,11 +209,10 @@ export async function purgeExpiredInvites(userId) {
   const expiryMs = EXPIRY_HOURS * 60 * 60 * 1000
   
   try {
-    // Buscar convites do usuário que estão disponíveis
+    // Buscar todos convites do usuário
     const q = query(
       collection(db, 'invites'),
-      where('createdBy', '==', userId),
-      where('status', '==', 'available')
+      where('createdBy', '==', userId)
     )
     
     const snapshot = await getDocs(q)
@@ -221,6 +220,10 @@ export async function purgeExpiredInvites(userId) {
     
     for (const docSnap of snapshot.docs) {
       const invite = docSnap.data()
+      
+      // Só deleta se status = available
+      if (invite.status !== 'available') continue
+      
       const createdAt = invite.createdAt?.toMillis() || 0
       const age = now - createdAt
       
