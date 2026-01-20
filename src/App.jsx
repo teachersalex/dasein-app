@@ -70,7 +70,7 @@ function InviteRoute() {
 }
 
 // 🔒 Páginas que mostram o bottom nav
-const NAV_PAGES = ['/feed', '/activity', '/home', '/discover', '/profile']
+const NAV_PAGES = ['/feed', '/activity', '/discover', '/profile']
 
 function AppLayout({ children }) {
   const location = useLocation()
