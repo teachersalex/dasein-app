@@ -3,6 +3,7 @@ import {
   getDoc, 
   setDoc, 
   updateDoc,
+  deleteDoc,
   collection,
   query,
   where,
@@ -36,7 +37,7 @@ export async function validateInviteCode(code) {
     const snapshot = await getDoc(inviteRef)
     
     if (!snapshot.exists()) {
-      return { valid: false, error: 'Convite não encontrado' }
+      return { valid: false, error: 'Convite inválido ou expirado' }
     }
     
     const invite = snapshot.data()
@@ -60,7 +61,7 @@ export async function useInvite(code, userId) {
     const inviteSnap = await getDoc(inviteRef)
     
     if (!inviteSnap.exists()) {
-      return { success: false, error: 'Convite não encontrado' }
+      return { success: false, error: 'Convite inválido ou expirado' }
     }
     
     const invite = inviteSnap.data()
@@ -198,5 +199,41 @@ export async function getInviteActivities(userId, limitCount = 20) {
   } catch (error) {
     console.error('Error getting invite activities:', error)
     return []
+  }
+}
+
+// 🗑️ Purge convites expirados (só do userId, +12h, não usados)
+export async function purgeExpiredInvites(userId) {
+  const EXPIRY_HOURS = 12
+  const now = Date.now()
+  const expiryMs = EXPIRY_HOURS * 60 * 60 * 1000
+  
+  try {
+    // Buscar convites do usuário que estão disponíveis
+    const q = query(
+      collection(db, 'invites'),
+      where('createdBy', '==', userId),
+      where('status', '==', 'available')
+    )
+    
+    const snapshot = await getDocs(q)
+    let deletedCount = 0
+    
+    for (const docSnap of snapshot.docs) {
+      const invite = docSnap.data()
+      const createdAt = invite.createdAt?.toMillis() || 0
+      const age = now - createdAt
+      
+      // Se tem mais de 12h, deleta
+      if (age > expiryMs) {
+        await deleteDoc(doc(db, 'invites', docSnap.id))
+        deletedCount++
+      }
+    }
+    
+    return { success: true, deleted: deletedCount }
+  } catch (error) {
+    console.error('Error purging invites:', error)
+    return { success: false, error: 'Erro ao limpar convites' }
   }
 }

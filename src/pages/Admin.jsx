@@ -15,6 +15,7 @@ import {
 import { db } from '../lib/firebase'
 import { useAuth } from '../hooks/useAuth'
 import { deletePost } from '../lib/posts'
+import { purgeExpiredInvites } from '../lib/invites'
 import FadeImage from '../components/FadeImage'
 import './Admin.css'
 
@@ -34,6 +35,7 @@ export default function Admin() {
   const [posts, setPosts] = useState([])
   const [inviteTree, setInviteTree] = useState([])
   const [growthMetrics, setGrowthMetrics] = useState(null)
+  const [purging, setPurging] = useState(false)
 
   // Check admin access
   const isAdmin = profile && ADMIN_USERNAMES.includes(profile.username)
@@ -254,6 +256,21 @@ export default function Admin() {
     }
   }
 
+  async function handlePurgeInvites() {
+    if (!confirm('Deletar convites expirados (+12h)?')) return
+    
+    setPurging(true)
+    const result = await purgeExpiredInvites(user.uid)
+    setPurging(false)
+    
+    if (result.success) {
+      alert(`${result.deleted} convite(s) expirado(s) deletado(s)`)
+      loadMetrics()
+    } else {
+      alert(result.error || 'Erro ao limpar convites')
+    }
+  }
+
   // === RENDER HELPERS ===
   function formatDate(timestamp) {
     if (!timestamp) return '-'
@@ -419,6 +436,17 @@ export default function Admin() {
                 </div>
               </>
             )}
+
+            {/* Ações admin */}
+            <h2 className="admin-subtitle">Ações</h2>
+            <button 
+              className="btn-small danger"
+              onClick={handlePurgeInvites}
+              disabled={purging}
+              style={{ marginTop: 8 }}
+            >
+              {purging ? 'Limpando...' : '🗑️ Limpar convites expirados (+12h)'}
+            </button>
           </div>
         )}
 
