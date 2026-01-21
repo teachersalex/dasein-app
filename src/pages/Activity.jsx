@@ -3,12 +3,20 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { getReceivedLikes } from '../lib/likes'
 import { getInviteActivities } from '../lib/invites'
+import { formatTime } from '../lib/utils'
 import FadeImage from '../components/FadeImage'
 import './Activity.css'
 
+/*
+ * Activity — Notificações
+ * 
+ * Mostra: curtidas recebidas, convites usados
+ * Correção audit: Promise.all para carregar perfis em paralelo
+ */
+
 export default function Activity() {
   const navigate = useNavigate()
-  const { user, profile, getUserProfile } = useAuth()
+  const { user, getUserProfile } = useAuth()
   
   const [activities, setActivities] = useState([])
   const [loading, setLoading] = useState(true)
@@ -23,13 +31,13 @@ export default function Activity() {
   async function loadActivities() {
     setLoading(true)
     
-    // Buscar likes recebidos
-    const likes = await getReceivedLikes(user.uid, 30)
+    // Buscar likes e convites em paralelo
+    const [likes, inviteActivities] = await Promise.all([
+      getReceivedLikes(user.uid, 30),
+      getInviteActivities(user.uid, 20)
+    ])
     
-    // Buscar notificações de convites usados
-    const inviteActivities = await getInviteActivities(user.uid, 20)
-    
-    // Transformar likes em atividades
+    // Transformar em formato unificado
     const likeItems = likes.map(like => ({
       id: like.id,
       type: 'like',
@@ -38,7 +46,6 @@ export default function Activity() {
       createdAt: like.createdAt?.toMillis() || Date.now()
     }))
     
-    // Transformar convites em atividades
     const inviteItems = inviteActivities.map(activity => ({
       id: activity.id,
       type: 'invite_used',
@@ -46,45 +53,32 @@ export default function Activity() {
       createdAt: activity.createdAt?.toMillis() || Date.now()
     }))
     
-    // Combinar e ordenar por data
+    // Combinar e ordenar
     const items = [...likeItems, ...inviteItems]
     items.sort((a, b) => b.createdAt - a.createdAt)
     
     setActivities(items)
     
-    // Marcar como visto – remove o badge no Feed
+    // Marcar como visto
     if (items.length > 0) {
       localStorage.setItem('lastActivitySeen', items[0].createdAt.toString())
     }
     
-    // Carregar perfis únicos
+    // Carregar perfis em paralelo (correção audit)
     const uniqueUserIds = [...new Set(items.map(a => a.userId))]
-    const profilesMap = {}
+    const profileResults = await Promise.all(
+      uniqueUserIds.map(uid => getUserProfile(uid))
+    )
     
-    for (const uid of uniqueUserIds) {
-      const p = await getUserProfile(uid)
-      if (p) profilesMap[uid] = p
-    }
+    const profilesMap = {}
+    uniqueUserIds.forEach((uid, index) => {
+      if (profileResults[index]) {
+        profilesMap[uid] = profileResults[index]
+      }
+    })
     
     setProfiles(profilesMap)
     setLoading(false)
-  }
-
-  function formatTime(timestamp) {
-    if (!timestamp) return ''
-    
-    const date = new Date(timestamp)
-    const now = new Date()
-    const diff = now - date
-    const minutes = Math.floor(diff / 60000)
-    const hours = Math.floor(diff / 3600000)
-    const days = Math.floor(diff / 86400000)
-
-    if (minutes < 1) return 'agora'
-    if (minutes < 60) return `${minutes}min`
-    if (hours < 24) return `${hours}h`
-    if (days < 7) return `${days}d`
-    return date.toLocaleDateString('pt-BR', { day: 'numeric', month: 'short' })
   }
 
   function goToProfile(username) {
@@ -97,7 +91,7 @@ export default function Activity() {
     return (
       <div className="activity-page">
         <header className="activity-header">
-          <h1 className="activity-title">Atividade</h1>
+          <h1 className="activity-title">atividade</h1>
         </header>
         <div className="screen-center">
           <div className="spinner" />
@@ -107,18 +101,20 @@ export default function Activity() {
   }
 
   return (
-    <div className="activity-page fade-in">
+    <div className="activity-page">
       <header className="activity-header">
-        <h1 className="activity-title">Atividade</h1>
+        <h1 className="activity-title">atividade</h1>
       </header>
 
       {activities.length === 0 ? (
         <div className="activity-empty">
-          <SparkIconLarge />
-          <p>Nenhuma atividade ainda</p>
-          <p className="activity-empty-hint">
-            Quando alguém curtir suas fotos, você verá aqui
-          </p>
+          <div className="activity-empty-content">
+            <SparkIcon />
+            <p className="activity-empty-title">nenhuma atividade</p>
+            <p className="activity-empty-hint">
+              quando alguém curtir suas fotos<br />ou entrar pelo seu convite, aparece aqui
+            </p>
+          </div>
         </div>
       ) : (
         <div className="activity-list">
@@ -131,14 +127,12 @@ export default function Activity() {
                 className="activity-item"
                 onClick={() => goToProfile(actorProfile?.username)}
               >
-                <div className="activity-avatar">
-                  <div className="avatar avatar-sm">
-                    {actorProfile?.photoURL ? (
-                      <FadeImage src={actorProfile.photoURL} alt={actorProfile.displayName} />
-                    ) : (
-                      actorProfile?.displayName?.charAt(0).toUpperCase() || '?'
-                    )}
-                  </div>
+                <div className="avatar avatar-sm">
+                  {actorProfile?.photoURL ? (
+                    <FadeImage src={actorProfile.photoURL} alt={actorProfile.displayName} />
+                  ) : (
+                    actorProfile?.displayName?.charAt(0).toUpperCase() || '?'
+                  )}
                 </div>
                 
                 <div className="activity-content">
@@ -147,8 +141,7 @@ export default function Activity() {
                       {actorProfile?.displayName || 'Alguém'}
                     </span>
                     {activity.type === 'like' && ' curtiu sua foto'}
-                    {activity.type === 'invite_used' && ' entrou pelo seu convite 🌱'}
-                    {activity.type === 'visit' && ' visitou seu perfil'}
+                    {activity.type === 'invite_used' && ' entrou pelo seu convite'}
                   </p>
                   <span className="activity-time">{formatTime(activity.createdAt)}</span>
                 </div>
@@ -161,9 +154,17 @@ export default function Activity() {
   )
 }
 
-function SparkIconLarge() {
+function SparkIcon() {
   return (
-    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" opacity="0.3">
+    <svg 
+      className="activity-empty-icon"
+      width="48" 
+      height="48" 
+      viewBox="0 0 24 24" 
+      fill="none" 
+      stroke="currentColor" 
+      strokeWidth="1"
+    >
       <path d="M12 2L14.5 9.5L22 12L14.5 14.5L12 22L9.5 14.5L2 12L9.5 9.5L12 2Z"/>
     </svg>
   )

@@ -1,13 +1,17 @@
-/* ==========================================
-   DASEIN - Activity Page
-   ========================================== */
+/*
+ * Activity.css — Notificações do Dasein
+ * 
+ * Estética: contemplativa, consistente com Landing
+ */
 
 .activity-page {
   min-height: 100vh;
   min-height: 100dvh;
   background: var(--color-bg);
-  padding-bottom: 80px;
+  padding-bottom: 100px;
 }
+
+/* === Header === */
 
 .activity-header {
   position: sticky;
@@ -15,39 +19,59 @@
   z-index: 10;
   background: var(--color-bg);
   padding: 16px 20px;
-  padding-top: calc(16px + var(--safe-top, 0px));
-  border-bottom: 1px solid var(--color-border);
+  padding-top: calc(16px + env(safe-area-inset-top, 0px));
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 .activity-title {
-  font-size: 18px;
-  font-weight: 400;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 20px;
+  font-weight: 300;
+  letter-spacing: 0.1em;
   color: var(--color-text);
+  text-transform: lowercase;
 }
 
-/* Empty state */
+/* === Empty State === */
+
 .activity-empty {
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 80px 24px;
-  text-align: center;
+  min-height: calc(100vh - 200px);
+  padding: 40px 24px;
 }
 
-.activity-empty p {
-  margin-top: 16px;
-  font-size: 15px;
-  color: var(--color-text-secondary);
+.activity-empty-content {
+  text-align: center;
+  max-width: 280px;
+}
+
+.activity-empty-icon {
+  color: rgba(255, 255, 255, 0.15);
+  margin-bottom: 24px;
+}
+
+.activity-empty-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.4rem;
+  font-weight: 300;
+  letter-spacing: 0.05em;
+  color: rgba(255, 255, 255, 0.5);
+  margin-bottom: 12px;
 }
 
 .activity-empty-hint {
-  margin-top: 8px !important;
-  font-size: 13px !important;
-  color: var(--color-text-muted) !important;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 0.9rem;
+  font-weight: 300;
+  letter-spacing: 0.03em;
+  line-height: 1.7;
+  color: rgba(255, 255, 255, 0.25);
 }
 
-/* Activity list */
+/* === Activity List === */
+
 .activity-list {
   padding: 8px 0;
 }
@@ -55,14 +79,14 @@
 .activity-item {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 12px 20px;
+  gap: 14px;
+  padding: 14px 20px;
   cursor: pointer;
-  transition: background 0.15s ease;
+  transition: background 0.2s ease;
 }
 
 .activity-item:active {
-  background: var(--color-surface);
+  background: rgba(255, 255, 255, 0.03);
 }
 
 .activity-content {
@@ -73,17 +97,21 @@
 .activity-text {
   font-size: 14px;
   font-weight: 300;
-  color: var(--color-text);
-  line-height: 1.4;
+  color: var(--color-text-secondary);
+  line-height: 1.5;
+  letter-spacing: 0.01em;
 }
 
 .activity-name {
   font-weight: 400;
+  color: var(--color-text);
 }
 
 .activity-time {
   font-size: 12px;
+  font-weight: 300;
   color: var(--color-text-muted);
-  margin-top: 2px;
+  margin-top: 4px;
   display: block;
+  letter-spacing: 0.02em;
 }

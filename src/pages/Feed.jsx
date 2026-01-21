@@ -2,33 +2,23 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { useFeed } from '../hooks/useQueries'
 import { getFilterClass } from '../lib/filters'
+import { formatTime } from '../lib/utils'
 import FadeImage from '../components/FadeImage'
 import DoubleTapPhoto from '../components/DoubleTapPhoto'
 import './Feed.css'
 
-// ✅ SAFE - Feed de posts de quem o usuário segue + seus próprios
+/*
+ * Feed — Timeline de posts
+ * 
+ * Mostra posts de quem o usuário segue + seus próprios.
+ * Empty state contemplativo para novos usuários.
+ */
+
 export default function Feed() {
   const navigate = useNavigate()
   const { user, profile } = useAuth()
   
   const { data, isLoading, error } = useFeed(user?.uid)
-
-  function formatTime(timestamp) {
-    if (!timestamp) return ''
-    
-    const date = new Date(timestamp)
-    const now = new Date()
-    const diff = now - date
-    const minutes = Math.floor(diff / 60000)
-    const hours = Math.floor(diff / 3600000)
-    const days = Math.floor(diff / 86400000)
-
-    if (minutes < 1) return 'agora'
-    if (minutes < 60) return `${minutes}min`
-    if (hours < 24) return `${hours}h`
-    if (days < 7) return `${days}d`
-    return date.toLocaleDateString('pt-BR', { day: 'numeric', month: 'short' })
-  }
 
   function goToProfile(username) {
     navigate(`/profile/${username}`)
@@ -39,32 +29,35 @@ export default function Feed() {
       state: { 
         post, 
         profile: author,
-        posts,      // Array completo para swipe
-        profiles,   // Mapa de perfis
-        index       // Posição atual
+        posts,
+        profiles,
+        index
       } 
     })
   }
 
   if (isLoading) {
     return (
-      <div className="screen-center">
-        <div className="spinner" />
+      <div className="feed-page">
+        <div className="screen-center">
+          <div className="spinner" />
+        </div>
       </div>
     )
   }
 
   if (error) {
     return (
-      <div className="screen-center">
-        <p className="text-caption">Erro ao carregar feed</p>
-        <button 
-          className="btn btn-ghost" 
-          onClick={() => window.location.reload()}
-          style={{ marginTop: 16 }}
-        >
-          Tentar novamente
-        </button>
+      <div className="feed-page">
+        <div className="screen-center">
+          <p className="feed-error-text">algo deu errado</p>
+          <button 
+            className="feed-retry-btn" 
+            onClick={() => window.location.reload()}
+          >
+            tentar novamente
+          </button>
+        </div>
       </div>
     )
   }
@@ -72,9 +65,9 @@ export default function Feed() {
   const { posts, profiles, empty } = data || { posts: [], profiles: {}, empty: true }
 
   return (
-    <div className="feed-page fade-in">
+    <div className="feed-page">
       <header className="feed-header">
-        <h1 className="feed-title">Feed</h1>
+        <h1 className="feed-logo">Dasein</h1>
         <button 
           className="feed-profile-btn"
           onClick={() => navigate('/profile')}
@@ -91,17 +84,18 @@ export default function Feed() {
 
       {empty ? (
         <div className="feed-empty">
-          <p>Nenhum post ainda.</p>
-          <p className="feed-empty-hint">
-            Siga pessoas para ver as fotos delas aqui.
-          </p>
-          <button 
-            className="btn" 
-            onClick={() => navigate('/discover')}
-            style={{ marginTop: 24 }}
-          >
-            Descobrir pessoas
-          </button>
+          <div className="feed-empty-content">
+            <p className="feed-empty-title">seu feed está vazio</p>
+            <p className="feed-empty-hint">
+              siga pessoas para ver<br />as histórias delas aqui
+            </p>
+            <button 
+              className="feed-empty-btn" 
+              onClick={() => navigate('/discover')}
+            >
+              descobrir pessoas
+            </button>
+          </div>
         </div>
       ) : (
         <div className="feed-list">
