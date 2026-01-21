@@ -3,6 +3,8 @@
  * 
  * Estética: contemplativa mas funcional
  * Tipografia: Cormorant para títulos, Inter para conteúdo
+ * 
+ * 🔧 REFATORADO: Usa variáveis do index.css
  */
 
 .feed-page {
@@ -27,7 +29,7 @@
 }
 
 .feed-logo {
-  font-family: 'Cormorant Garamond', serif;
+  font-family: var(--font-display);
   font-size: 24px;
   font-weight: 300;
   letter-spacing: 0.1em;
@@ -63,33 +65,33 @@
 }
 
 .feed-empty-title {
-  font-family: 'Cormorant Garamond', serif;
+  font-family: var(--font-display);
   font-size: 1.5rem;
   font-weight: 300;
   letter-spacing: 0.05em;
-  color: rgba(255, 255, 255, 0.6);
+  color: var(--color-text-60);
   margin-bottom: 16px;
 }
 
 .feed-empty-hint {
-  font-family: 'Cormorant Garamond', serif;
+  font-family: var(--font-display);
   font-size: 0.95rem;
   font-weight: 300;
   letter-spacing: 0.03em;
   line-height: 1.6;
-  color: rgba(255, 255, 255, 0.3);
+  color: var(--color-text-25);
   margin-bottom: 32px;
 }
 
 .feed-empty-btn {
-  font-family: 'Cormorant Garamond', serif;
+  font-family: var(--font-display);
   font-size: 0.9rem;
   font-weight: 400;
   letter-spacing: 0.15em;
   text-transform: lowercase;
-  color: rgba(255, 255, 255, 0.5);
+  color: var(--color-text-40);
   background: transparent;
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  border: 1px solid var(--color-text-15);
   padding: 14px 32px;
   border-radius: 2px;
   cursor: pointer;
@@ -97,9 +99,9 @@
 }
 
 .feed-empty-btn:hover {
-  color: rgba(255, 255, 255, 0.8);
-  border-color: rgba(255, 255, 255, 0.3);
-  background: rgba(255, 255, 255, 0.03);
+  color: var(--color-text-80);
+  border-color: var(--color-text-25);
+  background: var(--color-text-06);
 }
 
 .feed-empty-btn:active {
@@ -109,20 +111,20 @@
 /* === Error State === */
 
 .feed-error-text {
-  font-family: 'Cormorant Garamond', serif;
+  font-family: var(--font-display);
   font-size: 1rem;
   letter-spacing: 0.1em;
-  color: rgba(255, 255, 255, 0.4);
+  color: var(--color-text-40);
   margin-bottom: 24px;
 }
 
 .feed-retry-btn {
-  font-family: 'Cormorant Garamond', serif;
+  font-family: var(--font-display);
   font-size: 0.85rem;
   letter-spacing: 0.1em;
-  color: rgba(255, 255, 255, 0.4);
+  color: var(--color-text-40);
   background: none;
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  border: 1px solid var(--color-text-15);
   padding: 12px 24px;
   border-radius: 2px;
   cursor: pointer;
@@ -130,8 +132,8 @@
 }
 
 .feed-retry-btn:hover {
-  color: rgba(255, 255, 255, 0.6);
-  border-color: rgba(255, 255, 255, 0.25);
+  color: var(--color-text-60);
+  border-color: var(--color-text-25);
 }
 
 /* === Feed List === */
@@ -160,7 +162,7 @@
 }
 
 .feed-item-header:active {
-  background: rgba(255, 255, 255, 0.03);
+  background: var(--color-text-06);
 }
 
 .feed-item-meta {

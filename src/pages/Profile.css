@@ -3,6 +3,8 @@
  * 
  * Estética: Cormorant para títulos, Inter para dados
  * Consistente com Landing e demais páginas
+ * 
+ * 🔧 REFATORADO: Usa variáveis do index.css
  */
 
 .profile-page {
@@ -24,18 +26,18 @@
   top: calc(20px + env(safe-area-inset-top, 0px));
   background: none;
   border: none;
-  font-family: 'Cormorant Garamond', serif;
+  font-family: var(--font-display);
   font-size: 0.9rem;
   font-weight: 300;
   letter-spacing: 0.05em;
-  color: rgba(255, 255, 255, 0.4);
+  color: var(--color-text-40);
   cursor: pointer;
   transition: color 0.2s ease;
   z-index: 10;
 }
 
 .profile-back:hover {
-  color: rgba(255, 255, 255, 0.7);
+  color: var(--color-text-60);
 }
 
 /* === Header === */
@@ -50,7 +52,7 @@
 }
 
 .profile-name {
-  font-family: 'Cormorant Garamond', serif;
+  font-family: var(--font-display);
   font-size: 1.5rem;
   font-weight: 400;
   letter-spacing: 0.03em;
@@ -59,27 +61,27 @@
 }
 
 .profile-username {
-  font-family: 'Cormorant Garamond', serif;
+  font-family: var(--font-display);
   font-size: 0.95rem;
   font-weight: 300;
   letter-spacing: 0.05em;
-  color: rgba(255, 255, 255, 0.4);
+  color: var(--color-text-40);
   margin-bottom: 8px;
 }
 
 .profile-invited-by {
-  font-family: 'Cormorant Garamond', serif;
+  font-family: var(--font-display);
   font-size: 0.8rem;
   font-weight: 300;
   letter-spacing: 0.05em;
-  color: rgba(255, 255, 255, 0.25);
+  color: var(--color-text-25);
   margin-bottom: 20px;
   cursor: pointer;
   transition: color 0.2s ease;
 }
 
 .profile-invited-by:hover {
-  color: rgba(255, 255, 255, 0.45);
+  color: var(--color-text-40);
 }
 
 /* === Stats === */
@@ -99,7 +101,7 @@
 }
 
 .stat-number {
-  font-family: 'Cormorant Garamond', serif;
+  font-family: var(--font-display);
   font-size: 1.3rem;
   font-weight: 400;
   color: var(--color-text);
@@ -107,11 +109,11 @@
 }
 
 .stat-label {
-  font-family: 'Cormorant Garamond', serif;
+  font-family: var(--font-display);
   font-size: 0.75rem;
   font-weight: 300;
   letter-spacing: 0.1em;
-  color: rgba(255, 255, 255, 0.35);
+  color: var(--color-text-25);
   text-transform: lowercase;
 }
 
@@ -124,15 +126,15 @@
 }
 
 .stat-clickable:hover {
-  background: rgba(255, 255, 255, 0.03);
+  background: var(--color-text-06);
 }
 
 .profile-bio {
-  font-family: 'Cormorant Garamond', serif;
+  font-family: var(--font-display);
   font-size: 0.85rem;
   font-weight: 300;
   letter-spacing: 0.03em;
-  color: rgba(255, 255, 255, 0.4);
+  color: var(--color-text-40);
 }
 
 /* === Actions === */
@@ -151,17 +153,17 @@
   width: 48px;
   height: 48px;
   background: transparent;
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  border: 1px solid var(--color-text-10);
   border-radius: 50%;
-  color: rgba(255, 255, 255, 0.4);
+  color: var(--color-text-40);
   cursor: pointer;
   transition: all 0.3s ease;
 }
 
 .profile-action-btn:hover {
-  border-color: rgba(255, 255, 255, 0.25);
-  color: rgba(255, 255, 255, 0.7);
-  background: rgba(255, 255, 255, 0.03);
+  border-color: var(--color-text-25);
+  color: var(--color-text-60);
+  background: var(--color-text-06);
 }
 
 .profile-action-btn:active {
@@ -170,14 +172,14 @@
 
 /* Follow Button */
 .profile-follow-btn {
-  font-family: 'Cormorant Garamond', serif;
+  font-family: var(--font-display);
   font-size: 0.9rem;
   font-weight: 400;
   letter-spacing: 0.15em;
   text-transform: lowercase;
-  color: rgba(255, 255, 255, 0.7);
+  color: var(--color-text-60);
   background: transparent;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border: 1px solid var(--color-text-15);
   padding: 12px 36px;
   border-radius: 2px;
   cursor: pointer;
@@ -185,14 +187,14 @@
 }
 
 .profile-follow-btn:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.05);
-  border-color: rgba(255, 255, 255, 0.35);
-  color: rgba(255, 255, 255, 0.9);
+  background: var(--color-text-06);
+  border-color: var(--color-text-25);
+  color: var(--color-text-80);
 }
 
 .profile-follow-btn.following {
-  color: rgba(255, 255, 255, 0.4);
-  border-color: rgba(255, 255, 255, 0.1);
+  color: var(--color-text-40);
+  border-color: var(--color-text-10);
 }
 
 .profile-follow-btn:disabled {
@@ -219,19 +221,19 @@
 }
 
 .invites-count {
-  font-family: 'Cormorant Garamond', serif;
+  font-family: var(--font-display);
   font-size: 1rem;
   font-weight: 400;
-  color: rgba(255, 255, 255, 0.5);
+  color: var(--color-text-40);
   letter-spacing: 0.05em;
 }
 
 .invites-label {
-  font-family: 'Cormorant Garamond', serif;
+  font-family: var(--font-display);
   font-size: 0.8rem;
   font-weight: 300;
   letter-spacing: 0.1em;
-  color: rgba(255, 255, 255, 0.3);
+  color: var(--color-text-25);
 }
 
 /* === Invites Panel === */
@@ -239,8 +241,8 @@
 .invites-panel {
   margin-top: 32px;
   padding: 24px;
-  background: rgba(255, 255, 255, 0.02);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: var(--color-text-06);
+  border: 1px solid var(--color-text-06);
   border-radius: 8px;
   max-width: 320px;
   margin-left: auto;
@@ -249,11 +251,11 @@
 }
 
 .invites-panel h3 {
-  font-family: 'Cormorant Garamond', serif;
+  font-family: var(--font-display);
   font-size: 0.9rem;
   font-weight: 400;
   letter-spacing: 0.1em;
-  color: rgba(255, 255, 255, 0.6);
+  color: var(--color-text-60);
   text-transform: lowercase;
   margin-bottom: 20px;
 }
@@ -263,10 +265,10 @@
 }
 
 .invites-empty {
-  font-family: 'Cormorant Garamond', serif;
+  font-family: var(--font-display);
   font-size: 0.85rem;
   letter-spacing: 0.05em;
-  color: rgba(255, 255, 255, 0.3);
+  color: var(--color-text-25);
   text-align: center;
   padding: 20px 0;
 }
@@ -276,7 +278,7 @@
   align-items: center;
   gap: 10px;
   padding: 12px 14px;
-  background: rgba(255, 255, 255, 0.03);
+  background: var(--color-text-06);
   border-radius: 4px;
   margin-bottom: 8px;
 }
@@ -284,12 +286,12 @@
 .invite-code {
   font-family: monospace;
   font-size: 0.8rem;
-  color: rgba(255, 255, 255, 0.7);
+  color: var(--color-text-60);
   letter-spacing: 0.05em;
 }
 
 .invite-status {
-  font-family: 'Cormorant Garamond', serif;
+  font-family: var(--font-display);
   font-size: 0.7rem;
   letter-spacing: 0.1em;
   margin-left: auto;
@@ -301,16 +303,16 @@
 }
 
 .invite-status.used {
-  color: rgba(255, 255, 255, 0.25);
+  color: var(--color-text-25);
 }
 
 .invite-copy {
-  font-family: 'Cormorant Garamond', serif;
+  font-family: var(--font-display);
   font-size: 0.75rem;
   letter-spacing: 0.05em;
   background: none;
   border: none;
-  color: rgba(255, 255, 255, 0.4);
+  color: var(--color-text-40);
   cursor: pointer;
   padding: 4px 8px;
   margin: -4px -8px -4px 0;
@@ -318,19 +320,19 @@
 }
 
 .invite-copy:hover {
-  color: rgba(255, 255, 255, 0.7);
+  color: var(--color-text-60);
 }
 
 .invites-generate-btn {
   width: 100%;
-  font-family: 'Cormorant Garamond', serif;
+  font-family: var(--font-display);
   font-size: 0.85rem;
   font-weight: 400;
   letter-spacing: 0.1em;
   text-transform: lowercase;
-  color: rgba(255, 255, 255, 0.5);
+  color: var(--color-text-40);
   background: transparent;
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  border: 1px solid var(--color-text-10);
   padding: 14px 20px;
   border-radius: 4px;
   cursor: pointer;
@@ -339,9 +341,9 @@
 }
 
 .invites-generate-btn:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.03);
-  border-color: rgba(255, 255, 255, 0.2);
-  color: rgba(255, 255, 255, 0.7);
+  background: var(--color-text-06);
+  border-color: var(--color-text-15);
+  color: var(--color-text-60);
 }
 
 .invites-generate-btn:disabled {
@@ -389,23 +391,23 @@
 }
 
 .profile-empty-title {
-  font-family: 'Cormorant Garamond', serif;
+  font-family: var(--font-display);
   font-size: 1.1rem;
   font-weight: 300;
   letter-spacing: 0.05em;
-  color: rgba(255, 255, 255, 0.4);
+  color: var(--color-text-40);
   margin-bottom: 24px;
 }
 
 .profile-empty-btn {
-  font-family: 'Cormorant Garamond', serif;
+  font-family: var(--font-display);
   font-size: 0.85rem;
   font-weight: 400;
   letter-spacing: 0.15em;
   text-transform: lowercase;
-  color: rgba(255, 255, 255, 0.5);
+  color: var(--color-text-40);
   background: transparent;
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  border: 1px solid var(--color-text-15);
   padding: 14px 28px;
   border-radius: 2px;
   cursor: pointer;
@@ -413,28 +415,28 @@
 }
 
 .profile-empty-btn:hover {
-  background: rgba(255, 255, 255, 0.03);
-  border-color: rgba(255, 255, 255, 0.25);
-  color: rgba(255, 255, 255, 0.75);
+  background: var(--color-text-06);
+  border-color: var(--color-text-25);
+  color: var(--color-text-60);
 }
 
 /* === Not Found === */
 
 .profile-not-found {
-  font-family: 'Cormorant Garamond', serif;
+  font-family: var(--font-display);
   font-size: 1rem;
   letter-spacing: 0.1em;
-  color: rgba(255, 255, 255, 0.4);
+  color: var(--color-text-40);
   margin-bottom: 24px;
 }
 
 .profile-back-btn {
-  font-family: 'Cormorant Garamond', serif;
+  font-family: var(--font-display);
   font-size: 0.85rem;
   letter-spacing: 0.1em;
-  color: rgba(255, 255, 255, 0.4);
+  color: var(--color-text-40);
   background: none;
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  border: 1px solid var(--color-text-15);
   padding: 12px 24px;
   border-radius: 2px;
   cursor: pointer;
@@ -442,8 +444,8 @@
 }
 
 .profile-back-btn:hover {
-  color: rgba(255, 255, 255, 0.6);
-  border-color: rgba(255, 255, 255, 0.25);
+  color: var(--color-text-60);
+  border-color: var(--color-text-25);
 }
 
 /* === Logout === */
@@ -452,10 +454,10 @@
   display: block;
   width: fit-content;
   margin: 48px auto 0;
-  font-family: 'Cormorant Garamond', serif;
+  font-family: var(--font-display);
   font-size: 0.85rem;
   letter-spacing: 0.1em;
-  color: rgba(255, 255, 255, 0.25);
+  color: var(--color-text-25);
   background: none;
   border: none;
   cursor: pointer;
@@ -463,53 +465,37 @@
 }
 
 .logout-btn:hover {
-  color: rgba(255, 255, 255, 0.45);
+  color: var(--color-text-40);
 }
 
 /* === Confirmation Modal === */
-
-.confirm-modal {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.85);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 200;
-  animation: fadeIn 0.2s ease;
-  padding: 24px;
-}
+/* 🔧 NOTA: Estilos movidos para index.css como .confirm-modal global */
+/* Mantidos aqui apenas para override específico se necessário */
 
 .confirm-sheet {
-  background: var(--color-bg-elevated, #1a1a1a);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-text-10);
   border-radius: 12px;
   width: 100%;
   max-width: 300px;
   padding: 32px 24px;
   text-align: center;
-  animation: scaleIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  animation: scaleIn 0.25s var(--ease-out);
 }
 
 .confirm-message {
-  font-family: 'Cormorant Garamond', serif;
+  font-family: var(--font-display);
   font-size: 1.1rem;
   font-weight: 300;
   letter-spacing: 0.05em;
-  color: rgba(255, 255, 255, 0.8);
+  color: var(--color-text-80);
   line-height: 1.5;
-}
-
-.confirm-actions {
-  display: flex;
-  gap: 12px;
-  margin-top: 28px;
 }
 
 .confirm-cancel,
 .confirm-btn {
   flex: 1;
-  font-family: 'Cormorant Garamond', serif;
+  font-family: var(--font-display);
   font-size: 0.9rem;
   font-weight: 400;
   letter-spacing: 0.1em;
@@ -522,25 +508,25 @@
 
 .confirm-cancel {
   background: transparent;
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  color: rgba(255, 255, 255, 0.5);
+  border: 1px solid var(--color-text-15);
+  color: var(--color-text-40);
 }
 
 .confirm-cancel:hover {
-  border-color: rgba(255, 255, 255, 0.25);
-  color: rgba(255, 255, 255, 0.7);
+  border-color: var(--color-text-25);
+  color: var(--color-text-60);
 }
 
 .confirm-btn {
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  color: rgba(255, 255, 255, 0.7);
+  background: var(--color-text-10);
+  border: 1px solid var(--color-text-15);
+  color: var(--color-text-60);
 }
 
 .confirm-btn:hover {
-  background: rgba(255, 255, 255, 0.12);
-  border-color: rgba(255, 255, 255, 0.25);
-  color: rgba(255, 255, 255, 0.9);
+  background: var(--color-text-15);
+  border-color: var(--color-text-25);
+  color: var(--color-text-80);
 }
 
 /* === Animations === */

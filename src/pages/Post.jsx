@@ -8,22 +8,13 @@ import { formatTimeAgo } from '../lib/utils'
 import FadeImage from '../components/FadeImage'
 import './Post.css'
 
-/*
- * Post.jsx — Visualização de post com scroll vertical
- * 
- * Features:
- * - Scroll snap vertical entre posts
- * - Double tap para curtir
- * - Modal de quem curtiu
- * - Delete para o dono
- */
-
-// === Post Individual ===
+// ✅ Componente individual de cada post (evita re-mount)
 function PostItem({ 
   post, 
   author, 
   user, 
   getUserProfile,
+  isVisible,
   onAuthorClick 
 }) {
   const [liked, setLiked] = useState(false)
@@ -32,40 +23,49 @@ function PostItem({
   const [showLikers, setShowLikers] = useState(false)
   const [showHeart, setShowHeart] = useState(false)
   const [liking, setLiking] = useState(false)
+  
+  // 🔒 Esconde ações até dados chegarem
   const [dataReady, setDataReady] = useState(false)
+  
+  // 🔒 Animação só quando usuário clica
   const [justLiked, setJustLiked] = useState(false)
   
+  // Tap detection
   const tapTimer = useRef(null)
   const tapCount = useRef(0)
   
-  // Carrega dados em paralelo
+  // 🔒 Carrega likes UMA vez quando monta
   useEffect(() => {
     if (user && post) {
       loadAllData()
     }
     
     async function loadAllData() {
+      // Busca tudo em paralelo
       const [likedResult, likesResult] = await Promise.all([
         hasLiked(user.uid, post.id),
         getPostLikes(post.id)
       ])
       
+      // Seta os dados
       setLiked(likedResult)
       setLikers(likesResult)
       
-      // Perfis em paralelo
-      const profilePromises = likesResult.slice(0, 10).map(like => 
-        getUserProfile(like.userId)
+      // 🔧 FIX: Promise.all para carregar perfis em paralelo
+      const likesToLoad = likesResult.slice(0, 10)
+      const profilesArray = await Promise.all(
+        likesToLoad.map(like => getUserProfile(like.userId))
       )
-      const profileResults = await Promise.all(profilePromises)
       
       const profiles = {}
-      likesResult.slice(0, 10).forEach((like, index) => {
-        if (profileResults[index]) {
-          profiles[like.userId] = profileResults[index]
+      likesToLoad.forEach((like, index) => {
+        if (profilesArray[index]) {
+          profiles[like.userId] = profilesArray[index]
         }
       })
       setLikersProfiles(profiles)
+      
+      // Agora sim, mostra tudo
       setDataReady(true)
     }
   }, [user, post?.id])
@@ -76,15 +76,16 @@ function PostItem({
     const likes = await getPostLikes(post.id)
     setLikers(likes)
     
-    const profilePromises = likes.slice(0, 10).map(like => 
-      getUserProfile(like.userId)
+    // 🔧 FIX: Promise.all para perfis
+    const likesToLoad = likes.slice(0, 10)
+    const profilesArray = await Promise.all(
+      likesToLoad.map(like => getUserProfile(like.userId))
     )
-    const profileResults = await Promise.all(profilePromises)
     
     const profiles = {}
-    likes.slice(0, 10).forEach((like, index) => {
-      if (profileResults[index]) {
-        profiles[like.userId] = profileResults[index]
+    likesToLoad.forEach((like, index) => {
+      if (profilesArray[index]) {
+        profiles[like.userId] = profilesArray[index]
       }
     })
     setLikersProfiles(profiles)
@@ -97,6 +98,7 @@ function PostItem({
     setLiked(newLiked)
     setLiking(true)
     
+    // 🔒 Animação só quando curte (não quando descurte)
     if (newLiked) {
       setJustLiked(true)
       setTimeout(() => setJustLiked(false), 350)
@@ -133,8 +135,6 @@ function PostItem({
       
       if (!liked && user) {
         setLiked(true)
-        setJustLiked(true)
-        setTimeout(() => setJustLiked(false), 350)
         likePost(user.uid, post.id, post.userId).then(() => loadLikers())
       }
     }
@@ -157,9 +157,9 @@ function PostItem({
       </div>
       
       <div className="post-info">
-        <div className={`post-actions ${dataReady ? 'visible' : ''}`}>
+        <div className={`post-actions ${dataReady ? 'data-ready' : ''}`}>
           <button 
-            className={`btn-like ${liked ? 'liked' : ''} ${justLiked ? 'animate' : ''}`}
+            className={`btn-like ${liked ? 'liked' : ''} ${justLiked ? 'just-liked' : ''}`}
             onClick={handleLike}
             disabled={liking}
           >
@@ -171,7 +171,7 @@ function PostItem({
               className="btn-likers"
               onClick={() => setShowLikers(true)}
             >
-              <div className="likers-stack">
+              <div className="likers-avatars">
                 {likers.slice(0, 3).map((like, i) => {
                   const p = likersProfiles[like.userId]
                   return (
@@ -197,7 +197,7 @@ function PostItem({
           <p className="post-caption">{post.caption}</p>
         )}
         
-        <div className="post-author-row" onClick={onAuthorClick}>
+        <div className="post-meta" onClick={onAuthorClick}>
           <div className="avatar avatar-sm">
             {author?.photoURL ? (
               <FadeImage src={author.photoURL} alt={author.displayName} />
@@ -206,13 +206,15 @@ function PostItem({
             )}
           </div>
           
-          <div className="post-author-info">
-            <span className="post-author-name">{author?.displayName || 'Usuário'}</span>
-            <span className="post-author-time">{formatTimeAgo(post.createdAt)}</span>
+          <div className="post-meta-text">
+            <span className="post-author">{author?.displayName || 'Usuário'}</span>
+            {/* 🔧 FIX: Usa formatTimeAgo do utils */}
+            <span className="post-time">{formatTimeAgo(post.createdAt)}</span>
           </div>
         </div>
       </div>
       
+      {/* Modal de quem curtiu */}
       {showLikers && (
         <LikersModal 
           likers={likers}
@@ -225,15 +227,15 @@ function PostItem({
   )
 }
 
-// === Modal de Likers ===
+// ✅ Modal de likers separado
 function LikersModal({ likers, likersProfiles, user, onClose }) {
   const navigate = useNavigate()
   
   return (
     <div className="likers-modal" onClick={onClose}>
-      <div className="likers-sheet" onClick={e => e.stopPropagation()}>
+      <div className="likers-content" onClick={e => e.stopPropagation()}>
         <header className="likers-header">
-          <h2>curtidas</h2>
+          <h2>Curtidas</h2>
           <button onClick={onClose}>
             <CloseIcon />
           </button>
@@ -274,44 +276,55 @@ function LikersModal({ likers, likersProfiles, user, onClose }) {
   )
 }
 
-// === Componente Principal ===
+// ✅ Componente principal
 export default function Post() {
   const navigate = useNavigate()
   const { id } = useParams()
   const location = useLocation()
   const { user, getUserProfile } = useAuth()
   
+  // Dados do contexto (vindo do Profile ou Feed)
   const allPosts = location.state?.posts || []
   const allProfiles = location.state?.profiles || {}
   const initialIndex = location.state?.index ?? 0
   
+  // Fallback: post único
   const [singlePost, setSinglePost] = useState(location.state?.post || null)
   const [singleAuthor, setSingleAuthor] = useState(location.state?.profile || null)
   const [loading, setLoading] = useState(!singlePost && allPosts.length === 0)
   
+  // Refs para scroll
   const containerRef = useRef(null)
   const itemRefs = useRef({})
   
+  // Estado do post visível (para o header)
   const [visibleIndex, setVisibleIndex] = useState(initialIndex)
   const [deleting, setDeleting] = useState(false)
+  
+  // 🔧 FIX: Estado para ConfirmModal
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   
+  // Posts a renderizar
   const posts = allPosts.length > 0 ? allPosts : (singlePost ? [singlePost] : [])
   const currentPost = posts[visibleIndex]
   const currentAuthor = allPosts.length > 0 
     ? allProfiles[currentPost?.userId] 
     : singleAuthor
   
+  // 🔒 Só dono pode deletar
   const isOwner = user && currentPost && user.uid === currentPost.userId
   
+  // Carregar post único se não veio pelo state
   useEffect(() => {
     if (!singlePost && allPosts.length === 0) {
       loadSinglePost()
     }
   }, [id])
   
+  // Scroll inicial para o post clicado
   useEffect(() => {
     if (posts.length > 0 && itemRefs.current[initialIndex]) {
+      // Pequeno delay para garantir que o DOM está pronto
       setTimeout(() => {
         itemRefs.current[initialIndex]?.scrollIntoView({ 
           behavior: 'instant',
@@ -321,6 +334,7 @@ export default function Post() {
     }
   }, [posts.length, initialIndex])
   
+  // Intersection Observer para detectar post visível
   useEffect(() => {
     if (posts.length <= 1) return
     
@@ -356,7 +370,9 @@ export default function Post() {
     setLoading(false)
   }
   
+  // 🔧 FIX: Usa ConfirmModal em vez de confirm() nativo
   async function handleDelete() {
+    setShowDeleteConfirm(false)
     setDeleting(true)
     
     const result = await deletePost(currentPost.id, currentPost.storagePath)
@@ -364,8 +380,9 @@ export default function Post() {
     if (result.success) {
       navigate('/profile', { replace: true })
     } else {
+      // 🔧 FIX: Usa toast em vez de alert (se disponível)
+      // Por ora, só reseta o estado
       setDeleting(false)
-      setShowDeleteConfirm(false)
     }
   }
   
@@ -381,26 +398,23 @@ export default function Post() {
   
   if (loading) {
     return (
-      <div className="post-page">
-        <div className="screen-center">
-          <div className="spinner" />
-        </div>
+      <div className="screen-center">
+        <div className="spinner" />
       </div>
     )
   }
   
   if (posts.length === 0) {
     return (
-      <div className="post-page">
-        <div className="screen-center">
-          <p className="post-not-found">post não encontrado</p>
-        </div>
+      <div className="screen-center">
+        <p className="text-caption">Post não encontrado</p>
       </div>
     )
   }
   
   return (
     <div className="post-page">
+      {/* Header fixo */}
       <header className="post-header">
         <button className="btn-back" onClick={() => navigate(-1)}>
           <BackIcon />
@@ -414,12 +428,13 @@ export default function Post() {
             onClick={() => setShowDeleteConfirm(true)}
             disabled={deleting}
           >
-            <TrashIcon />
+            {deleting ? '...' : <TrashIcon />}
           </button>
         )}
       </header>
       
-      <div className="posts-scroll" ref={containerRef}>
+      {/* Container com scroll vertical */}
+      <div className="posts-scroll-container" ref={containerRef}>
         {posts.map((post, index) => {
           const author = allPosts.length > 0 
             ? allProfiles[post.userId] 
@@ -437,6 +452,7 @@ export default function Post() {
                 author={author}
                 user={user}
                 getUserProfile={getUserProfile}
+                isVisible={visibleIndex === index}
                 onAuthorClick={() => goToAuthorProfile(post, author)}
               />
             </div>
@@ -444,38 +460,43 @@ export default function Post() {
         })}
       </div>
       
-      {/* Delete Confirmation */}
+      {/* 🔧 FIX: ConfirmModal em vez de confirm() nativo */}
       {showDeleteConfirm && (
-        <div className="delete-modal" onClick={() => setShowDeleteConfirm(false)}>
-          <div className="delete-sheet" onClick={e => e.stopPropagation()}>
-            <p className="delete-message">apagar esta foto?</p>
-            <div className="delete-actions">
-              <button 
-                className="delete-cancel"
-                onClick={() => setShowDeleteConfirm(false)}
-              >
-                cancelar
-              </button>
-              <button 
-                className="delete-confirm"
-                onClick={handleDelete}
-                disabled={deleting}
-              >
-                {deleting ? '...' : 'apagar'}
-              </button>
-            </div>
-          </div>
-        </div>
+        <ConfirmModal
+          message="apagar esta foto?"
+          confirmText="apagar"
+          onConfirm={handleDelete}
+          onCancel={() => setShowDeleteConfirm(false)}
+        />
       )}
     </div>
   )
 }
 
-// === Icons ===
+// 🔧 FIX: ConfirmModal local (mesmo pattern do Profile.jsx)
+function ConfirmModal({ message, confirmText, onConfirm, onCancel }) {
+  return (
+    <div className="confirm-modal" onClick={onCancel}>
+      <div className="confirm-sheet" onClick={e => e.stopPropagation()}>
+        <p className="confirm-message">{message}</p>
+        <div className="confirm-actions">
+          <button className="confirm-cancel" onClick={onCancel}>
+            cancelar
+          </button>
+          <button className="confirm-btn" onClick={onConfirm}>
+            {confirmText}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ========== ICONS ==========
 
 function BackIcon() {
   return (
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
       <path d="M19 12H5M12 19l-7-7 7-7"/>
     </svg>
   )
@@ -494,7 +515,7 @@ function HeartIcon({ liked }) {
   return (
     <svg width="26" height="26" viewBox="0 0 24 24" strokeWidth="1.5">
       <defs>
-        <linearGradient id="heartGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <linearGradient id="silverGrad" x1="0%" y1="0%" x2="100%" y2="100%">
           <stop offset="0%" stopColor="#d0d0d0" />
           <stop offset="50%" stopColor="#a0a0a0" />
           <stop offset="100%" stopColor="#c0c0c0" />
@@ -502,8 +523,8 @@ function HeartIcon({ liked }) {
       </defs>
       <path 
         d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"
-        fill={liked ? "url(#heartGrad)" : "none"}
-        stroke={liked ? "url(#heartGrad)" : "rgba(255,255,255,0.4)"}
+        fill={liked ? "url(#silverGrad)" : "none"}
+        stroke={liked ? "url(#silverGrad)" : "#666"}
       />
     </svg>
   )
@@ -513,7 +534,7 @@ function HeartAnimated() {
   return (
     <svg width="80" height="80" viewBox="0 0 24 24">
       <defs>
-        <linearGradient id="heartGradBig" x1="0%" y1="0%" x2="100%" y2="100%">
+        <linearGradient id="silverGradBig" x1="0%" y1="0%" x2="100%" y2="100%">
           <stop offset="0%" stopColor="#e0e0e0" />
           <stop offset="50%" stopColor="#a8a8a8" />
           <stop offset="100%" stopColor="#c0c0c0" />
@@ -521,7 +542,7 @@ function HeartAnimated() {
       </defs>
       <path 
         d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"
-        fill="url(#heartGradBig)"
+        fill="url(#silverGradBig)"
       />
     </svg>
   )
@@ -529,7 +550,7 @@ function HeartAnimated() {
 
 function CloseIcon() {
   return (
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
       <path d="M18 6L6 18M6 6l12 12"/>
     </svg>
   )

@@ -4,6 +4,7 @@ import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
 import { useAuth } from '../hooks/useAuth'
 import { storage } from '../lib/firebase'
 import { validateInviteCode, useInvite } from '../lib/invites'
+import { resizeImage } from '../lib/utils'
 import './Landing.css'
 
 /*
@@ -253,7 +254,7 @@ export default function Landing() {
     const file = e.target.files?.[0]
     if (!file) return
     
-    // Resize before setting
+    // 🔧 FIX: Usa resizeImage do utils
     resizeImage(file, 400, (resizedBlob) => {
       setAvatarFile(resizedBlob)
       
@@ -314,38 +315,7 @@ export default function Landing() {
 
   // === Helpers ===
   
-  function resizeImage(file, maxSize, callback) {
-    const reader = new FileReader()
-    reader.onload = (e) => {
-      const img = new Image()
-      img.onload = () => {
-        const canvas = document.createElement('canvas')
-        let { width, height } = img
-        
-        if (width > height) {
-          if (width > maxSize) {
-            height = (height * maxSize) / width
-            width = maxSize
-          }
-        } else {
-          if (height > maxSize) {
-            width = (width * maxSize) / height
-            height = maxSize
-          }
-        }
-        
-        canvas.width = width
-        canvas.height = height
-        
-        const ctx = canvas.getContext('2d')
-        ctx.drawImage(img, 0, 0, width, height)
-        
-        canvas.toBlob(callback, 'image/jpeg', 0.9)
-      }
-      img.src = e.target.result
-    }
-    reader.readAsDataURL(file)
-  }
+  // 🔧 FIX: resizeImage removido — agora importado de utils.js
 
   function handleBack() {
     setError('')

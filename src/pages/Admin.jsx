@@ -16,6 +16,7 @@ import { db } from '../lib/firebase'
 import { useAuth } from '../hooks/useAuth'
 import { deletePost } from '../lib/posts'
 import { purgeExpiredInvites } from '../lib/invites'
+import { useToast } from '../components/Toast'
 import FadeImage from '../components/FadeImage'
 import './Admin.css'
 
@@ -25,6 +26,7 @@ const ADMIN_USERNAMES = ['alex']
 export default function Admin() {
   const navigate = useNavigate()
   const { user, profile, loading: authLoading } = useAuth()
+  const { showToast } = useToast()
   
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState('overview')
@@ -36,6 +38,9 @@ export default function Admin() {
   const [inviteTree, setInviteTree] = useState([])
   const [growthMetrics, setGrowthMetrics] = useState(null)
   const [purging, setPurging] = useState(false)
+
+  // 🔧 FIX: Estados para ConfirmModal
+  const [confirmModal, setConfirmModal] = useState(null)
 
   // Check admin access
   const isAdmin = profile && ADMIN_USERNAMES.includes(profile.username)
@@ -228,47 +233,66 @@ export default function Admin() {
   }
 
   // === ACTIONS ===
-  async function handleDeletePost(postId, storagePath) {
-    if (!confirm('Deletar este post?')) return
-    
-    const result = await deletePost(postId, storagePath)
-    if (result.success) {
-      setPosts(posts.filter(p => p.id !== postId))
-      loadMetrics()
-    } else {
-      alert('Erro ao deletar post')
-    }
+  
+  // 🔧 FIX: Usa ConfirmModal em vez de confirm() nativo
+  function handleDeletePost(postId, storagePath) {
+    setConfirmModal({
+      message: 'Deletar este post?',
+      confirmText: 'Deletar',
+      onConfirm: async () => {
+        setConfirmModal(null)
+        const result = await deletePost(postId, storagePath)
+        if (result.success) {
+          setPosts(posts.filter(p => p.id !== postId))
+          loadMetrics()
+          showToast('Post deletado', 'success')
+        } else {
+          showToast('Erro ao deletar post', 'error')
+        }
+      }
+    })
   }
 
-  async function handleBanUser(userId, currentBanned) {
+  function handleBanUser(userId, currentBanned) {
     const action = currentBanned ? 'desbanir' : 'banir'
-    if (!confirm(`Deseja ${action} este usuário?`)) return
-
-    try {
-      await updateDoc(doc(db, 'users', userId), {
-        banned: !currentBanned
-      })
-      setUsers(users.map(u => 
-        u.id === userId ? { ...u, banned: !currentBanned } : u
-      ))
-    } catch (error) {
-      alert('Erro ao atualizar usuário')
-    }
+    setConfirmModal({
+      message: `Deseja ${action} este usuário?`,
+      confirmText: action.charAt(0).toUpperCase() + action.slice(1),
+      onConfirm: async () => {
+        setConfirmModal(null)
+        try {
+          await updateDoc(doc(db, 'users', userId), {
+            banned: !currentBanned
+          })
+          setUsers(users.map(u => 
+            u.id === userId ? { ...u, banned: !currentBanned } : u
+          ))
+          showToast(`Usuário ${action === 'banir' ? 'banido' : 'desbanido'}`, 'success')
+        } catch (error) {
+          showToast('Erro ao atualizar usuário', 'error')
+        }
+      }
+    })
   }
 
-  async function handlePurgeInvites() {
-    if (!confirm('Deletar convites expirados (+12h)?')) return
-    
-    setPurging(true)
-    const result = await purgeExpiredInvites(user.uid)
-    setPurging(false)
-    
-    if (result.success) {
-      alert(`${result.deleted} convite(s) expirado(s) deletado(s)`)
-      loadMetrics()
-    } else {
-      alert(result.error || 'Erro ao limpar convites')
-    }
+  function handlePurgeInvites() {
+    setConfirmModal({
+      message: 'Deletar convites expirados (+12h)?',
+      confirmText: 'Limpar',
+      onConfirm: async () => {
+        setConfirmModal(null)
+        setPurging(true)
+        const result = await purgeExpiredInvites(user.uid)
+        setPurging(false)
+        
+        if (result.success) {
+          showToast(`${result.deleted} convite(s) deletado(s)`, 'success')
+          loadMetrics()
+        } else {
+          showToast(result.error || 'Erro ao limpar convites', 'error')
+        }
+      }
+    })
   }
 
   // === RENDER HELPERS ===
@@ -536,6 +560,35 @@ export default function Admin() {
             </div>
           </div>
         )}
+      </div>
+
+      {/* 🔧 FIX: ConfirmModal global */}
+      {confirmModal && (
+        <ConfirmModal
+          message={confirmModal.message}
+          confirmText={confirmModal.confirmText}
+          onConfirm={confirmModal.onConfirm}
+          onCancel={() => setConfirmModal(null)}
+        />
+      )}
+    </div>
+  )
+}
+
+// 🔧 FIX: ConfirmModal component
+function ConfirmModal({ message, confirmText, onConfirm, onCancel }) {
+  return (
+    <div className="confirm-modal" onClick={onCancel}>
+      <div className="confirm-sheet" onClick={e => e.stopPropagation()}>
+        <p className="confirm-message">{message}</p>
+        <div className="confirm-actions">
+          <button className="confirm-cancel" onClick={onCancel}>
+            Cancelar
+          </button>
+          <button className="confirm-btn" onClick={onConfirm}>
+            {confirmText}
+          </button>
+        </div>
       </div>
     </div>
   )

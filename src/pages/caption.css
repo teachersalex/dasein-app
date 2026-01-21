@@ -5,6 +5,8 @@
  * - Input elegante
  * - Thumbnail da foto
  * - Animação de sucesso
+ * 
+ * 🔧 REFATORADO: Usa variáveis do index.css
  */
 
 /* === Caption Screen === */
@@ -15,7 +17,7 @@
   display: flex;
   flex-direction: column;
   background: var(--color-bg);
-  animation: slideInRight 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  animation: slideInRight 0.3s var(--ease-out);
 }
 
 @keyframes slideInRight {
@@ -35,7 +37,7 @@
   justify-content: space-between;
   padding: 16px 20px;
   padding-top: calc(16px + env(safe-area-inset-top, 0px));
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  border-bottom: 1px solid var(--color-text-06);
 }
 
 .caption-back {
@@ -46,7 +48,7 @@
   justify-content: center;
   background: none;
   border: none;
-  color: rgba(255, 255, 255, 0.6);
+  color: var(--color-text-60);
   cursor: pointer;
   border-radius: 50%;
   transition: all 0.2s ease;
@@ -54,12 +56,12 @@
 }
 
 .caption-back:active {
-  background: rgba(255, 255, 255, 0.05);
-  color: rgba(255, 255, 255, 0.9);
+  background: var(--color-text-10);
+  color: var(--color-text-80);
 }
 
 .caption-title {
-  font-family: 'Cormorant Garamond', serif;
+  font-family: var(--font-display);
   font-size: 1rem;
   font-weight: 400;
   letter-spacing: 0.1em;
@@ -80,7 +82,7 @@
   height: 150px;
   border-radius: 4px;
   overflow: hidden;
-  background: rgba(255, 255, 255, 0.03);
+  background: var(--color-text-06);
   margin-bottom: 40px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
 }
@@ -102,8 +104,8 @@
   padding: 16px 0;
   background: transparent;
   border: none;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  font-family: 'Cormorant Garamond', serif;
+  border-bottom: 1px solid var(--color-text-10);
+  font-family: var(--font-display);
   font-size: 1.1rem;
   font-weight: 300;
   letter-spacing: 0.03em;
@@ -114,21 +116,21 @@
 }
 
 .caption-input:focus {
-  border-color: rgba(255, 255, 255, 0.25);
+  border-color: var(--color-text-25);
 }
 
 .caption-input::placeholder {
-  color: rgba(255, 255, 255, 0.25);
+  color: var(--color-text-25);
 }
 
 .caption-count {
   position: absolute;
   right: 0;
   bottom: -28px;
-  font-family: 'Cormorant Garamond', serif;
+  font-family: var(--font-display);
   font-size: 0.75rem;
   letter-spacing: 0.05em;
-  color: rgba(255, 255, 255, 0.25);
+  color: var(--color-text-25);
 }
 
 .caption-actions {
@@ -143,11 +145,11 @@
   justify-content: center;
   gap: 10px;
   padding: 18px 32px;
-  background: rgba(255, 255, 255, 0.9);
+  background: var(--color-text-80);
   color: var(--color-bg);
   border: none;
   border-radius: 2px;
-  font-family: 'Cormorant Garamond', serif;
+  font-family: var(--font-display);
   font-size: 1rem;
   font-weight: 400;
   letter-spacing: 0.15em;
@@ -202,7 +204,7 @@
 .success-circle {
   stroke-dasharray: 166;
   stroke-dashoffset: 166;
-  animation: circleIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: circleIn 0.6s var(--ease-out) forwards;
 }
 
 @keyframes circleIn {
@@ -212,7 +214,7 @@
 .success-check {
   stroke-dasharray: 48;
   stroke-dashoffset: 48;
-  animation: checkIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) 0.4s forwards;
+  animation: checkIn 0.3s var(--ease-out) 0.4s forwards;
 }
 
 @keyframes checkIn {
@@ -220,7 +222,7 @@
 }
 
 .success-title {
-  font-family: 'Cormorant Garamond', serif;
+  font-family: var(--font-display);
   font-size: 1.5rem;
   font-weight: 300;
   letter-spacing: 0.1em;
@@ -230,9 +232,9 @@
 }
 
 .success-subtitle {
-  font-family: 'Cormorant Garamond', serif;
+  font-family: var(--font-display);
   font-size: 0.9rem;
   font-weight: 300;
   letter-spacing: 0.05em;
-  color: rgba(255, 255, 255, 0.4);
+  color: var(--color-text-40);
 }

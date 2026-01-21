@@ -3,6 +3,8 @@
  * 
  * Features: scroll snap vertical, modal de likers, delete confirmation
  * Estética: consistente com Landing
+ * 
+ * 🔧 REFATORADO: Usa variáveis do index.css
  */
 
 .post-page {
@@ -47,7 +49,7 @@
   justify-content: center;
   background: none;
   border: none;
-  color: rgba(255, 255, 255, 0.8);
+  color: var(--color-text-80);
   cursor: pointer;
   transition: transform 0.2s ease, opacity 0.2s ease;
 }
@@ -65,7 +67,7 @@
   justify-content: center;
   background: none;
   border: none;
-  color: rgba(255, 255, 255, 0.3);
+  color: var(--color-text-25);
   cursor: pointer;
   transition: color 0.2s ease, transform 0.2s ease;
 }
@@ -85,7 +87,7 @@
 
 /* === Scroll Container === */
 
-.posts-scroll {
+.posts-scroll-container {
   flex: 1;
   overflow-y: scroll;
   overflow-x: hidden;
@@ -95,7 +97,7 @@
   -ms-overflow-style: none;
 }
 
-.posts-scroll::-webkit-scrollbar {
+.posts-scroll-container::-webkit-scrollbar {
   display: none;
 }
 
@@ -150,7 +152,7 @@
   transition: opacity 0.3s ease;
 }
 
-.post-actions.visible {
+.post-actions.data-ready {
   opacity: 1;
 }
 
@@ -167,7 +169,7 @@
   transform: scale(0.85);
 }
 
-.btn-like.animate svg {
+.btn-like.just-liked svg {
   animation: heartPop 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
@@ -190,7 +192,7 @@
   transform: scale(0.92);
 }
 
-.likers-stack {
+.likers-avatars {
   display: flex;
   margin-left: 8px;
 }
@@ -234,9 +236,9 @@
   letter-spacing: 0.01em;
 }
 
-/* === Author Row === */
+/* === Meta Row === */
 
-.post-author-row {
+.post-meta {
   display: flex;
   align-items: center;
   gap: 12px;
@@ -247,24 +249,24 @@
   transition: background 0.2s ease;
 }
 
-.post-author-row:active {
-  background: rgba(255, 255, 255, 0.03);
+.post-meta:active {
+  background: var(--color-text-06);
 }
 
-.post-author-info {
+.post-meta-text {
   display: flex;
   flex-direction: column;
   gap: 2px;
 }
 
-.post-author-name {
+.post-author {
   font-size: 14px;
   font-weight: 400;
   color: var(--color-text);
   letter-spacing: 0.01em;
 }
 
-.post-author-time {
+.post-time {
   font-size: 12px;
   font-weight: 300;
   color: var(--color-text-muted);
@@ -310,10 +312,10 @@
 /* === Not Found === */
 
 .post-not-found {
-  font-family: 'Cormorant Garamond', serif;
+  font-family: var(--font-display);
   font-size: 1rem;
   letter-spacing: 0.1em;
-  color: rgba(255, 255, 255, 0.4);
+  color: var(--color-text-40);
 }
 
 /* === Likers Modal === */
@@ -329,13 +331,13 @@
   animation: fadeIn 0.2s ease;
 }
 
-.likers-sheet {
+.likers-content {
   background: var(--color-bg);
   border-radius: 16px 16px 0 0;
   width: 100%;
   max-width: 500px;
   max-height: 70vh;
-  animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  animation: slideUp 0.3s var(--ease-out);
 }
 
 .likers-header {
@@ -343,11 +345,11 @@
   justify-content: space-between;
   align-items: center;
   padding: 20px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  border-bottom: 1px solid var(--color-text-06);
 }
 
 .likers-header h2 {
-  font-family: 'Cormorant Garamond', serif;
+  font-family: var(--font-display);
   font-size: 1rem;
   font-weight: 400;
   letter-spacing: 0.1em;
@@ -358,7 +360,7 @@
 .likers-header button {
   background: none;
   border: none;
-  color: rgba(255, 255, 255, 0.4);
+  color: var(--color-text-40);
   cursor: pointer;
   padding: 8px;
   margin: -8px;
@@ -366,7 +368,7 @@
 }
 
 .likers-header button:hover {
-  color: rgba(255, 255, 255, 0.7);
+  color: var(--color-text-60);
 }
 
 .likers-list {
@@ -385,7 +387,7 @@
 }
 
 .liker-item:active {
-  background: rgba(255, 255, 255, 0.03);
+  background: var(--color-text-06);
 }
 
 .liker-name {
@@ -395,95 +397,16 @@
   letter-spacing: 0.01em;
 }
 
-/* === Delete Modal === */
+/* === Confirm Modal === */
+/* 🔧 NOTA: Usa estilos base de index.css */
 
-.delete-modal {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.85);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 200;
-  animation: fadeIn 0.2s ease;
-  padding: 24px;
-}
-
-.delete-sheet {
-  background: var(--color-bg-elevated);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 12px;
-  width: 100%;
-  max-width: 300px;
-  padding: 32px 24px;
-  text-align: center;
-  animation: scaleIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-@keyframes scaleIn {
-  from {
-    opacity: 0;
-    transform: scale(0.95);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
-
-.delete-message {
-  font-family: 'Cormorant Garamond', serif;
+.confirm-message {
+  font-family: var(--font-display);
   font-size: 1.1rem;
   font-weight: 300;
   letter-spacing: 0.05em;
-  color: rgba(255, 255, 255, 0.8);
+  color: var(--color-text-80);
   margin-bottom: 28px;
-}
-
-.delete-actions {
-  display: flex;
-  gap: 12px;
-}
-
-.delete-cancel,
-.delete-confirm {
-  flex: 1;
-  font-family: 'Cormorant Garamond', serif;
-  font-size: 0.9rem;
-  font-weight: 400;
-  letter-spacing: 0.1em;
-  text-transform: lowercase;
-  padding: 14px 20px;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.delete-cancel {
-  background: transparent;
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  color: rgba(255, 255, 255, 0.5);
-}
-
-.delete-cancel:hover {
-  border-color: rgba(255, 255, 255, 0.25);
-  color: rgba(255, 255, 255, 0.7);
-}
-
-.delete-confirm {
-  background: rgba(180, 80, 80, 0.2);
-  border: 1px solid rgba(180, 80, 80, 0.3);
-  color: rgba(220, 120, 120, 0.9);
-}
-
-.delete-confirm:hover {
-  background: rgba(180, 80, 80, 0.3);
-  border-color: rgba(180, 80, 80, 0.4);
-}
-
-.delete-confirm:disabled {
-  opacity: 0.5;
-  cursor: default;
 }
 
 /* === Animations === */

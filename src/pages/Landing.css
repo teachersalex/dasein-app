@@ -3,6 +3,8 @@
  * 
  * Estados: landing, code, signup, profile, login
  * Filosofia: a landing se transforma, nunca termina.
+ * 
+ * 🔧 REFATORADO: Usa variáveis do index.css
  */
 
 /* === Base === */
@@ -77,12 +79,12 @@
 /* === Logo === */
 
 .landing-logo {
-  font-family: 'Cormorant Garamond', serif;
+  font-family: var(--font-display);
   font-size: clamp(4rem, 15vw, 10rem);
   font-weight: 300;
   letter-spacing: 0.15em;
   margin-bottom: 3rem;
-  color: #fff;
+  color: var(--color-text);
   text-shadow: 0 0 60px rgba(0, 0, 0, 0.8);
   opacity: 0;
   animation: landingFadeIn 1.5s ease 0.2s forwards;
@@ -96,11 +98,11 @@
 }
 
 .landing-subtitle {
-  font-family: 'Cormorant Garamond', serif;
+  font-family: var(--font-display);
   font-size: 1rem;
   font-weight: 300;
   letter-spacing: 0.2em;
-  color: rgba(255, 255, 255, 0.4);
+  color: var(--color-text-40);
   text-transform: lowercase;
   margin-bottom: 3rem;
 }
@@ -130,7 +132,7 @@
 .marquee-container::before {
   left: 0;
   background: linear-gradient(90deg,
-    rgba(10, 10, 10, 1) 0%,
+    var(--color-bg) 0%,
     rgba(10, 10, 10, 0.8) 40%,
     transparent 100%
   );
@@ -139,7 +141,7 @@
 .marquee-container::after {
   right: 0;
   background: linear-gradient(-90deg,
-    rgba(10, 10, 10, 1) 0%,
+    var(--color-bg) 0%,
     rgba(10, 10, 10, 0.8) 40%,
     transparent 100%
   );
@@ -158,19 +160,19 @@
 }
 
 .marquee span {
-  font-family: 'Cormorant Garamond', serif;
+  font-family: var(--font-display);
   font-size: clamp(0.9rem, 2.5vw, 1.2rem);
   font-weight: 300;
   letter-spacing: 0.2em;
   text-transform: lowercase;
-  color: rgba(255, 255, 255, 0.5);
+  color: var(--color-text-40);
 }
 
 .marquee .separator {
   display: inline-block;
   width: 4px;
   height: 4px;
-  background: rgba(255, 255, 255, 0.25);
+  background: var(--color-text-25);
   border-radius: 50%;
   margin: 0 2rem;
 }
@@ -188,10 +190,10 @@
 }
 
 .landing-invite {
-  font-family: 'Cormorant Garamond', serif;
+  font-family: var(--font-display);
   font-size: 0.95rem;
   letter-spacing: 0.2em;
-  color: rgba(255, 255, 255, 0.4);
+  color: var(--color-text-40);
   text-transform: lowercase;
   background: none;
   border: none;
@@ -201,7 +203,7 @@
 }
 
 .landing-invite:hover:not(:disabled) {
-  color: rgba(255, 255, 255, 0.7);
+  color: var(--color-text-60);
   letter-spacing: 0.25em;
 }
 
@@ -210,10 +212,10 @@
 }
 
 .landing-link {
-  font-family: 'Cormorant Garamond', serif;
+  font-family: var(--font-display);
   font-size: 0.8rem;
   letter-spacing: 0.15em;
-  color: rgba(255, 255, 255, 0.2);
+  color: var(--color-text-15);
   text-transform: lowercase;
   background: none;
   border: none;
@@ -223,7 +225,7 @@
 }
 
 .landing-link:hover {
-  color: rgba(255, 255, 255, 0.4);
+  color: var(--color-text-40);
 }
 
 /* === Form States === */
@@ -244,10 +246,10 @@
   position: absolute;
   top: -60px;
   left: 0;
-  font-family: 'Cormorant Garamond', serif;
+  font-family: var(--font-display);
   font-size: 0.85rem;
   letter-spacing: 0.1em;
-  color: rgba(255, 255, 255, 0.3);
+  color: var(--color-text-25);
   background: none;
   border: none;
   cursor: pointer;
@@ -256,7 +258,7 @@
 }
 
 .landing-back:hover {
-  color: rgba(255, 255, 255, 0.5);
+  color: var(--color-text-40);
 }
 
 /* Fields */
@@ -267,11 +269,11 @@
 
 .landing-field label {
   display: block;
-  font-family: 'Cormorant Garamond', serif;
+  font-family: var(--font-display);
   font-size: 0.75rem;
   font-weight: 400;
   letter-spacing: 0.2em;
-  color: rgba(255, 255, 255, 0.35);
+  color: var(--color-text-25);
   text-transform: lowercase;
   margin-bottom: 12px;
 }
@@ -282,10 +284,10 @@
   padding: 16px 0;
   background: transparent;
   border: none;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+  border-bottom: 1px solid var(--color-text-15);
   border-radius: 0;
-  color: #fff;
-  font-family: 'Cormorant Garamond', serif;
+  color: var(--color-text);
+  font-family: var(--font-display);
   font-size: 1.1rem;
   font-weight: 300;
   letter-spacing: 0.05em;
@@ -295,11 +297,11 @@
 }
 
 .landing-input:focus {
-  border-bottom-color: rgba(255, 255, 255, 0.4);
+  border-bottom-color: var(--color-text-40);
 }
 
 .landing-input::placeholder {
-  color: rgba(255, 255, 255, 0.2);
+  color: var(--color-text-15);
 }
 
 /* Code input special */
@@ -326,10 +328,10 @@
   left: 0;
   top: 50%;
   transform: translateY(-50%);
-  font-family: 'Cormorant Garamond', serif;
+  font-family: var(--font-display);
   font-size: 1.1rem;
   font-weight: 300;
-  color: rgba(255, 255, 255, 0.35);
+  color: var(--color-text-25);
   pointer-events: none;
 }
 
@@ -340,10 +342,10 @@
 /* Field status */
 .landing-field-status {
   display: block;
-  font-family: 'Cormorant Garamond', serif;
+  font-family: var(--font-display);
   font-size: 0.75rem;
   letter-spacing: 0.1em;
-  color: rgba(255, 255, 255, 0.35);
+  color: var(--color-text-25);
   margin-top: 8px;
 }
 
@@ -359,10 +361,10 @@
 .landing-input:-webkit-autofill,
 .landing-input:-webkit-autofill:hover,
 .landing-input:-webkit-autofill:focus {
-  -webkit-text-fill-color: #fff;
-  -webkit-box-shadow: 0 0 0px 1000px rgba(10, 10, 10, 1) inset;
+  -webkit-text-fill-color: var(--color-text);
+  -webkit-box-shadow: 0 0 0px 1000px var(--color-bg) inset;
   transition: background-color 5000s ease-in-out 0s;
-  font-family: 'Cormorant Garamond', serif;
+  font-family: var(--font-display);
 }
 
 /* === Avatar === */
@@ -375,16 +377,16 @@
   height: 100px;
   margin: 0 auto 12px;
   border-radius: 50%;
-  border: 1px dashed rgba(255, 255, 255, 0.2);
-  background: rgba(255, 255, 255, 0.03);
+  border: 1px dashed var(--color-text-15);
+  background: var(--color-text-06);
   cursor: pointer;
   overflow: hidden;
   transition: border-color 0.3s ease, background 0.3s ease;
 }
 
 .landing-avatar:hover {
-  border-color: rgba(255, 255, 255, 0.35);
-  background: rgba(255, 255, 255, 0.05);
+  border-color: var(--color-text-25);
+  background: var(--color-text-10);
 }
 
 .landing-avatar img {
@@ -394,7 +396,7 @@
 }
 
 .landing-avatar svg {
-  color: rgba(255, 255, 255, 0.25);
+  color: var(--color-text-25);
 }
 
 .landing-avatar input {
@@ -402,10 +404,10 @@
 }
 
 .landing-avatar-hint {
-  font-family: 'Cormorant Garamond', serif;
+  font-family: var(--font-display);
   font-size: 0.75rem;
   letter-spacing: 0.1em;
-  color: rgba(255, 255, 255, 0.25);
+  color: var(--color-text-25);
   text-align: center;
   margin-bottom: 32px;
 }
@@ -414,7 +416,7 @@
   font-family: inherit;
   font-size: inherit;
   letter-spacing: inherit;
-  color: rgba(255, 255, 255, 0.4);
+  color: var(--color-text-40);
   background: none;
   border: none;
   cursor: pointer;
@@ -423,7 +425,7 @@
 }
 
 .landing-avatar-hint button:hover {
-  color: rgba(255, 255, 255, 0.6);
+  color: var(--color-text-60);
 }
 
 /* === Button === */
@@ -432,11 +434,11 @@
   width: 100%;
   padding: 18px 32px;
   margin-top: 16px;
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: var(--color-text-10);
+  border: 1px solid var(--color-text-15);
   border-radius: 2px;
-  color: rgba(255, 255, 255, 0.7);
-  font-family: 'Cormorant Garamond', serif;
+  color: var(--color-text-60);
+  font-family: var(--font-display);
   font-size: 0.9rem;
   font-weight: 400;
   letter-spacing: 0.2em;
@@ -446,9 +448,9 @@
 }
 
 .landing-button:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.12);
-  border-color: rgba(255, 255, 255, 0.25);
-  color: rgba(255, 255, 255, 0.9);
+  background: var(--color-text-15);
+  border-color: var(--color-text-25);
+  color: var(--color-text-80);
 }
 
 .landing-button:disabled {
@@ -459,7 +461,7 @@
 /* === Error === */
 
 .landing-error {
-  font-family: 'Cormorant Garamond', serif;
+  font-family: var(--font-display);
   font-size: 0.8rem;
   letter-spacing: 0.1em;
   color: rgba(200, 120, 120, 0.9);

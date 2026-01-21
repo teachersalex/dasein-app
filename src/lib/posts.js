@@ -130,15 +130,36 @@ export async function getFeedPosts(followingIds, limit = 50) {
   }
 }
 
+/*
+ * 🔧 FIX: Cascade delete
+ * Deleta o post E todos os likes associados
+ * Evita likes órfãos no banco
+ */
 export async function deletePost(postId, storagePath) {
   try {
+    // 1. Buscar e deletar todos os likes do post
+    const likesQuery = query(
+      collection(db, 'likes'),
+      where('postId', '==', postId)
+    )
+    const likesSnap = await getDocs(likesQuery)
+    
+    // Deletar likes em paralelo
+    const deleteLikesPromises = likesSnap.docs.map(likeDoc => 
+      deleteDoc(doc(db, 'likes', likeDoc.id))
+    )
+    await Promise.all(deleteLikesPromises)
+    
+    // 2. Deletar o post
     await deleteDoc(doc(db, 'posts', postId))
     
+    // 3. Deletar imagem do Storage
     if (storagePath) {
       try {
         const storageRef = ref(storage, storagePath)
         await deleteObject(storageRef)
       } catch (e) {
+        // Imagem pode não existir mais, não é erro crítico
         console.warn('Storage delete failed (may not exist):', e)
       }
     }
