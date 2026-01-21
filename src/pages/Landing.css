@@ -1,4 +1,11 @@
-/* Landing - Dasein */
+/*
+ * Landing.css — Jornada de entrada no Dasein
+ * 
+ * Estados: landing, code, signup, profile, login
+ * Filosofia: a landing se transforma, nunca termina.
+ */
+
+/* === Base === */
 
 .landing {
   min-height: 100vh;
@@ -16,7 +23,8 @@
   opacity: 1;
 }
 
-/* Background image layer */
+/* === Background === */
+
 .landing-bg {
   position: absolute;
   inset: 0;
@@ -26,9 +34,15 @@
   opacity: 0.15;
   filter: blur(1px);
   z-index: 0;
+  transition: opacity 0.6s ease, filter 0.6s ease;
 }
 
-/* Vignette gradient */
+.landing.transformed .landing-bg {
+  opacity: 0.1;
+  filter: blur(2px);
+}
+
+/* Vignette */
 .landing-gradient {
   position: absolute;
   inset: 0;
@@ -36,19 +50,31 @@
     ellipse at center,
     transparent 0%,
     rgba(0, 0, 0, 0.3) 50%,
-    rgba(0, 0, 0, 0.8) 100%
+    rgba(0, 0, 0, 0.85) 100%
   );
   z-index: 1;
 }
 
-/* Content */
+/* === Content === */
+
 .landing-content {
   display: flex;
   flex-direction: column;
   align-items: center;
   text-align: center;
   z-index: 2;
+  width: 100%;
+  max-width: 400px;
+  padding: 24px;
+  transition: opacity 0.3s ease, transform 0.3s ease;
 }
+
+.landing-content.transitioning {
+  opacity: 0;
+  transform: translateY(10px);
+}
+
+/* === Logo === */
 
 .landing-logo {
   font-family: 'Cormorant Garamond', serif;
@@ -56,13 +82,31 @@
   font-weight: 300;
   letter-spacing: 0.15em;
   margin-bottom: 3rem;
-  color: var(--color-text);
+  color: #fff;
   text-shadow: 0 0 60px rgba(0, 0, 0, 0.8);
   opacity: 0;
   animation: landingFadeIn 1.5s ease 0.2s forwards;
 }
 
-/* Marquee */
+.landing-logo.small {
+  font-size: clamp(2.5rem, 10vw, 4rem);
+  margin-bottom: 0.5rem;
+  animation: none;
+  opacity: 1;
+}
+
+.landing-subtitle {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1rem;
+  font-weight: 300;
+  letter-spacing: 0.2em;
+  color: rgba(255, 255, 255, 0.4);
+  text-transform: lowercase;
+  margin-bottom: 3rem;
+}
+
+/* === Marquee === */
+
 .marquee-container {
   position: relative;
   width: 100vw;
@@ -86,9 +130,8 @@
 .marquee-container::before {
   left: 0;
   background: linear-gradient(90deg,
-    #0a0a0a 0%,
-    rgba(10, 10, 10, 0.9) 30%,
-    rgba(10, 10, 10, 0.5) 60%,
+    rgba(10, 10, 10, 1) 0%,
+    rgba(10, 10, 10, 0.8) 40%,
     transparent 100%
   );
 }
@@ -96,9 +139,8 @@
 .marquee-container::after {
   right: 0;
   background: linear-gradient(-90deg,
-    #0a0a0a 0%,
-    rgba(10, 10, 10, 0.9) 30%,
-    rgba(10, 10, 10, 0.5) 60%,
+    rgba(10, 10, 10, 1) 0%,
+    rgba(10, 10, 10, 0.8) 40%,
     transparent 100%
   );
 }
@@ -128,44 +170,55 @@
   display: inline-block;
   width: 4px;
   height: 4px;
-  background: rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.25);
   border-radius: 50%;
   margin: 0 2rem;
 }
 
-/* CTA */
+/* === Actions (Landing State) === */
+
 .landing-actions {
   margin-top: 3rem;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 16px;
+  gap: 20px;
   opacity: 0;
   animation: landingFadeIn 1.5s ease 1s forwards;
 }
 
 .landing-invite {
   font-family: 'Cormorant Garamond', serif;
-  font-size: 0.85rem;
+  font-size: 0.95rem;
   letter-spacing: 0.2em;
-  color: rgba(255, 255, 255, 0.3);
+  color: rgba(255, 255, 255, 0.4);
   text-transform: lowercase;
-  text-decoration: none;
-  transition: all 0.5s ease;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 8px 0;
+  transition: color 0.5s ease, letter-spacing 0.5s ease;
 }
 
-.landing-invite:hover {
-  color: rgba(255, 255, 255, 0.6);
+.landing-invite:hover:not(:disabled) {
+  color: rgba(255, 255, 255, 0.7);
   letter-spacing: 0.25em;
+}
+
+.landing-invite:disabled {
+  cursor: default;
 }
 
 .landing-link {
   font-family: 'Cormorant Garamond', serif;
-  font-size: 0.75rem;
+  font-size: 0.8rem;
   letter-spacing: 0.15em;
   color: rgba(255, 255, 255, 0.2);
   text-transform: lowercase;
-  text-decoration: none;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px 0;
   transition: color 0.3s ease;
 }
 
@@ -173,7 +226,249 @@
   color: rgba(255, 255, 255, 0.4);
 }
 
-/* Animations */
+/* === Form States === */
+
+.landing-form {
+  width: 100%;
+  position: relative;
+}
+
+.landing-form form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* Back button */
+.landing-back {
+  position: absolute;
+  top: -60px;
+  left: 0;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 0.85rem;
+  letter-spacing: 0.1em;
+  color: rgba(255, 255, 255, 0.3);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px 0;
+  transition: color 0.3s ease;
+}
+
+.landing-back:hover {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+/* Fields */
+.landing-field {
+  margin-bottom: 24px;
+  text-align: left;
+}
+
+.landing-field label {
+  display: block;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 0.75rem;
+  font-weight: 400;
+  letter-spacing: 0.2em;
+  color: rgba(255, 255, 255, 0.35);
+  text-transform: lowercase;
+  margin-bottom: 12px;
+}
+
+/* Inputs */
+.landing-input {
+  width: 100%;
+  padding: 16px 0;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 0;
+  color: #fff;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.1rem;
+  font-weight: 300;
+  letter-spacing: 0.05em;
+  outline: none;
+  transition: border-color 0.3s ease;
+  -webkit-appearance: none;
+}
+
+.landing-input:focus {
+  border-bottom-color: rgba(255, 255, 255, 0.4);
+}
+
+.landing-input::placeholder {
+  color: rgba(255, 255, 255, 0.2);
+}
+
+/* Code input special */
+.landing-input.code {
+  font-size: 2rem;
+  letter-spacing: 0.4em;
+  text-align: center;
+  text-transform: uppercase;
+  padding: 24px 0;
+  margin-bottom: 16px;
+}
+
+.landing-input.code::placeholder {
+  letter-spacing: 0.4em;
+}
+
+/* Username input */
+.landing-username-wrap {
+  position: relative;
+}
+
+.landing-username-at {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.1rem;
+  font-weight: 300;
+  color: rgba(255, 255, 255, 0.35);
+  pointer-events: none;
+}
+
+.landing-input.username {
+  padding-left: 20px;
+}
+
+/* Field status */
+.landing-field-status {
+  display: block;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 0.75rem;
+  letter-spacing: 0.1em;
+  color: rgba(255, 255, 255, 0.35);
+  margin-top: 8px;
+}
+
+.landing-field-status.valid {
+  color: rgba(120, 200, 120, 0.8);
+}
+
+.landing-field-status.invalid {
+  color: rgba(200, 120, 120, 0.8);
+}
+
+/* Autofill override */
+.landing-input:-webkit-autofill,
+.landing-input:-webkit-autofill:hover,
+.landing-input:-webkit-autofill:focus {
+  -webkit-text-fill-color: #fff;
+  -webkit-box-shadow: 0 0 0px 1000px rgba(10, 10, 10, 1) inset;
+  transition: background-color 5000s ease-in-out 0s;
+  font-family: 'Cormorant Garamond', serif;
+}
+
+/* === Avatar === */
+
+.landing-avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100px;
+  height: 100px;
+  margin: 0 auto 12px;
+  border-radius: 50%;
+  border: 1px dashed rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.03);
+  cursor: pointer;
+  overflow: hidden;
+  transition: border-color 0.3s ease, background 0.3s ease;
+}
+
+.landing-avatar:hover {
+  border-color: rgba(255, 255, 255, 0.35);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.landing-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.landing-avatar svg {
+  color: rgba(255, 255, 255, 0.25);
+}
+
+.landing-avatar input {
+  display: none;
+}
+
+.landing-avatar-hint {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 0.75rem;
+  letter-spacing: 0.1em;
+  color: rgba(255, 255, 255, 0.25);
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+.landing-avatar-hint button {
+  font-family: inherit;
+  font-size: inherit;
+  letter-spacing: inherit;
+  color: rgba(255, 255, 255, 0.4);
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.landing-avatar-hint button:hover {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+/* === Button === */
+
+.landing-button {
+  width: 100%;
+  padding: 18px 32px;
+  margin-top: 16px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 2px;
+  color: rgba(255, 255, 255, 0.7);
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 0.9rem;
+  font-weight: 400;
+  letter-spacing: 0.2em;
+  text-transform: lowercase;
+  cursor: pointer;
+  transition: all 0.4s ease;
+}
+
+.landing-button:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.25);
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.landing-button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+/* === Error === */
+
+.landing-error {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 0.8rem;
+  letter-spacing: 0.1em;
+  color: rgba(200, 120, 120, 0.9);
+  text-align: center;
+  margin-top: 16px;
+}
+
+/* === Animations === */
+
 @keyframes landingFadeIn {
   from {
     opacity: 0;
@@ -191,5 +486,38 @@
   }
   100% {
     transform: translateX(-50%);
+  }
+}
+
+/* === Mobile Adjustments === */
+
+@media (max-width: 480px) {
+  .landing-content {
+    padding: 20px;
+  }
+  
+  .landing-logo {
+    margin-bottom: 2rem;
+  }
+  
+  .landing-logo.small {
+    font-size: 2.5rem;
+  }
+  
+  .landing-input.code {
+    font-size: 1.6rem;
+    letter-spacing: 0.3em;
+  }
+  
+  .landing-back {
+    top: -50px;
+  }
+}
+
+/* === Safe Area === */
+
+@supports (padding: env(safe-area-inset-bottom)) {
+  .landing {
+    padding-bottom: env(safe-area-inset-bottom);
   }
 }

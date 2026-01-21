@@ -3,8 +3,6 @@ import {
   onAuthStateChanged,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
-  signInWithPopup,
-  GoogleAuthProvider,
   signOut
 } from 'firebase/auth'
 import { 
@@ -22,7 +20,15 @@ import { auth, db } from '../lib/firebase'
 
 const AuthContext = createContext(null)
 
-// 🔒 Provider principal - envolve todo o app
+/*
+ * AuthProvider — Gerenciamento de autenticação e perfil
+ * 
+ * Expõe:
+ * - user: Firebase Auth user
+ * - profile: Firestore profile (pode ser null mesmo com user)
+ * - loading: estado de carregamento inicial
+ * - Funções de auth e profile
+ */
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null)
   const [profile, setProfile] = useState(null)
@@ -45,15 +51,13 @@ export function AuthProvider({ children }) {
     return unsubscribe
   }, [])
 
-  // 🔒 Contrato do context - páginas dependem desses campos
   const value = {
-    user,           // Firebase Auth user
-    profile,        // Firestore profile (pode ser null mesmo com user)
+    user,
+    profile,
     loading,
     setProfile,
     loginWithEmail,
     signupWithEmail,
-    loginWithGoogle,
     logout: () => signOut(auth),
     getUserProfile,
     createUserProfile,
@@ -71,7 +75,7 @@ export function AuthProvider({ children }) {
 export function useAuth() {
   const context = useContext(AuthContext)
   if (!context) {
-    throw new Error('useAuth must be used within AuthProvider')
+    throw new Error('useAuth deve ser usado dentro de AuthProvider')
   }
   return context
 }
@@ -96,17 +100,6 @@ async function signupWithEmail(email, password) {
   }
 }
 
-async function loginWithGoogle() {
-  try {
-    const provider = new GoogleAuthProvider()
-    const result = await signInWithPopup(auth, provider)
-    const isNewUser = result._tokenResponse?.isNewUser || false
-    return { success: true, user: result.user, isNewUser }
-  } catch (error) {
-    return { success: false, error: getErrorMessage(error.code) }
-  }
-}
-
 // === Profile Functions ===
 
 async function getUserProfile(uid) {
@@ -119,12 +112,18 @@ async function getUserProfile(uid) {
     }
     return null
   } catch (error) {
-    console.error('Error getting profile:', error)
+    console.error('Erro ao buscar perfil:', error)
     return null
   }
 }
 
-// ⚠️ Campos iniciais do perfil - invitesAvailable usado em invites.js
+/*
+ * createUserProfile — Cria perfil inicial do usuário
+ * 
+ * Campos:
+ * - invitesAvailable: 2 (padrão) ou -1 (admin, infinito)
+ * - invitedBy: uid de quem convidou
+ */
 async function createUserProfile(uid, data) {
   try {
     const userRef = doc(db, 'users', uid)
@@ -168,7 +167,8 @@ async function isUsernameTaken(username) {
     const snapshot = await getDocs(q)
     return !snapshot.empty
   } catch (error) {
-    return true // Assume taken on error (safe)
+    // Em caso de erro, assume que está em uso (seguro)
+    return true
   }
 }
 
@@ -182,7 +182,6 @@ function getErrorMessage(code) {
     'auth/user-not-found': 'Usuário não encontrado.',
     'auth/wrong-password': 'Senha incorreta.',
     'auth/too-many-requests': 'Muitas tentativas. Tente novamente mais tarde.',
-    'auth/popup-closed-by-user': 'Login cancelado.',
     'auth/network-request-failed': 'Erro de conexão.',
     'auth/invalid-credential': 'Email ou senha incorretos.'
   }
