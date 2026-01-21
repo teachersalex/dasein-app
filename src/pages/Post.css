@@ -1,10 +1,12 @@
 /*
  * Post.css — Visualização de posts
  * 
- * Features: scroll snap vertical, modal de likers, delete confirmation
- * Estética: consistente com Landing
+ * Features: scroll snap vertical, double tap like
  * 
- * 🔧 REFATORADO: Usa variáveis do index.css
+ * Removido (extraído para outros arquivos):
+ * - Likers modal → BottomSheet.css
+ * - Confirm modal → index.css
+ * - fadeIn/slideUp → BottomSheet.css
  */
 
 .post-page {
@@ -41,24 +43,7 @@
   flex: 1;
 }
 
-.btn-back {
-  width: 44px;
-  height: 44px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: none;
-  border: none;
-  color: var(--color-text-80);
-  cursor: pointer;
-  transition: transform 0.2s ease, opacity 0.2s ease;
-}
-
-.btn-back:active {
-  transform: scale(0.85);
-  opacity: 0.5;
-}
-
+.btn-back,
 .btn-delete {
   width: 44px;
   height: 44px;
@@ -67,17 +52,26 @@
   justify-content: center;
   background: none;
   border: none;
-  color: var(--color-text-25);
   cursor: pointer;
-  transition: color 0.2s ease, transform 0.2s ease;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.btn-back {
+  color: var(--color-text-80);
+}
+
+.btn-delete {
+  color: var(--color-text-25);
+}
+
+.btn-back:active,
+.btn-delete:active {
+  transform: scale(0.85);
+  opacity: 0.5;
 }
 
 .btn-delete:hover {
   color: rgba(200, 100, 100, 0.8);
-}
-
-.btn-delete:active {
-  transform: scale(0.85);
 }
 
 .btn-delete:disabled {
@@ -273,7 +267,7 @@
   letter-spacing: 0.02em;
 }
 
-/* === Heart Animation === */
+/* === Heart Animation (double tap) === */
 
 .post-heart-animation {
   position: absolute;
@@ -316,107 +310,4 @@
   font-size: 1rem;
   letter-spacing: 0.1em;
   color: var(--color-text-40);
-}
-
-/* === Likers Modal === */
-
-.likers-modal {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.85);
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
-  z-index: 200;
-  animation: fadeIn 0.2s ease;
-}
-
-.likers-content {
-  background: var(--color-bg);
-  border-radius: 16px 16px 0 0;
-  width: 100%;
-  max-width: 500px;
-  max-height: 70vh;
-  animation: slideUp 0.3s var(--ease-out);
-}
-
-.likers-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 20px;
-  border-bottom: 1px solid var(--color-text-06);
-}
-
-.likers-header h2 {
-  font-family: var(--font-display);
-  font-size: 1rem;
-  font-weight: 400;
-  letter-spacing: 0.1em;
-  color: var(--color-text);
-  text-transform: lowercase;
-}
-
-.likers-header button {
-  background: none;
-  border: none;
-  color: var(--color-text-40);
-  cursor: pointer;
-  padding: 8px;
-  margin: -8px;
-  transition: color 0.2s ease;
-}
-
-.likers-header button:hover {
-  color: var(--color-text-60);
-}
-
-.likers-list {
-  padding: 8px 0;
-  overflow-y: auto;
-  max-height: calc(70vh - 70px);
-}
-
-.liker-item {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  padding: 14px 20px;
-  cursor: pointer;
-  transition: background 0.2s ease;
-}
-
-.liker-item:active {
-  background: var(--color-text-06);
-}
-
-.liker-name {
-  font-size: 14px;
-  font-weight: 400;
-  color: var(--color-text);
-  letter-spacing: 0.01em;
-}
-
-/* === Confirm Modal === */
-/* 🔧 NOTA: Usa estilos base de index.css */
-
-.confirm-message {
-  font-family: var(--font-display);
-  font-size: 1.1rem;
-  font-weight: 300;
-  letter-spacing: 0.05em;
-  color: var(--color-text-80);
-  margin-bottom: 28px;
-}
-
-/* === Animations === */
-
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
-@keyframes slideUp {
-  from { transform: translateY(100%); }
-  to { transform: translateY(0); }
 }

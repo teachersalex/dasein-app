@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { collection, getDocs } from 'firebase/firestore'
+import { collection, getDocs, doc, updateDoc } from 'firebase/firestore'
 import { db } from '../lib/firebase'
 import { useAuth } from '../hooks/useAuth'
+import { deletePost } from '../lib/posts'
 import { purgeExpiredInvites } from '../lib/invites'
 import { useToast } from '../components/Toast'
 import './Admin.css'
@@ -17,7 +18,9 @@ export default function Admin() {
   const [loading, setLoading] = useState(true)
   const [metrics, setMetrics] = useState(null)
   const [users, setUsers] = useState([])
+  const [posts, setPosts] = useState([])
   const [purging, setPurging] = useState(false)
+  const [tab, setTab] = useState('users')
 
   const isAdmin = profile && ADMIN_USERNAMES.includes(profile.username)
 
@@ -46,6 +49,7 @@ export default function Admin() {
       })
 
       setUsers(usersSnap.docs.map(d => ({ id: d.id, ...d.data() })))
+      setPosts(postsSnap.docs.map(d => ({ id: d.id, ...d.data() })))
     } catch (err) {
       console.error(err)
       showToast('Erro ao carregar dados', 'error')
@@ -68,7 +72,32 @@ export default function Admin() {
     }
   }
 
-  // Loading / Access
+  async function handleBan(userId, currentBanned) {
+    const action = currentBanned ? 'desbanir' : 'banir'
+    if (!confirm(`Deseja ${action} este usuário?`)) return
+    
+    try {
+      await updateDoc(doc(db, 'users', userId), { banned: !currentBanned })
+      setUsers(users.map(u => u.id === userId ? { ...u, banned: !currentBanned } : u))
+      showToast(`Usuário ${currentBanned ? 'desbanido' : 'banido'}`, 'success')
+    } catch (err) {
+      showToast('Erro ao atualizar usuário', 'error')
+    }
+  }
+
+  async function handleDeletePost(postId, storagePath) {
+    if (!confirm('Deletar este post?')) return
+    
+    const result = await deletePost(postId, storagePath)
+    if (result.success) {
+      setPosts(posts.filter(p => p.id !== postId))
+      showToast('Post deletado', 'success')
+      loadData()
+    } else {
+      showToast('Erro ao deletar', 'error')
+    }
+  }
+
   if (authLoading || loading) {
     return <div className="admin"><div className="spinner" /></div>
   }
@@ -111,28 +140,59 @@ export default function Admin() {
         </div>
       )}
 
-      <div className="admin-section">
-        <h2>Ações</h2>
-        <button 
-          className="btn-danger" 
-          onClick={handlePurge} 
-          disabled={purging}
-        >
+      <div className="admin-action">
+        <button className="btn-danger" onClick={handlePurge} disabled={purging}>
           {purging ? 'Limpando...' : '🗑️ Limpar convites expirados'}
         </button>
       </div>
 
-      <div className="admin-section">
-        <h2>Usuários ({users.length})</h2>
+      <div className="admin-tabs">
+        <button className={tab === 'users' ? 'active' : ''} onClick={() => setTab('users')}>
+          Usuários ({users.length})
+        </button>
+        <button className={tab === 'posts' ? 'active' : ''} onClick={() => setTab('posts')}>
+          Posts ({posts.length})
+        </button>
+      </div>
+
+      {tab === 'users' && (
         <ul className="admin-users">
           {users.map(u => (
-            <li key={u.id} onClick={() => navigate(`/profile/${u.username}`)}>
-              <span>@{u.username}</span>
-              <span className="user-name">{u.displayName}</span>
+            <li key={u.id} className={u.banned ? 'banned' : ''}>
+              <div className="user-info" onClick={() => navigate(`/profile/${u.username}`)}>
+                <span className="username">@{u.username}</span>
+                <span className="name">{u.displayName}</span>
+              </div>
+              <button 
+                className={u.banned ? 'btn-success' : 'btn-danger'}
+                onClick={() => handleBan(u.id, u.banned)}
+              >
+                {u.banned ? 'Desbanir' : 'Banir'}
+              </button>
             </li>
           ))}
         </ul>
-      </div>
+      )}
+
+      {tab === 'posts' && (
+        <div className="admin-posts">
+          {posts.map(post => {
+            const author = users.find(u => u.id === post.userId)
+            return (
+              <div key={post.id} className="admin-post">
+                <img src={post.photoURL} alt="" />
+                <div className="post-info">
+                  <span className="author">@{author?.username || '?'}</span>
+                  {post.caption && <span className="caption">{post.caption}</span>}
+                </div>
+                <button className="btn-danger" onClick={() => handleDeletePost(post.id, post.storagePath)}>
+                  🗑️
+                </button>
+              </div>
+            )
+          })}
+        </div>
+      )}
     </div>
   )
 }

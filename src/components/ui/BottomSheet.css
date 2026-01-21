@@ -1,0 +1,92 @@
+/*
+ * BottomSheet.css — Estilos do bottom sheet genérico
+ * Extraído de: Post.css (likers-modal)
+ */
+
+.bottom-sheet-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.85);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  z-index: 200;
+  animation: fadeIn 0.2s ease;
+}
+
+.bottom-sheet {
+  background: var(--color-bg);
+  border-radius: 16px 16px 0 0;
+  width: 100%;
+  max-width: 500px;
+  max-height: 70vh;
+  animation: slideUp 0.3s var(--ease-out);
+}
+
+.bottom-sheet-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px;
+  border-bottom: 1px solid var(--color-text-06);
+}
+
+.bottom-sheet-header h2 {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 400;
+  letter-spacing: 0.1em;
+  color: var(--color-text);
+  text-transform: lowercase;
+}
+
+.bottom-sheet-close {
+  background: none;
+  border: none;
+  color: var(--color-text-40);
+  cursor: pointer;
+  padding: 8px;
+  margin: -8px;
+  transition: color 0.2s ease;
+}
+
+.bottom-sheet-close:hover {
+  color: var(--color-text-60);
+}
+
+.bottom-sheet-content {
+  padding: 8px 0;
+  overflow-y: auto;
+  max-height: calc(70vh - 70px);
+}
+
+/* Item genérico de lista dentro do BottomSheet */
+.bottom-sheet-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 20px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.bottom-sheet-item:active {
+  background: var(--color-text-06);
+}
+
+.bottom-sheet-item-name {
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--color-text);
+  letter-spacing: 0.01em;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
