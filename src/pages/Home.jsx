@@ -25,9 +25,10 @@ import './caption.css'
  * 3. caption — legenda opcional
  * 4. success — feedback e redirect
  * 
- * Correções audit:
- * - alert → toast
- * - Feedback visual refinado
+ * Fixes aplicados:
+ * - resetVisualState: translateY → translateX
+ * - handlePost: guarda de user?.uid
+ * - redirectTimeout com cleanup
  */
 
 export default function Home() {
@@ -43,6 +44,16 @@ export default function Home() {
   const [posting, setPosting] = useState(false)
 
   const filterNameRef = useRef(null)
+  const redirectTimeoutRef = useRef(null)
+
+  // Cleanup do timeout de redirect
+  useEffect(() => {
+    return () => {
+      if (redirectTimeoutRef.current) {
+        clearTimeout(redirectTimeoutRef.current)
+      }
+    }
+  }, [])
 
   // Processamento de filtros
   useEffect(() => {
@@ -152,10 +163,11 @@ export default function Home() {
     resetVisualState(true)
   }
   
+  // FIX: translateY → translateX (você move horizontalmente!)
   function resetVisualState(animate = false) {
     if (filterNameRef.current) {
       filterNameRef.current.style.transition = animate ? 'transform 0.3s ease, opacity 0.3s ease' : 'none'
-      filterNameRef.current.style.transform = 'translateY(0)'
+      filterNameRef.current.style.transform = 'translateX(0)'
       filterNameRef.current.style.opacity = filterIndex !== 0 ? '1' : '0'
     }
   }
@@ -174,8 +186,16 @@ export default function Home() {
     setScreen('camera')
   }
   
+  // FIX: Guarda de user?.uid
   async function handlePost() {
     if (posting || !filteredPhoto) return
+    
+    // FIX: Verifica se user existe antes de tentar postar
+    if (!user?.uid) {
+      showToast('faça login para publicar', 'error')
+      return
+    }
+    
     setPosting(true)
     
     try {
@@ -191,7 +211,9 @@ export default function Home() {
         setCaption('')
         setPhotoData(null)
         setFilteredPhoto(null)
-        setTimeout(() => navigate('/feed'), 1500)
+        
+        // FIX: Usa ref para cleanup
+        redirectTimeoutRef.current = setTimeout(() => navigate('/feed'), 1500)
       } else {
         throw new Error(result.error || 'Upload failed')
       }
