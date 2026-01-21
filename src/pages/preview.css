@@ -1,6 +1,11 @@
-/* ==========================================
-   DASEIN - Preview Screen
-   ========================================== */
+/*
+ * preview.css — Tela de preview e seleção de filtro
+ * 
+ * Features:
+ * - Swipe para trocar filtro
+ * - Barras indicadoras
+ * - Feedback visual no nome do filtro
+ */
 
 .preview-screen {
   height: 100vh;
@@ -27,12 +32,11 @@
   cursor: grabbing;
 }
 
-/* 🔒 pointer-events: none é essencial pro swipe funcionar */
 .preview-image {
   width: 100%;
   height: 100%;
   object-fit: contain;
-  animation: previewZoomIn 0.35s var(--ease-out);
+  animation: previewZoomIn 0.35s cubic-bezier(0.16, 1, 0.3, 1);
   pointer-events: none;
   user-select: none;
   -webkit-user-select: none;
@@ -55,7 +59,8 @@
   justify-content: center;
 }
 
-/* Filter controls - área preta abaixo da foto */
+/* === Filter Controls === */
+
 .filter-controls {
   background: var(--color-bg);
   padding: 20px 20px 8px;
@@ -67,17 +72,17 @@
   z-index: 10;
 }
 
-/* Filter name - texto na área preta, NÃO sobre a foto */
+/* Filter name - Cormorant para consistência */
 .filter-name {
-  font-size: 14px;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 0.9rem;
   font-weight: 400;
-  color: var(--color-text-secondary);
-  letter-spacing: 1px;
-  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  text-transform: lowercase;
+  color: rgba(255, 255, 255, 0.5);
   opacity: 0;
-  transition: opacity 0.25s var(--ease-out), transform 0.25s var(--ease-out);
-  min-height: 20px;
-  /* Garante que fica no fluxo normal, não flutua */
+  transition: opacity 0.25s ease, transform 0.25s ease;
+  min-height: 24px;
   position: relative;
 }
 
@@ -85,7 +90,7 @@
   opacity: 1;
 }
 
-/* 🔒 ENGRENAGEM - valores aprovados, não alterar */
+/* Filter indicators - área de swipe */
 .filter-indicators {
   display: flex;
   align-items: center;
@@ -103,11 +108,11 @@
   cursor: grabbing;
 }
 
-/* 🔒 BARRAS - cor sólida (#444/#fff), não usar variáveis ou background-clip */
+/* Barras dos filtros */
 .filter-bar {
   width: 3px;
   height: 14px;
-  background: #444;
+  background: rgba(255, 255, 255, 0.25);
   border: none;
   padding: 0;
   margin: 0;
@@ -119,72 +124,70 @@
 }
 
 .filter-bar:hover {
-  background: #666;
+  background: rgba(255, 255, 255, 0.4);
 }
 
 .filter-bar.active {
-  background: #fff;
+  background: rgba(255, 255, 255, 0.9);
   height: 22px;
 }
 
-/* Preview actions */
+/* === Preview Actions === */
+
 .preview-actions {
   display: flex;
   gap: 12px;
   padding: 16px 20px;
-  padding-bottom: calc(24px + var(--safe-bottom, 0px));
+  padding-bottom: calc(24px + env(safe-area-inset-bottom, 0px));
   background: var(--color-bg);
 }
 
-/* Action buttons */
-.action-btn {
+.preview-btn {
   flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
   padding: 16px 24px;
-  border-radius: 100px;
-  font-family: inherit;
-  font-size: 14px;
+  border-radius: 2px;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 0.9rem;
   font-weight: 400;
+  letter-spacing: 0.1em;
+  text-transform: lowercase;
   cursor: pointer;
-  transition: all 0.2s var(--ease-out);
+  transition: all 0.2s ease;
   -webkit-tap-highlight-color: transparent;
   border: none;
 }
 
-.action-btn.primary {
-  background: white;
+.preview-btn.primary {
+  background: rgba(255, 255, 255, 0.9);
   color: var(--color-bg);
 }
 
-.action-btn.primary:active {
+.preview-btn.primary:active {
   transform: scale(0.97);
   opacity: 0.9;
 }
 
-.action-btn.primary:disabled {
+.preview-btn.primary:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
 
-.action-btn.secondary {
-  background: var(--color-surface);
-  color: var(--color-text-secondary);
-  border: 1px solid var(--color-border);
-}
-
-.action-btn.secondary:active {
-  transform: scale(0.97);
-  background: var(--color-bg-elevated);
-}
-
-.action-btn.ghost {
+.preview-btn.secondary {
   background: transparent;
-  color: var(--color-text-secondary);
+  color: rgba(255, 255, 255, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.15);
 }
 
-.action-btn.ghost:active {
-  color: var(--color-text);
+.preview-btn.secondary:hover {
+  border-color: rgba(255, 255, 255, 0.25);
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.preview-btn.secondary:active {
+  transform: scale(0.97);
+  background: rgba(255, 255, 255, 0.03);
 }

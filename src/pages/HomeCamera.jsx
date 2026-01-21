@@ -1,9 +1,20 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
+import { useToast } from '../components/Toast'
 import { CloseIcon, FlipIcon } from './HomeIcons'
 import './camera.css'
 
-// 🔒 Câmera com crop 4:5 - contrato com Home.jsx via onCapture(base64)
+/*
+ * HomeCamera — Câmera com crop 4:5
+ * 
+ * Contrato com Home.jsx: onCapture(base64)
+ * Output: JPEG base64, aspect ratio 4:5, max 1080px
+ * 
+ * Correção audit: alert → toast
+ */
+
 export default function HomeCamera({ onCapture, onClose }) {
+  const { showToast } = useToast()
+  
   const videoRef = useRef(null)
   const canvasRef = useRef(null)
   const streamRef = useRef(null)
@@ -47,7 +58,7 @@ export default function HomeCamera({ onCapture, onClose }) {
         
         video.oncanplay = handleCanPlay
         
-        // Fallback for iOS
+        // Fallback iOS
         setTimeout(() => {
           if (!cameraReady && streamRef.current) {
             video.play().catch(() => {})
@@ -58,10 +69,10 @@ export default function HomeCamera({ onCapture, onClose }) {
       
     } catch (error) {
       console.error('Camera error:', error)
-      alert('Não foi possível acessar a câmera')
+      showToast('não foi possível acessar a câmera', 'error')
       onClose()
     }
-  }, [facingMode, onClose])
+  }, [facingMode, onClose, showToast])
 
   function stopCamera() {
     if (streamRef.current) {
@@ -87,7 +98,7 @@ export default function HomeCamera({ onCapture, onClose }) {
     setFacingMode(mode => mode === 'environment' ? 'user' : 'environment')
   }
 
-  // ⚠️ CRITICAL - Crop 4:5 e output base64 JPEG
+  // Crop 4:5 e output base64 JPEG
   function capturePhoto() {
     if (!videoRef.current || !canvasRef.current || isCapturing || !cameraReady) return
     
@@ -104,7 +115,7 @@ export default function HomeCamera({ onCapture, onClose }) {
       const vw = video.videoWidth
       const vh = video.videoHeight
       
-      // 🔒 Aspect ratio 4:5 - padrão Dasein
+      // Aspect ratio 4:5 — padrão Dasein
       const targetAspect = 4 / 5
       const videoAspect = vw / vh
       
@@ -128,6 +139,7 @@ export default function HomeCamera({ onCapture, onClose }) {
       canvas.width = outputW
       canvas.height = outputH
       
+      // Mirror para selfie
       if (facingMode === 'user') {
         ctx.translate(canvas.width, 0)
         ctx.scale(-1, 1)
@@ -139,12 +151,13 @@ export default function HomeCamera({ onCapture, onClose }) {
         ctx.setTransform(1, 0, 0, 1, 0, 0)
       }
       
+      // Flash visual
       setShowFlash(true)
       setTimeout(() => setShowFlash(false), 120)
       
       if (navigator.vibrate) navigator.vibrate([10, 30, 10])
       
-      // 🔒 Output: base64 JPEG - contrato com Home.jsx
+      // Output: base64 JPEG
       const photo = canvas.toDataURL('image/jpeg', 0.92)
       
       setTimeout(() => {
@@ -188,14 +201,14 @@ export default function HomeCamera({ onCapture, onClose }) {
         
         <div className="camera-controls-overlay">
           <div className="camera-top-controls">
-            <button className="control-btn" onClick={onClose}>
+            <button className="camera-control-btn" onClick={onClose}>
               <CloseIcon />
             </button>
           </div>
           
           <div className="camera-bottom-controls">
-            <div className="controls-row">
-              <div className="control-spacer" />
+            <div className="camera-controls-row">
+              <div className="camera-control-spacer" />
               
               <button 
                 className={`shutter-btn ${isCapturing ? 'capturing' : ''}`}
@@ -209,7 +222,7 @@ export default function HomeCamera({ onCapture, onClose }) {
               </button>
               
               <button 
-                className={`control-btn flip-btn ${isFlipping ? 'flipping' : ''}`}
+                className={`camera-control-btn flip-btn ${isFlipping ? 'flipping' : ''}`}
                 onClick={flipCamera}
                 disabled={isFlipping}
               >

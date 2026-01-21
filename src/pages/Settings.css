@@ -1,35 +1,108 @@
+/*
+ * Settings.css — Edição de perfil
+ * 
+ * Estética: Cormorant para títulos, inputs elegantes
+ * Consistente com Landing e demais páginas
+ */
+
 .settings-page {
   min-height: 100vh;
   min-height: 100dvh;
-  padding-bottom: 40px;
+  background: var(--color-bg);
 }
 
-/* 🔒 Safe-area fix para o header */
-.settings-page .page-header {
+/* === Header === */
+
+.settings-header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
   padding-top: max(16px, env(safe-area-inset-top));
+  background: var(--color-bg);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
 }
+
+.settings-back {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: none;
+  border: none;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 0.9rem;
+  font-weight: 300;
+  letter-spacing: 0.05em;
+  color: rgba(255, 255, 255, 0.5);
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.settings-back:hover {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.settings-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1rem;
+  font-weight: 400;
+  letter-spacing: 0.1em;
+  color: var(--color-text);
+  text-transform: lowercase;
+}
+
+.settings-save {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 0.9rem;
+  font-weight: 400;
+  letter-spacing: 0.1em;
+  color: rgba(255, 255, 255, 0.7);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  padding: 8px 20px;
+  border-radius: 2px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.settings-save:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.settings-save:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+/* === Content === */
 
 .settings-content {
   max-width: 440px;
   margin: 0 auto;
-  padding: 32px 24px;
+  padding: 32px 24px 60px;
 }
 
-/* Avatar section */
-.avatar-section {
+/* === Avatar Section === */
+
+.settings-avatar-section {
   display: flex;
   flex-direction: column;
   align-items: center;
   margin-bottom: 48px;
 }
 
-.avatar-wrapper {
+.settings-avatar-wrapper {
   position: relative;
   cursor: pointer;
-  margin-bottom: 16px;
+  margin-bottom: 12px;
 }
 
-.avatar-overlay {
+.settings-avatar-overlay {
   position: absolute;
   inset: 0;
   border-radius: 50%;
@@ -38,53 +111,271 @@
   align-items: center;
   justify-content: center;
   opacity: 0;
-  transition: opacity 0.2s;
-  color: white;
+  transition: opacity 0.2s ease;
+  color: rgba(255, 255, 255, 0.8);
 }
 
-.avatar-wrapper:hover .avatar-overlay {
+.settings-avatar-wrapper:hover .settings-avatar-overlay {
   opacity: 1;
 }
 
-.avatar-hint {
-  font-size: 13px;
-  color: var(--color-text-tertiary);
+.settings-avatar-hint {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 0.85rem;
+  font-weight: 300;
+  letter-spacing: 0.05em;
+  color: rgba(255, 255, 255, 0.3);
 }
 
-/* Form sections */
-.form-section {
+/* === Sections === */
+
+.settings-section {
   margin-bottom: 40px;
 }
 
-.section-title {
-  font-size: 11px;
-  font-weight: 500;
-  color: var(--color-text-tertiary);
-  text-transform: uppercase;
-  letter-spacing: 1.5px;
-  margin-bottom: 20px;
+.settings-section-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 0.75rem;
+  font-weight: 400;
+  letter-spacing: 0.2em;
+  text-transform: lowercase;
+  color: rgba(255, 255, 255, 0.4);
+  margin-bottom: 24px;
   padding-bottom: 12px;
-  border-bottom: 1px solid var(--color-bg-elevated);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
 }
 
-/* Username input */
-.username-input-wrapper {
+/* === Fields === */
+
+.settings-field {
+  margin-bottom: 24px;
+}
+
+.settings-label {
+  display: block;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 0.8rem;
+  font-weight: 300;
+  letter-spacing: 0.1em;
+  color: rgba(255, 255, 255, 0.5);
+  margin-bottom: 8px;
+  text-transform: lowercase;
+}
+
+.settings-input {
+  width: 100%;
+  font-family: inherit;
+  font-size: 1rem;
+  font-weight: 300;
+  color: var(--color-text);
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  padding: 14px 16px;
+  transition: all 0.2s ease;
+}
+
+.settings-input::placeholder {
+  color: rgba(255, 255, 255, 0.25);
+}
+
+.settings-input:focus {
+  outline: none;
+  border-color: rgba(255, 255, 255, 0.25);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+/* Username wrapper */
+.settings-username-wrapper {
   position: relative;
 }
 
-.username-at {
+.settings-username-at {
   position: absolute;
   left: 16px;
   top: 50%;
   transform: translateY(-50%);
-  color: var(--color-text-tertiary);
-  font-size: 15px;
+  color: rgba(255, 255, 255, 0.35);
+  font-size: 1rem;
   pointer-events: none;
 }
 
-/* Danger zone */
-.danger-zone {
+.settings-input-username {
+  padding-left: 32px;
+}
+
+.settings-hint {
+  display: block;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 0.75rem;
+  font-weight: 300;
+  letter-spacing: 0.03em;
+  color: rgba(255, 255, 255, 0.25);
+  margin-top: 8px;
+}
+
+.settings-error {
+  display: block;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 0.75rem;
+  font-weight: 300;
+  letter-spacing: 0.03em;
+  color: rgba(200, 100, 100, 0.9);
+  margin-top: 8px;
+}
+
+/* === Select === */
+
+.settings-select {
+  width: 100%;
+  font-family: inherit;
+  font-size: 1rem;
+  font-weight: 300;
+  color: var(--color-text);
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  padding: 14px 16px;
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='rgba(255,255,255,0.4)' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 16px center;
+  transition: all 0.2s ease;
+}
+
+.settings-select:focus {
+  outline: none;
+  border-color: rgba(255, 255, 255, 0.25);
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+.settings-select option {
+  background: #1a1a1a;
+  color: var(--color-text);
+}
+
+/* === Danger Zone === */
+
+.settings-danger {
   margin-top: 60px;
   padding-top: 32px;
-  border-top: 1px solid var(--color-bg-elevated);
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.settings-logout-btn {
+  width: 100%;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 0.9rem;
+  font-weight: 400;
+  letter-spacing: 0.1em;
+  text-transform: lowercase;
+  color: rgba(200, 100, 100, 0.8);
+  background: rgba(200, 100, 100, 0.08);
+  border: 1px solid rgba(200, 100, 100, 0.2);
+  padding: 16px 24px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.settings-logout-btn:hover {
+  background: rgba(200, 100, 100, 0.15);
+  border-color: rgba(200, 100, 100, 0.35);
+  color: rgba(220, 110, 110, 0.95);
+}
+
+/* === Confirmation Modal === */
+
+.confirm-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+  animation: fadeIn 0.2s ease;
+  padding: 24px;
+}
+
+.confirm-sheet {
+  background: var(--color-bg-elevated, #1a1a1a);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  width: 100%;
+  max-width: 300px;
+  padding: 32px 24px;
+  text-align: center;
+  animation: scaleIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.confirm-message {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.1rem;
+  font-weight: 300;
+  letter-spacing: 0.05em;
+  color: rgba(255, 255, 255, 0.8);
+  line-height: 1.5;
+}
+
+.confirm-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 28px;
+}
+
+.confirm-cancel,
+.confirm-btn {
+  flex: 1;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 0.9rem;
+  font-weight: 400;
+  letter-spacing: 0.1em;
+  text-transform: lowercase;
+  padding: 14px 20px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.confirm-cancel {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.confirm-cancel:hover {
+  border-color: rgba(255, 255, 255, 0.25);
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.confirm-btn {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.confirm-btn:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.25);
+  color: rgba(255, 255, 255, 0.9);
+}
+
+/* === Animations === */
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }

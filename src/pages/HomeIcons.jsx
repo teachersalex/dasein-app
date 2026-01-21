@@ -1,6 +1,9 @@
-// ==========================================
-// DASEIN - Icons
-// ==========================================
+/*
+ * HomeIcons.jsx — Ícones SVG do fluxo de captura
+ * 
+ * Usados em: Home.jsx, HomeCamera.jsx
+ * Convenção: strokeWidth 1.5-2, tamanhos 18-24
+ */
 
 export function CameraIcon() {
   return (
@@ -71,7 +74,6 @@ export function SuccessAnimation() {
   )
 }
 
-// ✦ Spark - aba de atividades
 export function SparkIcon() {
   return (
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">

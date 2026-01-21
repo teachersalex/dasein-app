@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
+import { useToast } from '../components/Toast'
 import { uploadPost } from '../lib/posts'
 import { FILTERS, applyFilter } from '../lib/filters'
 import HomeCamera from './HomeCamera'
@@ -15,9 +16,24 @@ import './Home.css'
 import './preview.css'
 import './caption.css'
 
+/*
+ * Home — Fluxo de captura e publicação
+ * 
+ * Telas:
+ * 1. camera — captura com crop 4:5
+ * 2. preview — seleção de filtro com swipe
+ * 3. caption — legenda opcional
+ * 4. success — feedback e redirect
+ * 
+ * Correções audit:
+ * - alert → toast
+ * - Feedback visual refinado
+ */
+
 export default function Home() {
   const navigate = useNavigate()
   const { user } = useAuth()
+  const { showToast } = useToast()
   
   const [screen, setScreen] = useState('camera')
   const [photoData, setPhotoData] = useState(null)
@@ -26,10 +42,9 @@ export default function Home() {
   const [caption, setCaption] = useState('')
   const [posting, setPosting] = useState(false)
 
-  // Ref para feedback visual do nome do filtro
   const filterNameRef = useRef(null)
 
-  // ⚠️ CRITICAL - Processamento de filtros
+  // Processamento de filtros
   useEffect(() => {
     let isCancelled = false
     
@@ -51,7 +66,7 @@ export default function Home() {
     return () => { isCancelled = true }
   }, [photoData, filterIndex, screen])
 
-  // ✅ SAFE - navegação de filtros
+  // Navegação de filtros
   function nextFilter() {
     if (filterIndex < FILTERS.length - 1) {
       setFilterIndex(i => i + 1)
@@ -66,7 +81,7 @@ export default function Home() {
     }
   }
 
-  // Touch com feedback visual (Tension & Snap)
+  // Touch com feedback visual
   const touchState = useRef({ 
     startX: 0, startY: 0, lastX: 0,
     startTime: 0, lastFilterChange: 0, isDragging: false
@@ -101,7 +116,6 @@ export default function Home() {
       return
     }
     
-    // Feedback visual só no nome do filtro
     const offset = deltaFromStart / 2.5
     
     if (filterNameRef.current) {
@@ -109,7 +123,6 @@ export default function Home() {
       filterNameRef.current.style.opacity = 1 - Math.abs(offset) / 100
     }
     
-    // Troca de filtro
     const threshold = 50
     if (now - touchState.current.lastFilterChange > 100) {
       if (deltaFromLast < -threshold) {
@@ -147,7 +160,7 @@ export default function Home() {
     }
   }
 
-  // 🔒 Handlers críticos
+  // Handlers
   function handleCapture(photo) {
     setPhotoData(photo)
     setFilteredPhoto(photo)
@@ -161,17 +174,16 @@ export default function Home() {
     setScreen('camera')
   }
   
-  // 🔒 ORDEM DOS PARAMS: uploadPost(userId, photoData, caption, filterName)
   async function handlePost() {
     if (posting || !filteredPhoto) return
     setPosting(true)
     
     try {
       const result = await uploadPost(
-        user.uid,                    // 1
-        filteredPhoto,               // 2
-        caption,                     // 3
-        FILTERS[filterIndex].name    // 4
+        user.uid,
+        filteredPhoto,
+        caption,
+        FILTERS[filterIndex].name
       )
       
       if (result.success) {
@@ -179,14 +191,13 @@ export default function Home() {
         setCaption('')
         setPhotoData(null)
         setFilteredPhoto(null)
-        // Redireciona pro feed após 1.5s
         setTimeout(() => navigate('/feed'), 1500)
       } else {
         throw new Error(result.error || 'Upload failed')
       }
     } catch (error) {
       console.error('Post error:', error)
-      alert('Erro ao postar. Tenta de novo.')
+      showToast('erro ao publicar, tente novamente', 'error')
     }
     
     setPosting(false)
@@ -196,7 +207,10 @@ export default function Home() {
     <div className="home">
       
       {screen === 'camera' && (
-        <HomeCamera onCapture={handleCapture} onClose={() => navigate('/feed')} />
+        <HomeCamera 
+          onCapture={handleCapture} 
+          onClose={() => navigate('/feed')} 
+        />
       )}
       
       {screen === 'preview' && (
@@ -210,7 +224,10 @@ export default function Home() {
           </div>
           
           <div className="filter-controls">
-            <div ref={filterNameRef} className={`filter-name ${filterIndex !== 0 ? 'visible' : ''}`}>
+            <div 
+              ref={filterNameRef} 
+              className={`filter-name ${filterIndex !== 0 ? 'visible' : ''}`}
+            >
               {FILTERS[filterIndex].name}
             </div>
             
@@ -234,11 +251,15 @@ export default function Home() {
           </div>
           
           <div className="preview-actions">
-            <button className="action-btn secondary" onClick={handleRetake}>
-              <RetakeIcon /><span>Outra</span>
+            <button className="preview-btn secondary" onClick={handleRetake}>
+              <RetakeIcon /><span>outra</span>
             </button>
-            <button className="action-btn primary" onClick={() => setScreen('caption')} disabled={!filteredPhoto}>
-              <span>Continuar</span><ArrowIcon />
+            <button 
+              className="preview-btn primary" 
+              onClick={() => setScreen('caption')} 
+              disabled={!filteredPhoto}
+            >
+              <span>continuar</span><ArrowIcon />
             </button>
           </div>
         </div>
@@ -247,8 +268,10 @@ export default function Home() {
       {screen === 'caption' && (
         <div className="caption-screen">
           <div className="caption-header">
-            <button className="back-btn" onClick={() => setScreen('preview')}><BackIcon /></button>
-            <span className="caption-title">Finalizar</span>
+            <button className="caption-back" onClick={() => setScreen('preview')}>
+              <BackIcon />
+            </button>
+            <span className="caption-title">finalizar</span>
             <div style={{ width: 44 }} />
           </div>
           
@@ -260,7 +283,7 @@ export default function Home() {
               <input
                 type="text"
                 className="caption-input"
-                placeholder="Escreva algo..."
+                placeholder="escreva algo..."
                 maxLength={140}
                 value={caption}
                 onChange={e => setCaption(e.target.value)}
@@ -271,8 +294,15 @@ export default function Home() {
           </div>
           
           <div className="caption-actions">
-            <button className="post-btn" onClick={handlePost} disabled={posting}>
-              {posting ? <div className="spinner spinner-sm" /> : <><span>Publicar</span><CheckIcon /></>}
+            <button className="caption-post-btn" onClick={handlePost} disabled={posting}>
+              {posting ? (
+                <div className="spinner spinner-sm" />
+              ) : (
+                <>
+                  <span>publicar</span>
+                  <CheckIcon />
+                </>
+              )}
             </button>
           </div>
         </div>
@@ -282,8 +312,8 @@ export default function Home() {
         <div className="success-screen">
           <div className="success-content">
             <SuccessAnimation />
-            <h2 className="success-title">Publicado</h2>
-            <p className="success-subtitle">Seu momento foi salvo</p>
+            <h2 className="success-title">publicado</h2>
+            <p className="success-subtitle">seu momento foi salvo</p>
           </div>
         </div>
       )}

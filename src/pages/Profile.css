@@ -1,192 +1,247 @@
+/*
+ * Profile.css — Perfil do usuário
+ * 
+ * Estética: Cormorant para títulos, Inter para dados
+ * Consistente com Landing e demais páginas
+ */
+
 .profile-page {
-  padding: 60px 24px 40px;
+  min-height: 100vh;
+  min-height: 100dvh;
+  padding: 60px 24px 120px;
+  padding-top: calc(60px + env(safe-area-inset-top, 0px));
   max-width: 540px;
   margin: 0 auto;
+  background: var(--color-bg);
 }
+
+/* === Back Button === */
 
 .profile-back {
   position: fixed;
   top: 20px;
   left: 20px;
+  top: calc(20px + env(safe-area-inset-top, 0px));
   background: none;
   border: none;
-  color: var(--color-text-secondary);
-  font-size: 14px;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 0.9rem;
   font-weight: 300;
+  letter-spacing: 0.05em;
+  color: rgba(255, 255, 255, 0.4);
   cursor: pointer;
-  transition: color 0.2s;
+  transition: color 0.2s ease;
   z-index: 10;
 }
 
 .profile-back:hover {
-  color: var(--color-text);
+  color: rgba(255, 255, 255, 0.7);
 }
+
+/* === Header === */
 
 .profile-header {
   text-align: center;
   margin-bottom: 48px;
 }
 
+.profile-avatar {
+  margin-bottom: 24px;
+}
+
 .profile-name {
-  font-size: 20px;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.5rem;
   font-weight: 400;
-  letter-spacing: -0.3px;
+  letter-spacing: 0.03em;
+  color: var(--color-text);
   margin-bottom: 4px;
 }
 
 .profile-username {
-  font-size: 14px;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 0.95rem;
   font-weight: 300;
-  color: var(--color-text-secondary);
+  letter-spacing: 0.05em;
+  color: rgba(255, 255, 255, 0.4);
   margin-bottom: 8px;
 }
 
-/* 🌱 Convidado por */
 .profile-invited-by {
-  font-size: 12px;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 0.8rem;
   font-weight: 300;
-  color: var(--color-text-tertiary);
-  margin-bottom: 16px;
+  letter-spacing: 0.05em;
+  color: rgba(255, 255, 255, 0.25);
+  margin-bottom: 20px;
   cursor: pointer;
-  transition: color 0.15s;
+  transition: color 0.2s ease;
 }
 
 .profile-invited-by:hover {
-  color: var(--color-text-secondary);
+  color: rgba(255, 255, 255, 0.45);
 }
 
-/* Stats */
+/* === Stats === */
+
 .profile-stats {
   display: flex;
   justify-content: center;
-  gap: 32px;
-  margin-bottom: 16px;
+  gap: 40px;
+  margin-bottom: 20px;
 }
 
 .stat {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 2px;
+  gap: 4px;
 }
 
 .stat-number {
-  font-size: 18px;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.3rem;
   font-weight: 400;
   color: var(--color-text);
+  letter-spacing: 0.02em;
 }
 
 .stat-label {
-  font-size: 12px;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 0.75rem;
   font-weight: 300;
-  color: var(--color-text-tertiary);
+  letter-spacing: 0.1em;
+  color: rgba(255, 255, 255, 0.35);
+  text-transform: lowercase;
 }
 
 .stat-clickable {
   cursor: pointer;
   padding: 8px;
   margin: -8px;
-  border-radius: var(--radius-md);
-  transition: background 0.15s;
+  border-radius: 8px;
+  transition: background 0.2s ease;
 }
 
 .stat-clickable:hover {
-  background: var(--color-surface);
+  background: rgba(255, 255, 255, 0.03);
 }
 
 .profile-bio {
-  font-size: 13px;
-  font-weight: 200;
-  color: var(--color-text-secondary);
-  letter-spacing: 0.5px;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 0.85rem;
+  font-weight: 300;
+  letter-spacing: 0.03em;
+  color: rgba(255, 255, 255, 0.4);
 }
+
+/* === Actions === */
 
 .profile-actions {
   display: flex;
   justify-content: center;
   gap: 16px;
-  margin-top: 24px;
+  margin-top: 28px;
 }
 
 .profile-action-btn {
-  display: inline-flex;
+  display: flex;
   align-items: center;
   justify-content: center;
   width: 48px;
   height: 48px;
   background: transparent;
-  border: 1px solid var(--color-border);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 50%;
-  color: var(--color-text-secondary);
+  color: rgba(255, 255, 255, 0.4);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.3s ease;
 }
 
 .profile-action-btn:hover {
-  border-color: var(--color-text-tertiary);
-  color: var(--color-text);
-  background: var(--color-surface);
+  border-color: rgba(255, 255, 255, 0.25);
+  color: rgba(255, 255, 255, 0.7);
+  background: rgba(255, 255, 255, 0.03);
 }
 
 .profile-action-btn:active {
-  transform: scale(0.95);
+  transform: scale(0.92);
 }
 
-.btn-settings {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 44px;
-  height: 44px;
+/* Follow Button */
+.profile-follow-btn {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 0.9rem;
+  font-weight: 400;
+  letter-spacing: 0.15em;
+  text-transform: lowercase;
+  color: rgba(255, 255, 255, 0.7);
   background: transparent;
-  border: 1px solid var(--color-border);
-  border-radius: 50%;
-  color: var(--color-text-secondary);
-  font-size: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  padding: 12px 36px;
+  border-radius: 2px;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.3s ease;
 }
 
-.btn-settings:hover {
-  border-color: var(--color-text-tertiary);
-  color: var(--color-text);
+.profile-follow-btn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.35);
+  color: rgba(255, 255, 255, 0.9);
 }
 
-/* Invites */
+.profile-follow-btn.following {
+  color: rgba(255, 255, 255, 0.4);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.profile-follow-btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+/* === Invites Badge === */
+
 .invites-badge {
   display: inline-flex;
   align-items: center;
   gap: 8px;
   background: transparent;
   border: none;
-  padding: 8px 0;
-  font-size: 12px;
-  font-weight: 300;
-  color: var(--color-text-tertiary);
-  margin-top: 20px;
+  padding: 10px 0;
+  margin-top: 24px;
   cursor: pointer;
-  transition: color 0.2s;
+  transition: opacity 0.2s ease;
 }
 
 .invites-badge:hover {
-  color: var(--color-text-secondary);
+  opacity: 0.8;
 }
 
 .invites-count {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1rem;
   font-weight: 400;
-  color: var(--color-text-secondary);
+  color: rgba(255, 255, 255, 0.5);
+  letter-spacing: 0.05em;
 }
 
 .invites-label {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 0.8rem;
   font-weight: 300;
+  letter-spacing: 0.1em;
+  color: rgba(255, 255, 255, 0.3);
 }
 
+/* === Invites Panel === */
+
 .invites-panel {
-  margin-top: 24px;
-  padding: 20px;
-  background: var(--color-bg-elevated);
-  border-radius: var(--radius-lg);
-  border: 1px solid var(--color-border);
+  margin-top: 32px;
+  padding: 24px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 8px;
   max-width: 320px;
   margin-left: auto;
   margin-right: auto;
@@ -194,91 +249,314 @@
 }
 
 .invites-panel h3 {
-  font-size: 14px;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 0.9rem;
   font-weight: 400;
-  margin-bottom: 16px;
+  letter-spacing: 0.1em;
+  color: rgba(255, 255, 255, 0.6);
+  text-transform: lowercase;
+  margin-bottom: 20px;
 }
 
 .invites-list {
-  margin-bottom: 8px;
+  margin-bottom: 16px;
 }
 
 .invites-empty {
-  font-size: 13px;
-  color: var(--color-text-tertiary);
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 0.85rem;
+  letter-spacing: 0.05em;
+  color: rgba(255, 255, 255, 0.3);
   text-align: center;
-  padding: 16px 0;
+  padding: 20px 0;
 }
 
 .invite-item {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 10px 12px;
-  background: var(--color-surface);
-  border-radius: var(--radius-md);
+  gap: 10px;
+  padding: 12px 14px;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 4px;
   margin-bottom: 8px;
 }
 
 .invite-code {
   font-family: monospace;
-  font-size: 13px;
-  color: var(--color-text);
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.7);
+  letter-spacing: 0.05em;
 }
 
 .invite-status {
-  font-size: 11px;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
   margin-left: auto;
+  text-transform: lowercase;
 }
 
 .invite-status.available {
-  color: var(--color-success);
+  color: rgba(120, 180, 120, 0.8);
 }
 
 .invite-status.used {
-  color: var(--color-text-tertiary);
+  color: rgba(255, 255, 255, 0.25);
 }
 
 .invite-copy {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 0.75rem;
+  letter-spacing: 0.05em;
   background: none;
   border: none;
-  color: var(--color-text-secondary);
-  font-size: 12px;
+  color: rgba(255, 255, 255, 0.4);
   cursor: pointer;
   padding: 4px 8px;
+  margin: -4px -8px -4px 0;
+  transition: color 0.2s ease;
 }
 
 .invite-copy:hover {
-  color: var(--color-text);
+  color: rgba(255, 255, 255, 0.7);
 }
 
-/* Grid */
-.profile-loading,
+.invites-generate-btn {
+  width: 100%;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 0.85rem;
+  font-weight: 400;
+  letter-spacing: 0.1em;
+  text-transform: lowercase;
+  color: rgba(255, 255, 255, 0.5);
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  padding: 14px 20px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-top: 8px;
+}
+
+.invites-generate-btn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.03);
+  border-color: rgba(255, 255, 255, 0.2);
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.invites-generate-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+/* === Photo Grid === */
+
+.profile-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2px;
+  margin-top: 32px;
+}
+
+.profile-grid-item {
+  aspect-ratio: 1;
+  overflow: hidden;
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+}
+
+.profile-grid-item:hover {
+  opacity: 0.85;
+}
+
+.profile-grid-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.profile-grid-item.featured {
+  grid-column: span 2;
+  grid-row: span 2;
+}
+
+/* === Empty State === */
+
 .profile-empty {
   grid-column: span 3;
   text-align: center;
-  padding: 60px 20px;
-  color: var(--color-text-secondary);
+  padding: 60px 24px;
 }
 
-.profile-empty p {
+.profile-empty-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.1rem;
+  font-weight: 300;
+  letter-spacing: 0.05em;
+  color: rgba(255, 255, 255, 0.4);
   margin-bottom: 24px;
-  font-size: 14px;
 }
 
-/* Logout */
-.logout-link {
+.profile-empty-btn {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 0.85rem;
+  font-weight: 400;
+  letter-spacing: 0.15em;
+  text-transform: lowercase;
+  color: rgba(255, 255, 255, 0.5);
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  padding: 14px 28px;
+  border-radius: 2px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.profile-empty-btn:hover {
+  background: rgba(255, 255, 255, 0.03);
+  border-color: rgba(255, 255, 255, 0.25);
+  color: rgba(255, 255, 255, 0.75);
+}
+
+/* === Not Found === */
+
+.profile-not-found {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1rem;
+  letter-spacing: 0.1em;
+  color: rgba(255, 255, 255, 0.4);
+  margin-bottom: 24px;
+}
+
+.profile-back-btn {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 0.85rem;
+  letter-spacing: 0.1em;
+  color: rgba(255, 255, 255, 0.4);
+  background: none;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  padding: 12px 24px;
+  border-radius: 2px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.profile-back-btn:hover {
+  color: rgba(255, 255, 255, 0.6);
+  border-color: rgba(255, 255, 255, 0.25);
+}
+
+/* === Logout === */
+
+.logout-btn {
   display: block;
-  text-align: center;
-  margin-top: 48px;
-  color: var(--color-text-tertiary);
-  font-size: 13px;
+  width: fit-content;
+  margin: 48px auto 0;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 0.85rem;
+  letter-spacing: 0.1em;
+  color: rgba(255, 255, 255, 0.25);
   background: none;
   border: none;
   cursor: pointer;
-  transition: color 0.2s;
+  transition: color 0.2s ease;
 }
 
-.logout-link:hover {
-  color: var(--color-text-secondary);
+.logout-btn:hover {
+  color: rgba(255, 255, 255, 0.45);
+}
+
+/* === Confirmation Modal === */
+
+.confirm-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+  animation: fadeIn 0.2s ease;
+  padding: 24px;
+}
+
+.confirm-sheet {
+  background: var(--color-bg-elevated, #1a1a1a);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  width: 100%;
+  max-width: 300px;
+  padding: 32px 24px;
+  text-align: center;
+  animation: scaleIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.confirm-message {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.1rem;
+  font-weight: 300;
+  letter-spacing: 0.05em;
+  color: rgba(255, 255, 255, 0.8);
+  line-height: 1.5;
+}
+
+.confirm-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 28px;
+}
+
+.confirm-cancel,
+.confirm-btn {
+  flex: 1;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 0.9rem;
+  font-weight: 400;
+  letter-spacing: 0.1em;
+  text-transform: lowercase;
+  padding: 14px 20px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.confirm-cancel {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.confirm-cancel:hover {
+  border-color: rgba(255, 255, 255, 0.25);
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.confirm-btn {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.confirm-btn:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.25);
+  color: rgba(255, 255, 255, 0.9);
+}
+
+/* === Animations === */
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
