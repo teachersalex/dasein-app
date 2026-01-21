@@ -1,249 +1,204 @@
 /*
  * Profile.css — Perfil do usuário
  * 
- * Estética: Cormorant para títulos, Inter para dados
- * Consistente com Landing e demais páginas
- * 
- * 🔧 REFATORADO: Usa variáveis do index.css
+ * 🔧 FIX: Avatar centralizado corretamente
  */
 
 .profile-page {
-  min-height: 100vh;
-  min-height: 100dvh;
-  padding: 60px 24px 120px;
-  padding-top: calc(60px + env(safe-area-inset-top, 0px));
+  padding: 60px 24px 40px;
   max-width: 540px;
   margin: 0 auto;
-  background: var(--color-bg);
 }
-
-/* === Back Button === */
 
 .profile-back {
   position: fixed;
   top: 20px;
   left: 20px;
-  top: calc(20px + env(safe-area-inset-top, 0px));
   background: none;
   border: none;
-  font-family: var(--font-display);
-  font-size: 0.9rem;
+  color: var(--color-text-secondary);
+  font-size: 14px;
   font-weight: 300;
-  letter-spacing: 0.05em;
-  color: var(--color-text-40);
   cursor: pointer;
-  transition: color 0.2s ease;
+  transition: color 0.2s;
   z-index: 10;
 }
 
 .profile-back:hover {
-  color: var(--color-text-60);
+  color: var(--color-text);
 }
-
-/* === Header === */
 
 .profile-header {
   text-align: center;
   margin-bottom: 48px;
 }
 
-.profile-avatar {
-  margin-bottom: 24px;
+/* 🔧 FIX: Garante centralização do avatar */
+.profile-header .avatar {
+  display: flex;
+  margin: 0 auto 24px;
 }
 
 .profile-name {
-  font-family: var(--font-display);
-  font-size: 1.5rem;
+  font-size: 20px;
   font-weight: 400;
-  letter-spacing: 0.03em;
-  color: var(--color-text);
+  letter-spacing: -0.3px;
   margin-bottom: 4px;
 }
 
 .profile-username {
-  font-family: var(--font-display);
-  font-size: 0.95rem;
+  font-size: 14px;
   font-weight: 300;
-  letter-spacing: 0.05em;
-  color: var(--color-text-40);
+  color: var(--color-text-secondary);
   margin-bottom: 8px;
 }
 
+/* 🌱 Convidado por */
 .profile-invited-by {
-  font-family: var(--font-display);
-  font-size: 0.8rem;
+  font-size: 12px;
   font-weight: 300;
-  letter-spacing: 0.05em;
-  color: var(--color-text-25);
-  margin-bottom: 20px;
+  color: var(--color-text-tertiary);
+  margin-bottom: 16px;
   cursor: pointer;
-  transition: color 0.2s ease;
+  transition: color 0.15s;
 }
 
 .profile-invited-by:hover {
-  color: var(--color-text-40);
+  color: var(--color-text-secondary);
 }
 
-/* === Stats === */
-
+/* Stats */
 .profile-stats {
   display: flex;
   justify-content: center;
-  gap: 40px;
-  margin-bottom: 20px;
+  gap: 32px;
+  margin-bottom: 16px;
 }
 
 .stat {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
+  gap: 2px;
 }
 
 .stat-number {
-  font-family: var(--font-display);
-  font-size: 1.3rem;
+  font-size: 18px;
   font-weight: 400;
   color: var(--color-text);
-  letter-spacing: 0.02em;
 }
 
 .stat-label {
-  font-family: var(--font-display);
-  font-size: 0.75rem;
+  font-size: 12px;
   font-weight: 300;
-  letter-spacing: 0.1em;
-  color: var(--color-text-25);
-  text-transform: lowercase;
+  color: var(--color-text-tertiary);
 }
 
 .stat-clickable {
   cursor: pointer;
   padding: 8px;
   margin: -8px;
-  border-radius: 8px;
-  transition: background 0.2s ease;
+  border-radius: var(--radius-md);
+  transition: background 0.15s;
 }
 
 .stat-clickable:hover {
-  background: var(--color-text-06);
+  background: var(--color-surface);
 }
 
 .profile-bio {
-  font-family: var(--font-display);
-  font-size: 0.85rem;
-  font-weight: 300;
-  letter-spacing: 0.03em;
-  color: var(--color-text-40);
+  font-size: 13px;
+  font-weight: 200;
+  color: var(--color-text-secondary);
+  letter-spacing: 0.5px;
 }
-
-/* === Actions === */
 
 .profile-actions {
   display: flex;
   justify-content: center;
   gap: 16px;
-  margin-top: 28px;
+  margin-top: 24px;
 }
 
 .profile-action-btn {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
   width: 48px;
   height: 48px;
   background: transparent;
-  border: 1px solid var(--color-text-10);
+  border: 1px solid var(--color-border);
   border-radius: 50%;
-  color: var(--color-text-40);
+  color: var(--color-text-secondary);
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all 0.2s ease;
 }
 
 .profile-action-btn:hover {
-  border-color: var(--color-text-25);
-  color: var(--color-text-60);
-  background: var(--color-text-06);
+  border-color: var(--color-text-tertiary);
+  color: var(--color-text);
+  background: var(--color-surface);
 }
 
 .profile-action-btn:active {
-  transform: scale(0.92);
+  transform: scale(0.95);
 }
 
-/* Follow Button */
-.profile-follow-btn {
-  font-family: var(--font-display);
-  font-size: 0.9rem;
-  font-weight: 400;
-  letter-spacing: 0.15em;
-  text-transform: lowercase;
-  color: var(--color-text-60);
+.btn-settings {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
   background: transparent;
-  border: 1px solid var(--color-text-15);
-  padding: 12px 36px;
-  border-radius: 2px;
+  border: 1px solid var(--color-border);
+  border-radius: 50%;
+  color: var(--color-text-secondary);
+  font-size: 16px;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all 0.2s;
 }
 
-.profile-follow-btn:hover:not(:disabled) {
-  background: var(--color-text-06);
-  border-color: var(--color-text-25);
-  color: var(--color-text-80);
+.btn-settings:hover {
+  border-color: var(--color-text-tertiary);
+  color: var(--color-text);
 }
 
-.profile-follow-btn.following {
-  color: var(--color-text-40);
-  border-color: var(--color-text-10);
-}
-
-.profile-follow-btn:disabled {
-  opacity: 0.5;
-  cursor: default;
-}
-
-/* === Invites Badge === */
-
+/* Invites */
 .invites-badge {
   display: inline-flex;
   align-items: center;
   gap: 8px;
   background: transparent;
   border: none;
-  padding: 10px 0;
-  margin-top: 24px;
+  padding: 8px 0;
+  font-size: 12px;
+  font-weight: 300;
+  color: var(--color-text-tertiary);
+  margin-top: 20px;
   cursor: pointer;
-  transition: opacity 0.2s ease;
+  transition: color 0.2s;
 }
 
 .invites-badge:hover {
-  opacity: 0.8;
+  color: var(--color-text-secondary);
 }
 
 .invites-count {
-  font-family: var(--font-display);
-  font-size: 1rem;
   font-weight: 400;
-  color: var(--color-text-40);
-  letter-spacing: 0.05em;
+  color: var(--color-text-secondary);
 }
 
 .invites-label {
-  font-family: var(--font-display);
-  font-size: 0.8rem;
   font-weight: 300;
-  letter-spacing: 0.1em;
-  color: var(--color-text-25);
 }
 
-/* === Invites Panel === */
-
 .invites-panel {
-  margin-top: 32px;
-  padding: 24px;
-  background: var(--color-text-06);
-  border: 1px solid var(--color-text-06);
-  border-radius: 8px;
+  margin-top: 24px;
+  padding: 20px;
+  background: var(--color-bg-elevated);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-border);
   max-width: 320px;
   margin-left: auto;
   margin-right: auto;
@@ -251,298 +206,91 @@
 }
 
 .invites-panel h3 {
-  font-family: var(--font-display);
-  font-size: 0.9rem;
+  font-size: 14px;
   font-weight: 400;
-  letter-spacing: 0.1em;
-  color: var(--color-text-60);
-  text-transform: lowercase;
-  margin-bottom: 20px;
-}
-
-.invites-list {
   margin-bottom: 16px;
 }
 
+.invites-list {
+  margin-bottom: 8px;
+}
+
 .invites-empty {
-  font-family: var(--font-display);
-  font-size: 0.85rem;
-  letter-spacing: 0.05em;
-  color: var(--color-text-25);
+  font-size: 13px;
+  color: var(--color-text-tertiary);
   text-align: center;
-  padding: 20px 0;
+  padding: 16px 0;
 }
 
 .invite-item {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 12px 14px;
-  background: var(--color-text-06);
-  border-radius: 4px;
+  gap: 8px;
+  padding: 10px 12px;
+  background: var(--color-surface);
+  border-radius: var(--radius-md);
   margin-bottom: 8px;
 }
 
 .invite-code {
   font-family: monospace;
-  font-size: 0.8rem;
-  color: var(--color-text-60);
-  letter-spacing: 0.05em;
+  font-size: 13px;
+  color: var(--color-text);
 }
 
 .invite-status {
-  font-family: var(--font-display);
-  font-size: 0.7rem;
-  letter-spacing: 0.1em;
+  font-size: 11px;
   margin-left: auto;
-  text-transform: lowercase;
 }
 
 .invite-status.available {
-  color: rgba(120, 180, 120, 0.8);
+  color: var(--color-success);
 }
 
 .invite-status.used {
-  color: var(--color-text-25);
+  color: var(--color-text-tertiary);
 }
 
 .invite-copy {
-  font-family: var(--font-display);
-  font-size: 0.75rem;
-  letter-spacing: 0.05em;
   background: none;
   border: none;
-  color: var(--color-text-40);
+  color: var(--color-text-secondary);
+  font-size: 12px;
   cursor: pointer;
   padding: 4px 8px;
-  margin: -4px -8px -4px 0;
-  transition: color 0.2s ease;
 }
 
 .invite-copy:hover {
-  color: var(--color-text-60);
+  color: var(--color-text);
 }
 
-.invites-generate-btn {
-  width: 100%;
-  font-family: var(--font-display);
-  font-size: 0.85rem;
-  font-weight: 400;
-  letter-spacing: 0.1em;
-  text-transform: lowercase;
-  color: var(--color-text-40);
-  background: transparent;
-  border: 1px solid var(--color-text-10);
-  padding: 14px 20px;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  margin-top: 8px;
-}
-
-.invites-generate-btn:hover:not(:disabled) {
-  background: var(--color-text-06);
-  border-color: var(--color-text-15);
-  color: var(--color-text-60);
-}
-
-.invites-generate-btn:disabled {
-  opacity: 0.4;
-  cursor: default;
-}
-
-/* === Photo Grid === */
-
-.profile-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 2px;
-  margin-top: 32px;
-}
-
-.profile-grid-item {
-  aspect-ratio: 1;
-  overflow: hidden;
-  cursor: pointer;
-  transition: opacity 0.2s ease;
-}
-
-.profile-grid-item:hover {
-  opacity: 0.85;
-}
-
-.profile-grid-item img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.profile-grid-item.featured {
-  grid-column: span 2;
-  grid-row: span 2;
-}
-
-/* === Empty State === */
-
+/* Grid */
+.profile-loading,
 .profile-empty {
   grid-column: span 3;
   text-align: center;
-  padding: 60px 24px;
+  padding: 60px 20px;
+  color: var(--color-text-secondary);
 }
 
-.profile-empty-title {
-  font-family: var(--font-display);
-  font-size: 1.1rem;
-  font-weight: 300;
-  letter-spacing: 0.05em;
-  color: var(--color-text-40);
+.profile-empty p {
   margin-bottom: 24px;
+  font-size: 14px;
 }
 
-.profile-empty-btn {
-  font-family: var(--font-display);
-  font-size: 0.85rem;
-  font-weight: 400;
-  letter-spacing: 0.15em;
-  text-transform: lowercase;
-  color: var(--color-text-40);
-  background: transparent;
-  border: 1px solid var(--color-text-15);
-  padding: 14px 28px;
-  border-radius: 2px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-.profile-empty-btn:hover {
-  background: var(--color-text-06);
-  border-color: var(--color-text-25);
-  color: var(--color-text-60);
-}
-
-/* === Not Found === */
-
-.profile-not-found {
-  font-family: var(--font-display);
-  font-size: 1rem;
-  letter-spacing: 0.1em;
-  color: var(--color-text-40);
-  margin-bottom: 24px;
-}
-
-.profile-back-btn {
-  font-family: var(--font-display);
-  font-size: 0.85rem;
-  letter-spacing: 0.1em;
-  color: var(--color-text-40);
-  background: none;
-  border: 1px solid var(--color-text-15);
-  padding: 12px 24px;
-  border-radius: 2px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-.profile-back-btn:hover {
-  color: var(--color-text-60);
-  border-color: var(--color-text-25);
-}
-
-/* === Logout === */
-
-.logout-btn {
+/* Logout */
+.logout-link {
   display: block;
-  width: fit-content;
-  margin: 48px auto 0;
-  font-family: var(--font-display);
-  font-size: 0.85rem;
-  letter-spacing: 0.1em;
-  color: var(--color-text-25);
+  text-align: center;
+  margin-top: 48px;
+  color: var(--color-text-tertiary);
+  font-size: 13px;
   background: none;
   border: none;
   cursor: pointer;
-  transition: color 0.2s ease;
+  transition: color 0.2s;
 }
 
-.logout-btn:hover {
-  color: var(--color-text-40);
-}
-
-/* === Confirmation Modal === */
-/* 🔧 NOTA: Estilos movidos para index.css como .confirm-modal global */
-/* Mantidos aqui apenas para override específico se necessário */
-
-.confirm-sheet {
-  background: var(--color-bg-elevated);
-  border: 1px solid var(--color-text-10);
-  border-radius: 12px;
-  width: 100%;
-  max-width: 300px;
-  padding: 32px 24px;
-  text-align: center;
-  animation: scaleIn 0.25s var(--ease-out);
-}
-
-.confirm-message {
-  font-family: var(--font-display);
-  font-size: 1.1rem;
-  font-weight: 300;
-  letter-spacing: 0.05em;
-  color: var(--color-text-80);
-  line-height: 1.5;
-}
-
-.confirm-cancel,
-.confirm-btn {
-  flex: 1;
-  font-family: var(--font-display);
-  font-size: 0.9rem;
-  font-weight: 400;
-  letter-spacing: 0.1em;
-  text-transform: lowercase;
-  padding: 14px 20px;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.confirm-cancel {
-  background: transparent;
-  border: 1px solid var(--color-text-15);
-  color: var(--color-text-40);
-}
-
-.confirm-cancel:hover {
-  border-color: var(--color-text-25);
-  color: var(--color-text-60);
-}
-
-.confirm-btn {
-  background: var(--color-text-10);
-  border: 1px solid var(--color-text-15);
-  color: var(--color-text-60);
-}
-
-.confirm-btn:hover {
-  background: var(--color-text-15);
-  border-color: var(--color-text-25);
-  color: var(--color-text-80);
-}
-
-/* === Animations === */
-
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
-@keyframes scaleIn {
-  from {
-    opacity: 0;
-    transform: scale(0.95);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
+.logout-link:hover {
+  color: var(--color-text-secondary);
 }
