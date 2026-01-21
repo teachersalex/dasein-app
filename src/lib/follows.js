@@ -1,58 +1,61 @@
 import { 
   doc, 
   getDoc,
-  setDoc,
-  deleteDoc,
-  updateDoc,
   collection,
   query,
   where,
   getDocs,
   limit,
   increment,
-  serverTimestamp 
+  serverTimestamp,
+  runTransaction,
+  documentId
 } from 'firebase/firestore'
 import { db } from './firebase'
 
 // 🔒 Composite key pattern - garante unicidade e lookup O(1)
 // followId = `${currentUserId}_${targetUserId}`
 
+// 🔧 FIX: follow/unfollow com transaction para contadores consistentes
 export async function followUser(currentUserId, targetUserId) {
   if (currentUserId === targetUserId) {
     return { success: false, error: 'Você não pode seguir a si mesmo' }
   }
 
   try {
-    // 🔒 NÃO alterar formato do ID
     const followId = `${currentUserId}_${targetUserId}`
     const followRef = doc(db, 'follows', followId)
-    
-    const existing = await getDoc(followRef)
-    if (existing.exists()) {
-      return { success: false, error: 'Você já segue este usuário' }
-    }
-
-    await setDoc(followRef, {
-      followerId: currentUserId,
-      followingId: targetUserId,
-      createdAt: serverTimestamp()
-    })
-
     const currentUserRef = doc(db, 'users', currentUserId)
     const targetUserRef = doc(db, 'users', targetUserId)
 
-    await updateDoc(currentUserRef, {
-      followingCount: increment(1)
-    })
+    await runTransaction(db, async (transaction) => {
+      const followSnap = await transaction.get(followRef)
+      
+      if (followSnap.exists()) {
+        throw new Error('Você já segue este usuário')
+      }
 
-    await updateDoc(targetUserRef, {
-      followersCount: increment(1)
+      // Criar follow
+      transaction.set(followRef, {
+        followerId: currentUserId,
+        followingId: targetUserId,
+        createdAt: serverTimestamp()
+      })
+
+      // Atualizar contadores atomicamente
+      transaction.update(currentUserRef, {
+        followingCount: increment(1)
+      })
+
+      transaction.update(targetUserRef, {
+        followersCount: increment(1)
+      })
     })
 
     return { success: true }
   } catch (error) {
     console.error('Error following user:', error)
-    return { success: false, error: 'Erro ao seguir usuário' }
+    return { success: false, error: error.message || 'Erro ao seguir usuário' }
   }
 }
 
@@ -60,29 +63,33 @@ export async function unfollowUser(currentUserId, targetUserId) {
   try {
     const followId = `${currentUserId}_${targetUserId}`
     const followRef = doc(db, 'follows', followId)
-
-    const existing = await getDoc(followRef)
-    if (!existing.exists()) {
-      return { success: false, error: 'Você não segue este usuário' }
-    }
-
-    await deleteDoc(followRef)
-
     const currentUserRef = doc(db, 'users', currentUserId)
     const targetUserRef = doc(db, 'users', targetUserId)
 
-    await updateDoc(currentUserRef, {
-      followingCount: increment(-1)
-    })
+    await runTransaction(db, async (transaction) => {
+      const followSnap = await transaction.get(followRef)
+      
+      if (!followSnap.exists()) {
+        throw new Error('Você não segue este usuário')
+      }
 
-    await updateDoc(targetUserRef, {
-      followersCount: increment(-1)
+      // Deletar follow
+      transaction.delete(followRef)
+
+      // Atualizar contadores atomicamente
+      transaction.update(currentUserRef, {
+        followingCount: increment(-1)
+      })
+
+      transaction.update(targetUserRef, {
+        followersCount: increment(-1)
+      })
     })
 
     return { success: true }
   } catch (error) {
     console.error('Error unfollowing user:', error)
-    return { success: false, error: 'Erro ao deixar de seguir' }
+    return { success: false, error: error.message || 'Erro ao deixar de seguir' }
   }
 }
 
@@ -98,7 +105,30 @@ export async function isFollowing(currentUserId, targetUserId) {
   }
 }
 
-// ⚠️ N+1 queries - OK para MVP, considerar desnormalização se escalar
+// 🔧 FIX: Buscar perfis em lote (não N+1)
+async function getProfilesByIds(ids) {
+  if (!ids || ids.length === 0) return []
+  
+  const profiles = []
+  
+  // Firestore 'in' query max 30 items
+  for (let i = 0; i < ids.length; i += 30) {
+    const chunk = ids.slice(i, i + 30)
+    
+    const q = query(
+      collection(db, 'users'),
+      where(documentId(), 'in', chunk)
+    )
+    
+    const snapshot = await getDocs(q)
+    snapshot.forEach(doc => {
+      profiles.push({ id: doc.id, ...doc.data() })
+    })
+  }
+  
+  return profiles
+}
+
 export async function getFollowers(userId) {
   try {
     const q = query(
@@ -107,17 +137,10 @@ export async function getFollowers(userId) {
     )
     
     const snapshot = await getDocs(q)
-    const followerIds = []
-    
-    snapshot.forEach(doc => {
-      followerIds.push(doc.data().followerId)
-    })
+    const followerIds = snapshot.docs.map(doc => doc.data().followerId)
 
-    const profiles = await Promise.all(
-      followerIds.map(id => getUserProfileById(id))
-    )
-
-    return profiles.filter(Boolean)
+    // 🔧 FIX: Busca em lote, não N+1
+    return await getProfilesByIds(followerIds)
   } catch (error) {
     console.error('Error getting followers:', error)
     return []
@@ -132,34 +155,13 @@ export async function getFollowing(userId) {
     )
     
     const snapshot = await getDocs(q)
-    const followingIds = []
-    
-    snapshot.forEach(doc => {
-      followingIds.push(doc.data().followingId)
-    })
+    const followingIds = snapshot.docs.map(doc => doc.data().followingId)
 
-    const profiles = await Promise.all(
-      followingIds.map(id => getUserProfileById(id))
-    )
-
-    return profiles.filter(Boolean)
+    // 🔧 FIX: Busca em lote, não N+1
+    return await getProfilesByIds(followingIds)
   } catch (error) {
     console.error('Error getting following:', error)
     return []
-  }
-}
-
-async function getUserProfileById(uid) {
-  try {
-    const docRef = doc(db, 'users', uid)
-    const docSnap = await getDoc(docRef)
-    
-    if (docSnap.exists()) {
-      return { id: docSnap.id, ...docSnap.data() }
-    }
-    return null
-  } catch (error) {
-    return null
   }
 }
 
@@ -193,7 +195,6 @@ export async function searchUsers(searchTerm, maxResults = 20) {
   try {
     const term = searchTerm.toLowerCase().trim()
     
-    // Busca "começa com" usando range query
     const q = query(
       collection(db, 'users'),
       where('username', '>=', term),
@@ -202,13 +203,7 @@ export async function searchUsers(searchTerm, maxResults = 20) {
     )
     
     const snapshot = await getDocs(q)
-    const users = []
-    
-    snapshot.forEach(doc => {
-      users.push({ id: doc.id, ...doc.data() })
-    })
-
-    return users
+    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
   } catch (error) {
     console.error('Error searching users:', error)
     return []

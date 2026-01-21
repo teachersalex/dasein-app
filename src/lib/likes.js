@@ -1,4 +1,16 @@
-import { doc, setDoc, deleteDoc, getDoc, collection, query, where, getDocs, serverTimestamp } from 'firebase/firestore'
+import { 
+  doc, 
+  setDoc, 
+  deleteDoc, 
+  getDoc, 
+  collection, 
+  query, 
+  where, 
+  getDocs, 
+  orderBy,
+  limit,
+  serverTimestamp 
+} from 'firebase/firestore'
 import { db } from './firebase'
 
 // ⚠️ CRITICAL - composite key evita duplicatas
@@ -51,7 +63,7 @@ export async function hasLiked(userId, postId) {
   }
 }
 
-// Buscar likes de um post (se precisar no futuro)
+// Buscar likes de um post
 export async function getPostLikes(postId) {
   try {
     const q = query(
@@ -66,22 +78,18 @@ export async function getPostLikes(postId) {
   }
 }
 
-// Buscar likes recebidos por um usuário (pra aba atividades)
+// 🔧 FIX: orderBy + limit no Firestore (não em memória)
 export async function getReceivedLikes(userId, limitCount = 20) {
   try {
     const q = query(
       collection(db, 'likes'),
-      where('postOwnerId', '==', userId)
+      where('postOwnerId', '==', userId),
+      orderBy('createdAt', 'desc'),
+      limit(limitCount)
     )
     const snapshot = await getDocs(q)
     
-    // Ordenar por data (mais recente primeiro)
-    const likes = snapshot.docs
-      .map(doc => ({ id: doc.id, ...doc.data() }))
-      .sort((a, b) => b.createdAt?.toMillis() - a.createdAt?.toMillis())
-      .slice(0, limitCount)
-    
-    return likes
+    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
   } catch (error) {
     console.error('Error getting received likes:', error)
     return []

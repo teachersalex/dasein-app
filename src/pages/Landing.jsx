@@ -10,14 +10,11 @@ import './Landing.css'
 /*
  * Landing — Jornada completa de entrada no Dasein
  * 
- * Estados:
- * - landing: contemplação inicial
- * - code: campo de código (se não veio por URL)
- * - signup: criar conta (email + senha)
- * - profile: username + avatar
- * - login: para quem já tem conta
- * 
- * Filosofia: a landing não termina, ela se transforma.
+ * 🔧 FIXES APLICADOS:
+ * - 5.1: Separado codePart (5 chars) de fullCode (DSEIN-XXXXX)
+ * - 5.2: Trata falha do useInvite no signup
+ * - 5.3: Usa authUser || user para evitar null em refresh
+ * - 5.4: Cleanup do timeout no unmount
  */
 
 export default function Landing() {
@@ -31,7 +28,8 @@ export default function Landing() {
     createUserProfile, 
     isUsernameTaken, 
     getUserProfile, 
-    setProfile 
+    setProfile,
+    logout
   } = useAuth()
   
   // === State ===
@@ -39,8 +37,9 @@ export default function Landing() {
   const [step, setStep] = useState('landing')
   const [transitioning, setTransitioning] = useState(false)
   
-  // Invite
-  const [code, setCode] = useState('')
+  // 🔧 FIX 5.1: Separar codePart (input) de fullCode (validação)
+  const [codePart, setCodePart] = useState('')  // Só os 5 caracteres
+  const [fullCode, setFullCode] = useState('')   // DSEIN-XXXXX completo
   const [inviteData, setInviteData] = useState(null)
   const [pendingUrlCode, setPendingUrlCode] = useState(null)
   
@@ -73,12 +72,33 @@ export default function Landing() {
     return () => clearTimeout(timer)
   }, [])
 
-  // Capture invite code from URL - ACEITA QUALQUER FORMATO
+  // 🔧 FIX 5.4: Cleanup do timeout no unmount
+  useEffect(() => {
+    return () => {
+      if (usernameTimeoutRef.current) {
+        clearTimeout(usernameTimeoutRef.current)
+      }
+    }
+  }, [])
+
+  // Captura código da URL - aceita QUALQUER formato
   useEffect(() => {
     if (urlCode) {
-      // Remove prefixo DSEIN ou DSEIN- se existir, pega só os 5 chars
-      const cleanCode = urlCode.toUpperCase().replace(/^DSEIN-?/i, '').slice(0, 5)
-      if (cleanCode.match(/^[A-Z0-9]{5}$/)) {
+      const upper = urlCode.toUpperCase()
+      let cleanCode = ''
+      
+      if (upper.startsWith('DSEIN-')) {
+        cleanCode = upper.slice(6, 11)
+      } else if (upper.startsWith('DSEIN')) {
+        cleanCode = upper.slice(5, 10)
+      } else if (upper.length === 5) {
+        cleanCode = upper
+      } else {
+        const alphaNum = upper.replace(/[^A-Z0-9]/g, '')
+        cleanCode = alphaNum.slice(-5)
+      }
+      
+      if (cleanCode.length === 5 && /^[A-Z0-9]{5}$/.test(cleanCode)) {
         setPendingUrlCode(`DSEIN-${cleanCode}`)
       }
     }
@@ -117,21 +137,23 @@ export default function Landing() {
   
   async function handleInviteClick() {
     if (pendingUrlCode) {
-      // Código veio pela URL — validar automaticamente
       setLoading(true)
+      setError('')
+      
       const result = await validateInviteCode(pendingUrlCode)
       
       if (result.valid) {
         setInviteData(result.invite)
-        setCode(pendingUrlCode)
+        setFullCode(pendingUrlCode)
         transitionTo('signup')
       } else {
         setError(result.error)
+        // 🔧 FIX 5.1: Preenche codePart com os 5 chars para edição
+        setCodePart(pendingUrlCode.replace(/^DSEIN-/, ''))
         transitionTo('code')
       }
       setLoading(false)
     } else {
-      // Sem código na URL — mostrar campo
       transitionTo('code')
     }
   }
@@ -144,23 +166,20 @@ export default function Landing() {
   
   function handleCodeChange(e) {
     let value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '')
-    
-    // Limit to 5 characters (the code part only)
     if (value.length > 5) {
       value = value.slice(0, 5)
     }
-    
-    setCode(value)
+    setCodePart(value)
     setError('')
   }
 
   async function handleCodeSubmit(e) {
     e?.preventDefault()
     
-    const normalizedCode = `DSEIN-${code}`
+    const normalizedCode = `DSEIN-${codePart}`
     
-    if (!normalizedCode.match(/^DSEIN-[A-Z0-9]{5}$/)) {
-      setError('Código inválido')
+    if (codePart.length !== 5) {
+      setError('Código deve ter 5 caracteres')
       return
     }
     
@@ -169,7 +188,7 @@ export default function Landing() {
     
     if (result.valid) {
       setInviteData(result.invite)
-      setCode(normalizedCode)
+      setFullCode(normalizedCode)
       transitionTo('signup')
     } else {
       setError(result.error)
@@ -185,14 +204,22 @@ export default function Landing() {
     setLoading(true)
     setError('')
     
-    const result = await signupWithEmail(email, password)
+    const authResult = await signupWithEmail(email, password)
     
-    if (result.success) {
-      setAuthUser(result.user)
-      await useInvite(code, result.user.uid)
-      transitionTo('profile')
+    if (authResult.success) {
+      // 🔧 FIX 5.2: Tratar falha do useInvite
+      const inviteResult = await useInvite(fullCode, authResult.user.uid)
+      
+      if (inviteResult.success) {
+        setAuthUser(authResult.user)
+        transitionTo('profile')
+      } else {
+        // Convite falhou - fazer logout e mostrar erro
+        setError(inviteResult.error || 'Erro ao usar convite. Tente novamente.')
+        await logout()
+      }
     } else {
-      setError(result.error)
+      setError(authResult.error)
     }
     
     setLoading(false)
@@ -214,7 +241,6 @@ export default function Landing() {
         setProfile(existingProfile)
         navigate('/feed')
       } else {
-        // Tem auth mas não tem profile — ir pro onboarding
         setAuthUser(result.user)
         transitionTo('profile')
       }
@@ -231,7 +257,6 @@ export default function Landing() {
     const value = e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, '')
     setUsername(value)
     
-    // Clear previous timeout
     if (usernameTimeoutRef.current) {
       clearTimeout(usernameTimeoutRef.current)
     }
@@ -258,7 +283,6 @@ export default function Landing() {
     const file = e.target.files?.[0]
     if (!file) return
     
-    // 🔧 FIX: Usa resizeImage do utils
     resizeImage(file, 400, (resizedBlob) => {
       setAvatarFile(resizedBlob)
       
@@ -276,7 +300,6 @@ export default function Landing() {
       return
     }
     
-    // Double-check availability
     const taken = await isUsernameTaken(username)
     if (taken) {
       setUsernameStatus({ text: 'indisponível', valid: false })
@@ -285,10 +308,20 @@ export default function Landing() {
     
     setLoading(true)
     
+    // 🔧 FIX 5.3: Usar authUser || user para evitar null
+    const currentUser = authUser || user
+    
+    if (!currentUser) {
+      setError('Sessão expirada. Tente novamente.')
+      setLoading(false)
+      transitionTo('landing')
+      return
+    }
+    
     let photoURL = null
     if (avatarFile) {
       try {
-        const avatarRef = ref(storage, `avatars/${authUser.uid}.jpg`)
+        const avatarRef = ref(storage, `avatars/${currentUser.uid}.jpg`)
         await uploadBytes(avatarRef, avatarFile)
         photoURL = await getDownloadURL(avatarRef)
       } catch (err) {
@@ -296,16 +329,16 @@ export default function Landing() {
       }
     }
     
-    const result = await createUserProfile(authUser.uid, {
+    const result = await createUserProfile(currentUser.uid, {
       displayName: displayName || username,
       username,
-      email: authUser.email,
+      email: currentUser.email,
       photoURL,
       invitedBy: inviteData?.createdBy || null
     })
     
     if (result.success) {
-      const newProfile = await getUserProfile(authUser.uid)
+      const newProfile = await getUserProfile(currentUser.uid)
       if (newProfile) {
         setProfile(newProfile)
       }
@@ -317,22 +350,19 @@ export default function Landing() {
     setLoading(false)
   }
 
-  // === Helpers ===
-  
-  // 🔧 FIX: resizeImage removido — agora importado de utils.js
-
   function handleBack() {
     setError('')
     if (step === 'code' || step === 'login') {
       transitionTo('landing')
     } else if (step === 'signup') {
+      // 🔧 FIX 5.1: Ao voltar, mantém codePart limpo (só 5 chars)
       transitionTo('code')
     }
   }
 
   // === Computed ===
   
-  const isCodeComplete = code.length === 5
+  const isCodeComplete = codePart.length === 5
   const canSubmitProfile = username.length >= 3 && usernameStatus.valid === true
 
   // === Render ===
@@ -416,7 +446,7 @@ export default function Landing() {
                 type="text"
                 className="landing-input code"
                 placeholder="XXXXX"
-                value={code}
+                value={codePart}
                 onChange={handleCodeChange}
                 maxLength={5}
                 autoComplete="off"
@@ -616,8 +646,6 @@ export default function Landing() {
     </div>
   )
 }
-
-// === Icons ===
 
 function CameraIcon() {
   return (

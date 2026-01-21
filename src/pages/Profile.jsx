@@ -80,7 +80,8 @@ export default function Profile() {
   async function loadInvites() {
     try {
       const userInvites = await getUserInvites(user.uid)
-      setInvites(userInvites)
+      // 🔧 FIX: Filtrar só os disponíveis na UI
+      setInvites(userInvites.filter(inv => inv.status === 'available'))
     } catch (err) {
       console.error('Erro ao carregar convites:', err)
     }
@@ -113,7 +114,8 @@ export default function Profile() {
       const result = await createInvite(user.uid)
       
       if (result.success) {
-        const inviteLink = `getdasein.app/${result.code}`
+        // 🔧 FIX: Adicionar https:// para virar link clicável
+        const inviteLink = `https://getdasein.app/${result.code}`
         
         try {
           await navigator.clipboard.writeText(inviteLink)
@@ -124,10 +126,14 @@ export default function Profile() {
         
         await loadInvites()
         
+        // 🔧 FIX: Refetch do profile para pegar o contador atualizado do banco
+        // (o createInvite já decrementa via transaction)
         if (available !== -1) {
-          const newAvailable = available - 1
-          setProfile({ ...profile, invitesAvailable: newAvailable })
-          setViewProfile(prev => ({ ...prev, invitesAvailable: newAvailable }))
+          const updatedProfile = await getUserProfile(user.uid)
+          if (updatedProfile) {
+            setProfile(updatedProfile)
+            setViewProfile(updatedProfile)
+          }
         }
       } else {
         alert(result.error || 'Erro ao criar convite.')
@@ -142,11 +148,12 @@ export default function Profile() {
 
   async function copyInviteCode(code) {
     try {
-      await navigator.clipboard.writeText(`getdasein.app/${code}`)
+      // 🔧 FIX: Adicionar https:// para virar link clicável
+      await navigator.clipboard.writeText(`https://getdasein.app/${code}`)
       setCopiedCode(code)
       setTimeout(() => setCopiedCode(null), 2000)
     } catch {
-      alert(`Link: getdasein.app/${code}`)
+      alert(`Link: https://getdasein.app/${code}`)
     }
   }
 
@@ -155,11 +162,6 @@ export default function Profile() {
     navigate('/')
   }
 
-  /*
-   * 🔧 FIX: Atualiza AMBOS os estados
-   * - viewProfile: seguidores do perfil sendo visto
-   * - profile: seu próprio "seguindo" count
-   */
   async function handleFollow() {
     if (!viewProfile || followLoading) return
 
@@ -170,13 +172,11 @@ export default function Profile() {
     if (result.success) {
       setFollowing(true)
       
-      // Atualizar perfil visualizado (seguidores do outro)
       setViewProfile(prev => ({
         ...prev,
         followersCount: (prev.followersCount || 0) + 1
       }))
       
-      // 🔧 FIX: Atualizar SEU perfil (seguindo)
       setProfile(prev => ({
         ...prev,
         followingCount: (prev.followingCount || 0) + 1
@@ -196,13 +196,11 @@ export default function Profile() {
     if (result.success) {
       setFollowing(false)
       
-      // Atualizar perfil visualizado
       setViewProfile(prev => ({
         ...prev,
         followersCount: Math.max(0, (prev.followersCount || 0) - 1)
       }))
       
-      // 🔧 FIX: Atualizar SEU perfil (seguindo)
       setProfile(prev => ({
         ...prev,
         followingCount: Math.max(0, (prev.followingCount || 0) - 1)
@@ -353,23 +351,21 @@ export default function Profile() {
             
             <div className="invites-list">
               {invites.length === 0 ? (
-                <p className="invites-empty">Nenhum convite gerado ainda</p>
+                <p className="invites-empty">Nenhum convite disponível</p>
               ) : (
                 invites.map(inv => (
                   <div key={inv.id} className="invite-item">
                     <span className="invite-code">{inv.code}</span>
                     <span className={`invite-status ${inv.status}`}>
-                      {inv.status === 'available' ? 'disponível' : 'usado'}
+                      disponível
                     </span>
-                    {inv.status === 'available' && (
-                      <button 
-                        className="invite-copy"
-                        onClick={() => copyInviteCode(inv.code)}
-                        style={copiedCode === inv.code ? { color: 'var(--color-success)' } : {}}
-                      >
-                        {copiedCode === inv.code ? 'copiado!' : 'copiar'}
-                      </button>
-                    )}
+                    <button 
+                      className="invite-copy"
+                      onClick={() => copyInviteCode(inv.code)}
+                      style={copiedCode === inv.code ? { color: 'var(--color-success)' } : {}}
+                    >
+                      {copiedCode === inv.code ? 'copiado!' : 'copiar'}
+                    </button>
                   </div>
                 ))
               )}

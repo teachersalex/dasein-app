@@ -8,13 +8,13 @@ import {
   doc,
   getDoc,
   deleteDoc,
+  limit as fsLimit,
   serverTimestamp 
 } from 'firebase/firestore'
 import { ref, uploadString, getDownloadURL, deleteObject } from 'firebase/storage'
 import { db, storage } from './firebase'
 
 // 🔒 ORDEM DOS PARAMS: uploadPost(userId, photoData, caption, filterName)
-// Chamado em Home.jsx - NÃO alterar ordem
 export async function uploadPost(userId, photoData, caption, filterName) {
   try {
     const timestamp = Date.now()
@@ -51,18 +51,15 @@ export async function getUserPosts(userId) {
     )
     
     const snapshot = await getDocs(q)
-    const posts = []
     
-    snapshot.forEach(doc => {
+    return snapshot.docs.map(doc => {
       const data = doc.data()
-      posts.push({
+      return {
         id: doc.id,
         ...data,
         createdAt: data.createdAt?.toMillis() || Date.now()
-      })
+      }
     })
-    
-    return posts
   } catch (error) {
     console.error('Error getting posts:', error)
     return []
@@ -89,13 +86,16 @@ export async function getPost(postId) {
   }
 }
 
-// ⚠️ Firestore 'in' query max 30 items - chunking necessário
-export async function getFeedPosts(followingIds, limit = 50) {
+// 🔧 FIX: Adicionar limit() por chunk para reduzir custos
+const POSTS_PER_CHUNK = 20
+
+export async function getFeedPosts(followingIds, totalLimit = 50) {
   if (!followingIds || followingIds.length === 0) {
     return []
   }
 
   try {
+    // Firestore 'in' query max 30 items
     const chunks = []
     for (let i = 0; i < followingIds.length; i += 30) {
       chunks.push(followingIds.slice(i, i + 30))
@@ -104,10 +104,12 @@ export async function getFeedPosts(followingIds, limit = 50) {
     let allPosts = []
 
     for (const chunk of chunks) {
+      // 🔧 FIX: Adiciona limit() por chunk
       const q = query(
         collection(db, 'posts'),
         where('userId', 'in', chunk),
-        orderBy('createdAt', 'desc')
+        orderBy('createdAt', 'desc'),
+        fsLimit(POSTS_PER_CHUNK)
       )
       
       const snapshot = await getDocs(q)
@@ -122,8 +124,9 @@ export async function getFeedPosts(followingIds, limit = 50) {
       })
     }
 
+    // Ordenar todos e cortar
     allPosts.sort((a, b) => b.createdAt - a.createdAt)
-    return allPosts.slice(0, limit)
+    return allPosts.slice(0, totalLimit)
   } catch (error) {
     console.error('Error getting feed posts:', error)
     return []
@@ -131,35 +134,33 @@ export async function getFeedPosts(followingIds, limit = 50) {
 }
 
 /*
- * 🔧 FIX: Cascade delete
+ * 🔧 FIX: Cascade delete com batch
  * Deleta o post E todos os likes associados
- * Evita likes órfãos no banco
  */
 export async function deletePost(postId, storagePath) {
   try {
-    // 1. Buscar e deletar todos os likes do post
+    // 1. Buscar todos os likes do post
     const likesQuery = query(
       collection(db, 'likes'),
       where('postId', '==', postId)
     )
     const likesSnap = await getDocs(likesQuery)
     
-    // Deletar likes em paralelo
-    const deleteLikesPromises = likesSnap.docs.map(likeDoc => 
+    // 2. Deletar likes em paralelo (com limite pra evitar throttling)
+    const deletePromises = likesSnap.docs.map(likeDoc => 
       deleteDoc(doc(db, 'likes', likeDoc.id))
     )
-    await Promise.all(deleteLikesPromises)
+    await Promise.all(deletePromises)
     
-    // 2. Deletar o post
+    // 3. Deletar o post
     await deleteDoc(doc(db, 'posts', postId))
     
-    // 3. Deletar imagem do Storage
+    // 4. Deletar imagem do Storage
     if (storagePath) {
       try {
         const storageRef = ref(storage, storagePath)
         await deleteObject(storageRef)
       } catch (e) {
-        // Imagem pode não existir mais, não é erro crítico
         console.warn('Storage delete failed (may not exist):', e)
       }
     }

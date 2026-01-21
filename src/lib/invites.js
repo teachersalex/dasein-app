@@ -8,9 +8,11 @@ import {
   query,
   where,
   orderBy,
+  limit,
   getDocs,
   increment,
-  serverTimestamp 
+  serverTimestamp,
+  runTransaction
 } from 'firebase/firestore'
 import { db } from './firebase'
 
@@ -27,7 +29,6 @@ export function generateInviteCode() {
 export async function validateInviteCode(code) {
   const normalizedCode = code.trim().toUpperCase()
   
-  // 🔒 Regex do formato - mudar quebra convites existentes
   if (!normalizedCode.match(/^DSEIN-[A-Z0-9]{5}$/)) {
     return { valid: false, error: 'Formato inválido' }
   }
@@ -48,51 +49,62 @@ export async function validateInviteCode(code) {
     
     return { valid: true, invite: { id: snapshot.id, ...invite } }
   } catch (error) {
+    console.error('Error validating invite:', error)
     return { valid: false, error: 'Erro ao validar. Tente novamente.' }
   }
 }
 
-// 🔒 useInvite(code, userId) - chamado após auth no Auth.jsx
+// 🔧 FIX 3.1: useInvite com transaction para evitar race condition
 export async function useInvite(code, userId) {
   const normalizedCode = code.trim().toUpperCase()
   
   try {
     const inviteRef = doc(db, 'invites', normalizedCode)
-    const inviteSnap = await getDoc(inviteRef)
     
-    if (!inviteSnap.exists()) {
-      return { success: false, error: 'Convite inválido ou expirado' }
-    }
-    
-    const invite = inviteSnap.data()
-    
-    // Atualizar convite como usado
-    await updateDoc(inviteRef, {
-      usedBy: userId,
-      usedAt: serverTimestamp(),
-      status: 'used'
+    const result = await runTransaction(db, async (transaction) => {
+      const inviteSnap = await transaction.get(inviteRef)
+      
+      if (!inviteSnap.exists()) {
+        throw new Error('Convite inválido ou expirado')
+      }
+      
+      const invite = inviteSnap.data()
+      
+      // Verifica se já foi usado (dentro da transaction)
+      if (invite.status === 'used') {
+        throw new Error('Este convite já foi usado')
+      }
+      
+      // Marca como usado atomicamente
+      transaction.update(inviteRef, {
+        usedBy: userId,
+        usedAt: serverTimestamp(),
+        status: 'used'
+      })
+      
+      return { createdBy: invite.createdBy }
     })
     
-    // 🔔 Criar atividade para quem convidou
-    if (invite.createdBy) {
-      await createInviteUsedActivity(invite.createdBy, userId)
+    // Criar atividade fora da transaction (não crítico)
+    if (result.createdBy) {
+      await createInviteUsedActivity(result.createdBy, userId)
     }
     
-    return { success: true, invitedBy: invite.createdBy }
+    return { success: true, invitedBy: result.createdBy }
   } catch (error) {
-    return { success: false, error: 'Erro ao usar convite.' }
+    console.error('Error using invite:', error)
+    return { success: false, error: error.message || 'Erro ao usar convite.' }
   }
 }
 
-// 🔔 Notificar criador do convite que alguém entrou
 async function createInviteUsedActivity(inviterUserId, newUserId) {
   try {
     const activityId = `invite_${newUserId}_${Date.now()}`
     
     await setDoc(doc(db, 'activities', activityId), {
       type: 'invite_used',
-      userId: newUserId,           // quem entrou
-      targetUserId: inviterUserId, // quem convidou (recebe a notificação)
+      userId: newUserId,
+      targetUserId: inviterUserId,
       createdAt: serverTimestamp()
     })
     
@@ -103,23 +115,10 @@ async function createInviteUsedActivity(inviterUserId, newUserId) {
   }
 }
 
+// 🔧 FIX 3.2: createInvite com transaction para atomicidade
 export async function createInvite(userId) {
   try {
-    const userRef = doc(db, 'users', userId)
-    const userSnap = await getDoc(userRef)
-    
-    if (!userSnap.exists()) {
-      return { success: false, error: 'Usuário não encontrado' }
-    }
-    
-    const user = userSnap.data()
-    
-    // -1 = convites infinitos (admin)
-    if (user.invitesAvailable !== -1 && user.invitesAvailable <= 0) {
-      return { success: false, error: 'Você não tem convites disponíveis' }
-    }
-    
-    // Retry loop para código único
+    // Gerar código único primeiro
     let code
     let attempts = 0
     
@@ -136,25 +135,45 @@ export async function createInvite(userId) {
       return { success: false, error: 'Erro ao gerar código. Tente novamente.' }
     }
     
+    const userRef = doc(db, 'users', userId)
     const inviteRef = doc(db, 'invites', code)
-    await setDoc(inviteRef, {
-      code,
-      createdBy: userId,
-      createdAt: serverTimestamp(),
-      usedBy: null,
-      usedAt: null,
-      status: 'available'
-    })
     
-    if (user.invitesAvailable !== -1) {
-      await updateDoc(userRef, {
-        invitesAvailable: increment(-1)
+    await runTransaction(db, async (transaction) => {
+      const userSnap = await transaction.get(userRef)
+      
+      if (!userSnap.exists()) {
+        throw new Error('Usuário não encontrado')
+      }
+      
+      const user = userSnap.data()
+      
+      // -1 = convites infinitos (admin)
+      if (user.invitesAvailable !== -1 && user.invitesAvailable <= 0) {
+        throw new Error('Você não tem convites disponíveis')
+      }
+      
+      // Criar convite
+      transaction.set(inviteRef, {
+        code,
+        createdBy: userId,
+        createdAt: serverTimestamp(),
+        usedBy: null,
+        usedAt: null,
+        status: 'available'
       })
-    }
+      
+      // Decrementar contador (se não for admin)
+      if (user.invitesAvailable !== -1) {
+        transaction.update(userRef, {
+          invitesAvailable: increment(-1)
+        })
+      }
+    })
     
     return { success: true, code }
   } catch (error) {
-    return { success: false, error: 'Erro ao criar convite.' }
+    console.error('Error creating invite:', error)
+    return { success: false, error: error.message || 'Erro ao criar convite.' }
   }
 }
 
@@ -175,41 +194,37 @@ export async function getUserInvites(userId) {
     
     return invites
   } catch (error) {
+    console.error('Error getting user invites:', error)
     return []
   }
 }
 
-// 🔍 Buscar atividades de convite para um usuário
+// 🔧 FIX 3.3: getInviteActivities com orderBy + limit no Firestore
 export async function getInviteActivities(userId, limitCount = 20) {
   try {
     const q = query(
       collection(db, 'activities'),
       where('targetUserId', '==', userId),
-      where('type', '==', 'invite_used')
+      where('type', '==', 'invite_used'),
+      orderBy('createdAt', 'desc'),
+      limit(limitCount)
     )
     
     const snapshot = await getDocs(q)
     
-    const activities = snapshot.docs
-      .map(doc => ({ id: doc.id, ...doc.data() }))
-      .sort((a, b) => (b.createdAt?.toMillis() || 0) - (a.createdAt?.toMillis() || 0))
-      .slice(0, limitCount)
-    
-    return activities
+    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
   } catch (error) {
     console.error('Error getting invite activities:', error)
     return []
   }
 }
 
-// 🗑️ Purge convites expirados (só do userId, +12h, não usados)
 export async function purgeExpiredInvites(userId) {
   const EXPIRY_HOURS = 12
   const now = Date.now()
   const expiryMs = EXPIRY_HOURS * 60 * 60 * 1000
   
   try {
-    // Buscar todos convites do usuário
     const q = query(
       collection(db, 'invites'),
       where('createdBy', '==', userId)
@@ -221,13 +236,11 @@ export async function purgeExpiredInvites(userId) {
     for (const docSnap of snapshot.docs) {
       const invite = docSnap.data()
       
-      // Só deleta se status = available
       if (invite.status !== 'available') continue
       
       const createdAt = invite.createdAt?.toMillis() || 0
       const age = now - createdAt
       
-      // Se tem mais de 12h, deleta
       if (age > expiryMs) {
         await deleteDoc(doc(db, 'invites', docSnap.id))
         deletedCount++
