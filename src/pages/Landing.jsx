@@ -73,10 +73,14 @@ export default function Landing() {
     return () => clearTimeout(timer)
   }, [])
 
-  // Capture invite code from URL
+  // Capture invite code from URL - ACEITA QUALQUER FORMATO
   useEffect(() => {
-    if (urlCode && urlCode.match(/^DSEIN-[A-Z0-9]{5}$/i)) {
-      setPendingUrlCode(urlCode.toUpperCase())
+    if (urlCode) {
+      // Remove prefixo DSEIN ou DSEIN- se existir, pega só os 5 chars
+      const cleanCode = urlCode.toUpperCase().replace(/^DSEIN-?/i, '').slice(0, 5)
+      if (cleanCode.match(/^[A-Z0-9]{5}$/)) {
+        setPendingUrlCode(`DSEIN-${cleanCode}`)
+      }
     }
   }, [urlCode])
 
