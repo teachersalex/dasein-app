@@ -9,7 +9,6 @@ import FollowModal from '../components/FollowModal'
 import FadeImage from '../components/FadeImage'
 import './Profile.css'
 
-// ✅ SAFE - Perfil próprio ou de outro usuário
 export default function Profile() {
   const navigate = useNavigate()
   const { username } = useParams()
@@ -28,7 +27,6 @@ export default function Profile() {
 
   const [modalType, setModalType] = useState(null)
   
-  // 🌱 Quem convidou
   const [inviterProfile, setInviterProfile] = useState(null)
 
   const isOwnProfile = !username || (profile && username === profile.username)
@@ -44,7 +42,6 @@ export default function Profile() {
           setPosts(userPosts)
         }
         
-        // Carregar quem convidou
         if (profile?.invitedBy) {
           const inviter = await getUserProfile(profile.invitedBy)
           setInviterProfile(inviter)
@@ -63,7 +60,6 @@ export default function Profile() {
           const userPosts = await getUserPosts(otherProfile.id)
           setPosts(userPosts)
           
-          // Carregar quem convidou
           if (otherProfile.invitedBy) {
             const inviter = await getUserProfile(otherProfile.invitedBy)
             setInviterProfile(inviter)
@@ -159,6 +155,11 @@ export default function Profile() {
     navigate('/')
   }
 
+  /*
+   * 🔧 FIX: Atualiza AMBOS os estados
+   * - viewProfile: seguidores do perfil sendo visto
+   * - profile: seu próprio "seguindo" count
+   */
   async function handleFollow() {
     if (!viewProfile || followLoading) return
 
@@ -168,9 +169,17 @@ export default function Profile() {
 
     if (result.success) {
       setFollowing(true)
+      
+      // Atualizar perfil visualizado (seguidores do outro)
       setViewProfile(prev => ({
         ...prev,
         followersCount: (prev.followersCount || 0) + 1
+      }))
+      
+      // 🔧 FIX: Atualizar SEU perfil (seguindo)
+      setProfile(prev => ({
+        ...prev,
+        followingCount: (prev.followingCount || 0) + 1
       }))
     }
 
@@ -186,9 +195,17 @@ export default function Profile() {
 
     if (result.success) {
       setFollowing(false)
+      
+      // Atualizar perfil visualizado
       setViewProfile(prev => ({
         ...prev,
         followersCount: Math.max(0, (prev.followersCount || 0) - 1)
+      }))
+      
+      // 🔧 FIX: Atualizar SEU perfil (seguindo)
+      setProfile(prev => ({
+        ...prev,
+        followingCount: Math.max(0, (prev.followingCount || 0) - 1)
       }))
     }
 
@@ -234,7 +251,6 @@ export default function Profile() {
       )}
 
       <header className="profile-header">
-        {/* 🔧 FIX: Removido style inline, centralização via CSS */}
         <div className="avatar avatar-lg">
           {viewProfile.photoURL ? (
             <FadeImage src={viewProfile.photoURL} alt={viewProfile.displayName} />
@@ -246,7 +262,6 @@ export default function Profile() {
         <h1 className="profile-name">{viewProfile.displayName}</h1>
         <p className="profile-username">@{viewProfile.username}</p>
         
-        {/* 🌱 Convidado por */}
         {inviterProfile && (
           <p 
             className="profile-invited-by"
