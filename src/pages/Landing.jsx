@@ -2,20 +2,7 @@ import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import './Landing.css'
 
-// ✅ SAFE - página inicial estática
-const words = [
-  'existir',
-  'to exist',
-  '存在する',
-  'exister',
-  'existieren',
-  'esistere',
-  '존재하다'
-]
-
 export default function Landing() {
-  const [currentIndex, setCurrentIndex] = useState(0)
-  const [isTransitioning, setIsTransitioning] = useState(false)
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
@@ -23,37 +10,54 @@ export default function Landing() {
     return () => clearTimeout(timer)
   }, [])
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setIsTransitioning(true)
-      
-      setTimeout(() => {
-        setCurrentIndex(i => (i + 1) % words.length)
-        setIsTransitioning(false)
-      }, 500)
-    }, 3000)
-
-    return () => clearInterval(interval)
-  }, [])
-
   return (
     <div className={`landing ${mounted ? 'mounted' : ''}`}>
+      <div className="landing-bg"></div>
+      <div className="landing-gradient"></div>
+      
       <div className="landing-content">
         <h1 className="landing-logo">Dasein</h1>
         
-        <div className="landing-word-container">
-          <span className={`landing-word ${isTransitioning ? 'exit' : ''}`}>
-            {words[currentIndex]}
-          </span>
+        <div className="marquee-container">
+          <div className="marquee">
+            <div className="marquee-text">
+              <span>guarde seus momentos</span>
+              <span className="separator"></span>
+              <span>mostre seu estilo</span>
+              <span className="separator"></span>
+              <span>conte suas histórias</span>
+              <span className="separator"></span>
+              <span>keep your moments</span>
+              <span className="separator"></span>
+              <span>show your style</span>
+              <span className="separator"></span>
+              <span>tell your stories</span>
+              <span className="separator"></span>
+            </div>
+            <div className="marquee-text">
+              <span>guarde seus momentos</span>
+              <span className="separator"></span>
+              <span>mostre seu estilo</span>
+              <span className="separator"></span>
+              <span>conte suas histórias</span>
+              <span className="separator"></span>
+              <span>keep your moments</span>
+              <span className="separator"></span>
+              <span>show your style</span>
+              <span className="separator"></span>
+              <span>tell your stories</span>
+              <span className="separator"></span>
+            </div>
+          </div>
         </div>
         
         <div className="landing-actions">
-          <Link to="/auth" className="btn">
-            Tenho um convite
+          <Link to="/auth" className="landing-invite">
+            tenho um convite
           </Link>
           
           <Link to="/login" className="landing-link">
-            Já tenho conta
+            já tenho conta
           </Link>
         </div>
       </div>
