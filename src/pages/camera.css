@@ -1,252 +1,69 @@
-/* ==========================================
-   DASEIN - Camera Screen
-   ========================================== */
+/* Camera.css — Fluxo de publicação */
 
-.camera-screen {
-  height: 100vh;
-  height: 100dvh;
-  display: flex;
-  flex-direction: column;
-  background: #000;
-  position: relative;
-}
+.camera-flow { min-height: 100dvh; background: var(--color-bg); position: relative; overflow: hidden; }
 
-.camera-screen.ready .camera-viewfinder video {
-  opacity: 1;
-}
+/* === Preview === */
+.preview-screen { height: 100dvh; display: flex; flex-direction: column; background: var(--color-bg); animation: fadeIn .3s; }
+.preview-container { flex: 1; display: flex; align-items: center; justify-content: center; background: #000; overflow: hidden; touch-action: pan-y pinch-zoom; }
+.preview-image { width: 100%; height: 100%; object-fit: contain; animation: zoomIn .35s var(--ease-out); pointer-events: none; user-select: none; }
+.preview-loading { display: flex; align-items: center; justify-content: center; }
 
-/* Viewfinder */
-.camera-viewfinder {
-  flex: 1;
-  position: relative;
-  overflow: hidden;
-  background: #000;
-}
+@keyframes zoomIn { from { opacity: 0; transform: scale(1.03); } to { opacity: 1; transform: scale(1); } }
 
-.camera-viewfinder video {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  opacity: 0;
-  transition: opacity 0.3s ease;
-}
+/* Filtros */
+.filter-controls { background: var(--color-bg); padding: 20px 20px 8px; display: flex; flex-direction: column; align-items: center; gap: 16px; }
+.filter-name { font-family: var(--font-display); font-size: .9rem; font-weight: 400; letter-spacing: .15em; text-transform: lowercase; color: var(--color-text-40); opacity: 0; transition: opacity .25s, transform .25s; min-height: 24px; }
+.filter-name.visible { opacity: 1; }
+.filter-indicators { display: flex; align-items: center; justify-content: center; gap: 12px; min-height: 48px; padding: 12px 40px; touch-action: none; user-select: none; }
+.filter-bar { width: 3px; height: 14px; background: var(--color-text-25); border: none; padding: 0; border-radius: 2px; cursor: pointer; transition: height .2s cubic-bezier(.34,1.56,.64,1), background .15s; -webkit-tap-highlight-color: transparent; }
+.filter-bar:hover { background: var(--color-text-40); }
+.filter-bar.active { background: var(--color-text-80); height: 22px; }
 
-.camera-viewfinder video.mirror {
-  transform: scaleX(-1);
-}
+/* Ações preview */
+.preview-actions { display: flex; gap: 12px; padding: 16px 20px; padding-bottom: calc(24px + env(safe-area-inset-bottom)); background: var(--color-bg); }
+.preview-btn { flex: 1; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 16px 24px; border-radius: 2px; font-family: var(--font-display); font-size: .9rem; font-weight: 400; letter-spacing: .1em; text-transform: lowercase; cursor: pointer; transition: all .2s; -webkit-tap-highlight-color: transparent; border: none; }
+.preview-btn.primary { background: var(--color-text-80); color: var(--color-bg); }
+.preview-btn.primary:active { transform: scale(.97); opacity: .9; }
+.preview-btn.primary:disabled { opacity: .5; cursor: not-allowed; }
+.preview-btn.secondary { background: transparent; color: var(--color-text-40); border: 1px solid var(--color-text-15); }
+.preview-btn.secondary:hover { border-color: var(--color-text-25); color: var(--color-text-60); }
+.preview-btn.secondary:active { transform: scale(.97); background: var(--color-text-06); }
 
-.camera-viewfinder.flipping video {
-  animation: viewfinderFlip 0.3s ease;
-}
+/* === Caption === */
+.caption-screen { min-height: 100dvh; display: flex; flex-direction: column; background: var(--color-bg); animation: slideIn .3s var(--ease-out); }
+@keyframes slideIn { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
 
-@keyframes viewfinderFlip {
-  0% { opacity: 1; }
-  50% { opacity: 0; }
-  100% { opacity: 1; }
-}
+.caption-header { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; padding-top: calc(16px + env(safe-area-inset-top)); border-bottom: 1px solid var(--color-text-06); }
+.caption-back { width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; background: none; border: none; color: var(--color-text-60); cursor: pointer; border-radius: 50%; transition: all .2s; -webkit-tap-highlight-color: transparent; }
+.caption-back:active { background: var(--color-text-10); color: var(--color-text-80); }
+.caption-title { font-family: var(--font-display); font-size: 1rem; font-weight: 400; letter-spacing: .1em; color: var(--color-text); text-transform: lowercase; }
 
-/* Vignette */
-.viewfinder-vignette {
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(
-    ellipse at center,
-    transparent 60%,
-    rgba(0, 0, 0, 0.25) 100%
-  );
-  pointer-events: none;
-}
+.caption-content { flex: 1; padding: 32px 24px; display: flex; flex-direction: column; align-items: center; }
+.caption-preview { width: 120px; height: 150px; border-radius: 4px; overflow: hidden; background: var(--color-text-06); margin-bottom: 40px; box-shadow: 0 8px 32px rgba(0,0,0,.4); }
+.caption-preview img { width: 100%; height: 100%; object-fit: cover; }
 
-/* 4:5 Crop Overlay */
-.crop-overlay {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  /* 
-    Para 9:16 -> 4:5:
-    9:16 = 0.5625 aspect
-    4:5 = 0.8 aspect
-    
-    Altura do 4:5 em relação ao 9:16:
-    Se width = w, height 9:16 = w / 0.5625
-    Altura 4:5 = w / 0.8
-    Ratio = (w/0.8) / (w/0.5625) = 0.5625 / 0.8 = 70.3%
-    
-    Barras = (100 - 70.3) / 2 = 14.85% cada
-    
-    Arredondando: 15% top, 85% bottom
-  */
-  background: 
-    linear-gradient(to bottom,
-      rgba(0, 0, 0, 0.45) 0%,
-      rgba(0, 0, 0, 0.45) 15%,
-      transparent 15%,
-      transparent 85%,
-      rgba(0, 0, 0, 0.45) 85%,
-      rgba(0, 0, 0, 0.45) 100%
-    );
-}
+.caption-input-wrapper { width: 100%; max-width: 360px; position: relative; }
+.caption-input { width: 100%; padding: 16px 0; background: transparent; border: none; border-bottom: 1px solid var(--color-text-10); font-family: var(--font-display); font-size: 1.1rem; font-weight: 300; letter-spacing: .03em; color: var(--color-text); outline: none; transition: border-color .2s; text-align: center; }
+.caption-input:focus { border-color: var(--color-text-25); }
+.caption-input::placeholder { color: var(--color-text-25); }
+.caption-count { position: absolute; right: 0; bottom: -28px; font-family: var(--font-display); font-size: .75rem; letter-spacing: .05em; color: var(--color-text-25); }
 
-/* Linhas de separação sutis */
-.crop-overlay::before,
-.crop-overlay::after {
-  content: '';
-  position: absolute;
-  left: 0;
-  right: 0;
-  height: 1px;
-  background: rgba(255, 255, 255, 0.2);
-  display: block;
-}
+.caption-actions { padding: 24px; padding-bottom: calc(32px + env(safe-area-inset-bottom)); }
+.caption-post-btn { width: 100%; display: flex; align-items: center; justify-content: center; gap: 10px; padding: 18px 32px; background: var(--color-text-80); color: var(--color-bg); border: none; border-radius: 2px; font-family: var(--font-display); font-size: 1rem; font-weight: 400; letter-spacing: .15em; text-transform: lowercase; cursor: pointer; transition: all .2s; -webkit-tap-highlight-color: transparent; }
+.caption-post-btn:active { transform: scale(.98); opacity: .9; }
+.caption-post-btn:disabled { opacity: .6; cursor: not-allowed; }
 
-.crop-overlay::before {
-  top: 15%;
-}
+/* === Success === */
+.success-screen { height: 100dvh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 24px; background: var(--color-bg); animation: fadeIn .4s; }
+.success-content { display: flex; flex-direction: column; align-items: center; }
+.success-animation { width: 80px; height: 80px; margin-bottom: 32px; color: rgba(120,180,120,.9); }
+.success-animation svg { width: 100%; height: 100%; }
+.success-circle { stroke-dasharray: 166; stroke-dashoffset: 166; animation: draw .6s var(--ease-out) forwards; }
+.success-check { stroke-dasharray: 48; stroke-dashoffset: 48; animation: draw .3s var(--ease-out) .4s forwards; }
+@keyframes draw { to { stroke-dashoffset: 0; } }
+.success-title { font-family: var(--font-display); font-size: 1.5rem; font-weight: 300; letter-spacing: .1em; color: var(--color-text); margin-bottom: 8px; text-transform: lowercase; }
+.success-subtitle { font-family: var(--font-display); font-size: .9rem; font-weight: 300; letter-spacing: .05em; color: var(--color-text-40); }
 
-.crop-overlay::after {
-  bottom: 15%;
-}
-
-/* Controls overlay */
-.camera-controls-overlay {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  pointer-events: none;
-}
-
-.camera-controls-overlay > * {
-  pointer-events: auto;
-}
-
-/* Top controls */
-.camera-top-controls {
-  padding: 16px 20px;
-  padding-top: calc(16px + var(--safe-top, 0px));
-  display: flex;
-  justify-content: flex-start;
-}
-
-/* Bottom controls */
-.camera-bottom-controls {
-  padding: 24px 20px;
-  padding-bottom: calc(32px + var(--safe-bottom, 0px));
-  background: linear-gradient(to top, rgba(0,0,0,0.5) 0%, transparent 100%);
-}
-
-/* 🔧 FIX: Renomeado de .controls-row para .camera-controls-row */
-.camera-controls-row {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 40px;
-}
-
-/* 🔧 FIX: Renomeado de .control-spacer para .camera-control-spacer */
-.camera-control-spacer {
-  width: 48px;
-}
-
-/* 🔧 FIX: Renomeado de .control-btn para .camera-control-btn */
-.camera-control-btn {
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  color: white;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.2s var(--ease-out);
-  -webkit-tap-highlight-color: transparent;
-}
-
-.camera-control-btn:active {
-  transform: scale(0.9);
-  background: rgba(255, 255, 255, 0.2);
-}
-
-.camera-control-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.flip-btn.flipping {
-  animation: flipBtnSpin 0.3s ease;
-}
-
-@keyframes flipBtnSpin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(180deg); }
-}
-
-/* Shutter button */
-.shutter-btn {
-  width: 80px;
-  height: 80px;
-  border: none;
-  background: none;
-  cursor: pointer;
-  position: relative;
-  -webkit-tap-highlight-color: transparent;
-}
-
-.shutter-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.shutter-outer {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.shutter-ring {
-  position: absolute;
-  inset: 0;
-  border-radius: 50%;
-  border: 3px solid white;
-  transition: all 0.15s var(--ease-out);
-  animation: shutterBreathe 3s ease-in-out infinite;
-}
-
-@keyframes shutterBreathe {
-  0%, 100% { transform: scale(1); opacity: 1; }
-  50% { transform: scale(1.02); opacity: 0.9; }
-}
-
-.shutter-inner {
-  width: 62px;
-  height: 62px;
-  border-radius: 50%;
-  background: white;
-  transition: all 0.15s var(--ease-out);
-}
-
-.shutter-btn:active .shutter-ring {
-  transform: scale(0.95);
-  animation: none;
-}
-
-.shutter-btn:active .shutter-inner {
-  transform: scale(0.85);
-}
-
-.shutter-btn.capturing .shutter-ring {
-  transform: scale(1.1);
-  opacity: 0.5;
-  animation: none;
-}
-
-.shutter-btn.capturing .shutter-inner {
-  transform: scale(0.7);
-}
+/* Utils */
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+.spinner-sm { width: 18px; height: 18px; border-width: 2px; }

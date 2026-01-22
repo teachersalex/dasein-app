@@ -1,0 +1,62 @@
+/* camera.css — Engine de captura */
+
+.camera-screen { height: 100dvh; display: flex; flex-direction: column; background: #000; position: relative; }
+.camera-screen.ready .camera-viewfinder video { opacity: 1; }
+
+/* Viewfinder */
+.camera-viewfinder { flex: 1; position: relative; overflow: hidden; background: #000; }
+.camera-viewfinder video { width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity .3s; }
+.camera-viewfinder video.mirror { transform: scaleX(-1); }
+.camera-viewfinder.flipping video { animation: flip .3s; }
+@keyframes flip { 0% { opacity: 1; } 50% { opacity: 0; } 100% { opacity: 1; } }
+
+.viewfinder-vignette { position: absolute; inset: 0; background: radial-gradient(ellipse at center, transparent 60%, rgba(0,0,0,.25) 100%); pointer-events: none; }
+
+/* Crop 4:5 */
+.crop-overlay {
+  position: absolute; inset: 0; pointer-events: none;
+  background: linear-gradient(to bottom, rgba(0,0,0,.45) 0%, rgba(0,0,0,.45) 15%, transparent 15%, transparent 85%, rgba(0,0,0,.45) 85%, rgba(0,0,0,.45) 100%);
+}
+.crop-overlay::before, .crop-overlay::after { content: ''; position: absolute; left: 0; right: 0; height: 1px; background: rgba(255,255,255,.2); }
+.crop-overlay::before { top: 15%; }
+.crop-overlay::after { bottom: 15%; }
+
+/* Controls */
+.camera-controls-overlay { position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: space-between; pointer-events: none; }
+.camera-controls-overlay > * { pointer-events: auto; }
+
+.camera-top-controls { padding: 16px 20px; padding-top: calc(16px + var(--safe-top, 0px)); }
+.camera-bottom-controls { padding: 24px 20px; padding-bottom: calc(32px + var(--safe-bottom, 0px)); background: linear-gradient(to top, rgba(0,0,0,.5), transparent); }
+.camera-controls-row { display: flex; align-items: center; justify-content: center; gap: 40px; }
+
+.camera-control-btn {
+  width: 48px; height: 48px; border-radius: 50%;
+  background: rgba(255,255,255,.1); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255,255,255,.2); color: white;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; transition: all .2s; -webkit-tap-highlight-color: transparent;
+}
+.camera-control-btn:active { transform: scale(.9); background: rgba(255,255,255,.2); }
+.camera-control-btn:disabled { opacity: .5; cursor: not-allowed; }
+
+.flip-btn.flipping { animation: spin .3s; }
+@keyframes spin { from { transform: rotate(0); } to { transform: rotate(180deg); } }
+
+/* Shutter */
+.shutter-btn { width: 80px; height: 80px; border: none; background: none; cursor: pointer; position: relative; -webkit-tap-highlight-color: transparent; }
+.shutter-btn:disabled { opacity: .5; cursor: not-allowed; }
+.shutter-outer { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; }
+
+.shutter-ring { position: absolute; inset: 0; border-radius: 50%; border: 3px solid white; transition: all .15s; animation: breathe 3s ease-in-out infinite; }
+@keyframes breathe { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.02); opacity: .9; } }
+
+.shutter-inner { width: 62px; height: 62px; border-radius: 50%; background: white; transition: all .15s; }
+
+.shutter-btn:active .shutter-ring { transform: scale(.95); animation: none; }
+.shutter-btn:active .shutter-inner { transform: scale(.85); }
+.shutter-btn.capturing .shutter-ring { transform: scale(1.1); opacity: .5; animation: none; }
+.shutter-btn.capturing .shutter-inner { transform: scale(.7); }
+
+/* Flash */
+.capture-flash { position: fixed; inset: 0; background: white; opacity: 0; pointer-events: none; z-index: 9999; transition: opacity .05s; }
+.capture-flash.active { opacity: .9; transition: opacity .02s; }
