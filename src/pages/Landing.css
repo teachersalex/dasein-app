@@ -1,14 +1,6 @@
-/*
- * Landing.css — Jornada de entrada no Dasein
- * 
- * Estados: landing, code, signup, profile, login
- * Filosofia: a landing se transforma, nunca termina.
- * 
- * 🔧 REFATORADO: Usa variáveis do index.css
- */
+/* Landing.css — Jornada de entrada no Dasein */
 
 /* === Base === */
-
 .landing {
   min-height: 100vh;
   min-height: 100dvh;
@@ -20,13 +12,9 @@
   opacity: 0;
   transition: opacity 0.8s ease;
 }
-
-.landing.mounted {
-  opacity: 1;
-}
+.landing.mounted { opacity: 1; }
 
 /* === Background === */
-
 .landing-bg {
   position: absolute;
   inset: 0;
@@ -38,13 +26,11 @@
   z-index: 0;
   transition: opacity 0.6s ease, filter 0.6s ease;
 }
-
 .landing.transformed .landing-bg {
   opacity: 0.1;
   filter: blur(2px);
 }
 
-/* Vignette */
 .landing-gradient {
   position: absolute;
   inset: 0;
@@ -58,7 +44,6 @@
 }
 
 /* === Content === */
-
 .landing-content {
   display: flex;
   flex-direction: column;
@@ -70,14 +55,12 @@
   padding: 24px;
   transition: opacity 0.3s ease, transform 0.3s ease;
 }
-
 .landing-content.transitioning {
   opacity: 0;
   transform: translateY(10px);
 }
 
 /* === Logo === */
-
 .landing-logo {
   font-family: var(--font-display);
   font-size: clamp(4rem, 15vw, 10rem);
@@ -89,7 +72,6 @@
   opacity: 0;
   animation: landingFadeIn 1.5s ease 0.2s forwards;
 }
-
 .landing-logo.small {
   font-size: clamp(2.5rem, 10vw, 4rem);
   margin-bottom: 0.5rem;
@@ -108,7 +90,6 @@
 }
 
 /* === Marquee === */
-
 .marquee-container {
   position: relative;
   width: 100vw;
@@ -117,7 +98,6 @@
   opacity: 0;
   animation: landingFadeIn 1.5s ease 0.6s forwards;
 }
-
 .marquee-container::before,
 .marquee-container::after {
   content: '';
@@ -128,23 +108,13 @@
   z-index: 2;
   pointer-events: none;
 }
-
 .marquee-container::before {
   left: 0;
-  background: linear-gradient(90deg,
-    var(--color-bg) 0%,
-    rgba(10, 10, 10, 0.8) 40%,
-    transparent 100%
-  );
+  background: linear-gradient(90deg, var(--color-bg) 0%, rgba(10,10,10,0.8) 40%, transparent 100%);
 }
-
 .marquee-container::after {
   right: 0;
-  background: linear-gradient(-90deg,
-    var(--color-bg) 0%,
-    rgba(10, 10, 10, 0.8) 40%,
-    transparent 100%
-  );
+  background: linear-gradient(-90deg, var(--color-bg) 0%, rgba(10,10,10,0.8) 40%, transparent 100%);
 }
 
 .marquee {
@@ -152,13 +122,11 @@
   white-space: nowrap;
   animation: marqueeScroll 25s linear infinite;
 }
-
 .marquee-text {
   display: flex;
   align-items: center;
   padding-right: 2rem;
 }
-
 .marquee span {
   font-family: var(--font-display);
   font-size: clamp(0.9rem, 2.5vw, 1.2rem);
@@ -167,7 +135,6 @@
   text-transform: lowercase;
   color: var(--color-text-40);
 }
-
 .marquee .separator {
   display: inline-block;
   width: 4px;
@@ -177,8 +144,7 @@
   margin: 0 2rem;
 }
 
-/* === Actions (Landing State) === */
-
+/* === Actions === */
 .landing-actions {
   margin-top: 3rem;
   display: flex;
@@ -201,15 +167,11 @@
   padding: 8px 0;
   transition: color 0.5s ease, letter-spacing 0.5s ease;
 }
-
 .landing-invite:hover:not(:disabled) {
   color: var(--color-text-60);
   letter-spacing: 0.25em;
 }
-
-.landing-invite:disabled {
-  cursor: default;
-}
+.landing-invite:disabled { cursor: default; }
 
 .landing-link {
   font-family: var(--font-display);
@@ -223,25 +185,19 @@
   padding: 4px 0;
   transition: color 0.3s ease;
 }
+.landing-link:hover { color: var(--color-text-40); }
 
-.landing-link:hover {
-  color: var(--color-text-40);
-}
-
-/* === Form States === */
-
+/* === Form === */
 .landing-form {
   width: 100%;
   position: relative;
 }
-
 .landing-form form {
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
 
-/* Back button */
 .landing-back {
   position: absolute;
   top: -60px;
@@ -256,17 +212,12 @@
   padding: 4px 0;
   transition: color 0.3s ease;
 }
+.landing-back:hover { color: var(--color-text-40); }
 
-.landing-back:hover {
-  color: var(--color-text-40);
-}
-
-/* Fields */
 .landing-field {
   margin-bottom: 24px;
   text-align: left;
 }
-
 .landing-field label {
   display: block;
   font-family: var(--font-display);
@@ -278,7 +229,7 @@
   margin-bottom: 12px;
 }
 
-/* Inputs */
+/* === Inputs === */
 .landing-input {
   width: 100%;
   padding: 16px 0;
@@ -295,16 +246,9 @@
   transition: border-color 0.3s ease;
   -webkit-appearance: none;
 }
+.landing-input:focus { border-bottom-color: var(--color-text-40); }
+.landing-input::placeholder { color: var(--color-text-15); }
 
-.landing-input:focus {
-  border-bottom-color: var(--color-text-40);
-}
-
-.landing-input::placeholder {
-  color: var(--color-text-15);
-}
-
-/* Code input special */
 .landing-input.code {
   font-size: 2rem;
   letter-spacing: 0.4em;
@@ -313,16 +257,9 @@
   padding: 24px 0;
   margin-bottom: 16px;
 }
+.landing-input.code::placeholder { letter-spacing: 0.4em; }
 
-.landing-input.code::placeholder {
-  letter-spacing: 0.4em;
-}
-
-/* Username input */
-.landing-username-wrap {
-  position: relative;
-}
-
+.landing-username-wrap { position: relative; }
 .landing-username-at {
   position: absolute;
   left: 0;
@@ -334,12 +271,8 @@
   color: var(--color-text-25);
   pointer-events: none;
 }
+.landing-input.username { padding-left: 20px; }
 
-.landing-input.username {
-  padding-left: 20px;
-}
-
-/* Field status */
 .landing-field-status {
   display: block;
   font-family: var(--font-display);
@@ -348,14 +281,8 @@
   color: var(--color-text-25);
   margin-top: 8px;
 }
-
-.landing-field-status.valid {
-  color: rgba(120, 200, 120, 0.8);
-}
-
-.landing-field-status.invalid {
-  color: rgba(200, 120, 120, 0.8);
-}
+.landing-field-status.valid { color: rgba(120, 200, 120, 0.8); }
+.landing-field-status.invalid { color: rgba(200, 120, 120, 0.8); }
 
 /* Autofill override */
 .landing-input:-webkit-autofill,
@@ -368,7 +295,6 @@
 }
 
 /* === Avatar === */
-
 .landing-avatar {
   display: flex;
   align-items: center;
@@ -383,25 +309,13 @@
   overflow: hidden;
   transition: border-color 0.3s ease, background 0.3s ease;
 }
-
 .landing-avatar:hover {
   border-color: var(--color-text-25);
   background: var(--color-text-10);
 }
-
-.landing-avatar img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.landing-avatar svg {
-  color: var(--color-text-25);
-}
-
-.landing-avatar input {
-  display: none;
-}
+.landing-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.landing-avatar svg { color: var(--color-text-25); }
+.landing-avatar input { display: none; }
 
 .landing-avatar-hint {
   font-family: var(--font-display);
@@ -411,7 +325,6 @@
   text-align: center;
   margin-bottom: 32px;
 }
-
 .landing-avatar-hint button {
   font-family: inherit;
   font-size: inherit;
@@ -423,13 +336,9 @@
   text-decoration: underline;
   text-underline-offset: 2px;
 }
-
-.landing-avatar-hint button:hover {
-  color: var(--color-text-60);
-}
+.landing-avatar-hint button:hover { color: var(--color-text-60); }
 
 /* === Button === */
-
 .landing-button {
   width: 100%;
   padding: 18px 32px;
@@ -446,20 +355,14 @@
   cursor: pointer;
   transition: all 0.4s ease;
 }
-
 .landing-button:hover:not(:disabled) {
   background: var(--color-text-15);
   border-color: var(--color-text-25);
   color: var(--color-text-80);
 }
-
-.landing-button:disabled {
-  opacity: 0.4;
-  cursor: default;
-}
+.landing-button:disabled { opacity: 0.4; cursor: default; }
 
 /* === Error === */
-
 .landing-error {
   font-family: var(--font-display);
   font-size: 0.8rem;
@@ -470,56 +373,25 @@
 }
 
 /* === Animations === */
-
 @keyframes landingFadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(15px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(15px); }
+  to { opacity: 1; transform: translateY(0); }
 }
-
 @keyframes marqueeScroll {
-  0% {
-    transform: translateX(0);
-  }
-  100% {
-    transform: translateX(-50%);
-  }
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
 }
 
-/* === Mobile Adjustments === */
-
+/* === Mobile === */
 @media (max-width: 480px) {
-  .landing-content {
-    padding: 20px;
-  }
-  
-  .landing-logo {
-    margin-bottom: 2rem;
-  }
-  
-  .landing-logo.small {
-    font-size: 2.5rem;
-  }
-  
-  .landing-input.code {
-    font-size: 1.6rem;
-    letter-spacing: 0.3em;
-  }
-  
-  .landing-back {
-    top: -50px;
-  }
+  .landing-content { padding: 20px; }
+  .landing-logo { margin-bottom: 2rem; }
+  .landing-logo.small { font-size: 2.5rem; }
+  .landing-input.code { font-size: 1.6rem; letter-spacing: 0.3em; }
+  .landing-back { top: -50px; }
 }
 
 /* === Safe Area === */
-
 @supports (padding: env(safe-area-inset-bottom)) {
-  .landing {
-    padding-bottom: env(safe-area-inset-bottom);
-  }
+  .landing { padding-bottom: env(safe-area-inset-bottom); }
 }
